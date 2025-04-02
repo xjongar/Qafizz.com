@@ -1,2 +1,0 @@
-# Qafizz.com
-# Qafizz.com
