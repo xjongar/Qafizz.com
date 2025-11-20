@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scroll Through Time - Journey Through 5000 Years of History</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Fixed Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            z-index: 1000;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-family: 'Lato', sans-serif;
+            font-size: 1.5em;
+            font-weight: 900;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .hourglass {
+            font-size: 1.2em;
+            animation: rotate 4s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .current-year {
+            font-family: 'Lato', sans-serif;
+            font-size: 1.5em;
+            color: #fff;
+            text-align: right;
+            font-weight: 700;
+        }
+
+        .year-label {
+            font-size: 0.5em;
+            opacity: 0.7;
+            display: block;
+        }
+
+        /* Main Timeline Container */
+        .timeline-container {
+            max-width: 1200px;
+            margin: 120px auto 50px;
+            padding: 0 40px;
+            position: relative;
+        }
+
+        /* Vertical Timeline Line */
+        .timeline-line {
+            position: absolute;
+            left: 80px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #fff;
+        }
+
+        /* Era Section */
+        .era-section {
+            margin-bottom: 100px;
+        }
+
+        .era-header {
+            position: relative;
+            margin-left: 100px;
+            margin-bottom: 60px;
+        }
+
+        .era-title {
+            font-family: 'Lato', sans-serif;
+            font-size: 2.5em;
+            color: #fff;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .era-timespan {
+            font-size: 1.2em;
+            opacity: 0.7;
+        }
+
+        /* Event Card */
+        .event {
+            position: relative;
+            margin-bottom: 80px;
+            margin-left: 120px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Timeline Dot */
+        .event::before {
+            content: '';
+            position: absolute;
+            left: -56px;
+            top: 30px;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border: 3px solid #000;
+            border-radius: 50%;
+            z-index: 10;
+        }
+
+        .event-card {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 0;
+            padding: 40px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .event-card:hover {
+            background: #1a1a1a;
+            border-color: #fff;
+            transform: translateX(10px);
+        }
+
+        .event-card:visited {
+            color: inherit;
+        }
+
+        .event-header-info {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+
+        .event-icon {
+            font-size: 0.75em;
+            font-weight: 700;
+            min-width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            border: 1px solid #fff;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'Lato', sans-serif;
+            text-align: center;
+            line-height: 1.2;
+            padding: 10px;
+        }
+
+        .event-details {
+            flex: 1;
+        }
+
+        .event-year {
+            font-family: 'Lato', sans-serif;
+            font-size: 1.2em;
+            color: #999;
+            margin-bottom: 10px;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        .event-title {
+            font-family: 'Lato', sans-serif;
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            line-height: 1.4;
+            color: #fff;
+        }
+
+        .event-category {
+            display: inline-block;
+            padding: 4px 12px;
+            background: transparent;
+            border: 1px solid #666;
+            font-size: 0.75em;
+            color: #999;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .event-description {
+            font-size: 1em;
+            line-height: 1.8;
+            color: #ccc;
+            margin-top: 20px;
+            font-weight: 300;
+        }
+
+        .event-impact {
+            margin-top: 25px;
+            padding: 20px 0;
+            border-top: 1px solid #333;
+        }
+
+        .impact-title {
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .impact-text {
+            line-height: 1.8;
+            color: #999;
+            font-size: 0.95em;
+            font-weight: 300;
+        }
+
+        /* Share to X button */
+        .share-x-btn {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: #000;
+            border: 1px solid #fff;
+            color: #fff;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.9em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .share-x-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        /* Scroll to top button */
+        .scroll-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            border: none;
+            font-size: 1.5em;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .scroll-top.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .scroll-top:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        /* Intro Section */
+        .intro {
+            text-align: center;
+            padding: 60px 20px;
+            max-width: 800px;
+            margin: 0 auto 100px;
+        }
+
+        .intro h2 {
+            font-family: 'Lato', sans-serif;
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #fff;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .intro p {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #999;
+            font-weight: 300;
+        }
+
+        .scroll-hint {
+            margin-top: 40px;
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* On This Day Section */
+        .on-this-day {
+            background: #111;
+            border: 2px solid #fff;
+            padding: 40px;
+            margin: 0 auto 80px;
+            max-width: 900px;
+            text-align: center;
+        }
+
+        .on-this-day h3 {
+            font-family: 'Lato', sans-serif;
+            font-size: 2em;
+            color: #fff;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+        }
+
+        .on-this-day .date-display {
+            font-size: 1.3em;
+            color: #999;
+            margin-bottom: 30px;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .today-events {
+            text-align: left;
+            margin-top: 30px;
+        }
+
+        .today-event-item {
+            background: #000;
+            border: 1px solid #333;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .today-event-item:hover {
+            border-color: #fff;
+            transform: translateX(5px);
+        }
+
+        .today-event-year {
+            font-size: 1.1em;
+            color: #999;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .today-event-title {
+            font-size: 1.3em;
+            color: #fff;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .today-event-description {
+            font-size: 0.95em;
+            color: #ccc;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        .no-events-message {
+            color: #666;
+            font-size: 1.1em;
+            padding: 30px;
+            font-weight: 300;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .current-year {
+                font-size: 1.2em;
+            }
+
+            .timeline-line {
+                left: 30px;
+            }
+
+            .event {
+                margin-left: 60px;
+            }
+
+            .event::before {
+                left: -46px;
+            }
+
+            .era-header {
+                margin-left: 60px;
+            }
+
+            .era-title {
+                font-size: 2em;
+            }
+
+            .event-icon {
+                min-width: 80px;
+                height: 80px;
+                font-size: 3em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>
+                Scroll Through Time
+            </h1>
+            <div class="current-year">
+                <span class="year-label">Currently Viewing</span>
+                <span id="display-year">3000 BCE</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="timeline-container">
+        <div class="timeline-line"></div>
+
+        <div class="intro">
+            <h2>Journey Through 5,000 Years of History</h2>
+            <p>Scroll down to explore over 50 pivotal moments that shaped human civilization, from the birth of writing to the AI revolution.</p>
+            <div class="scroll-hint">Start scrolling to begin your journey</div>
+        </div>
+
+        <!-- ON THIS DAY SECTION -->
+        <div class="on-this-day">
+            <h3>On This Day in History</h3>
+            <div class="date-display" id="today-date">Loading...</div>
+            <div class="today-events" id="today-events-container">
+                <!-- Events will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- ANCIENT ERA (3000-500 BCE) -->
+        <div class="era-section">
+            <div class="era-header">
+                <h2 class="era-title">Ancient Era</h2>
+                <div class="era-timespan">3000 BCE - 500 BCE</div>
+            </div>
+
+            <div class="event" data-year="-3000">
+                <a href="https://en.wikipedia.org/wiki/Cuneiform" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Tech</div>
+                        <div class="event-details">
+                            <div class="event-year">3000 BCE</div>
+                            <div class="event-title">Birth of Writing in Mesopotamia</div>
+                            <span class="event-category">Technology</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        The Sumerians develop cuneiform, one of the earliest systems of writing, revolutionizing human communication and record-keeping.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">This invention enabled the preservation of knowledge across generations and laid the foundation for complex civilizations, allowing humans to record history, laws, and literature.</div>
+                    </div>                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="-2560">
+                <a href="https://en.wikipedia.org/wiki/Great_Pyramid_of_Giza" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Arch</div>
+                        <div class="event-details">
+                            <div class="event-year">2560 BCE</div>
+                            <div class="event-title">Construction of the Great Pyramid of Giza</div>
+                            <span class="event-category">Architecture</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        The Great Pyramid is completed for Pharaoh Khufu, becoming one of the Seven Wonders of the Ancient World and the tallest man-made structure for 3,800 years.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Demonstrated advanced engineering, mathematics, and organizational capabilities. This massive structure contains approximately 2.3 million stone blocks, each weighing 2.5 tons on average.</div>
+                    </div>                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="-1754">
+                <a href="https://en.wikipedia.org/wiki/Code_of_Hammurabi" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Law</div>
+                        <div class="event-details">
+                            <div class="event-year">1754 BCE</div>
+                            <div class="event-title">Code of Hammurabi Established</div>
+                            <span class="event-category">Law</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        King Hammurabi of Babylon creates one of the earliest and most complete written legal codes, containing 282 laws covering everything from trade to family law.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Established the principle of written law and justice, influencing legal systems for millennia. It introduced concepts like presumption of innocence and proportional punishment.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="-1200">
+                <a href="https://en.wikipedia.org/wiki/Late_Bronze_Age_collapse" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Crisis</div>
+                        <div class="event-details">
+                            <div class="event-year">1200 BCE</div>
+                            <div class="event-title">Bronze Age Collapse</div>
+                            <span class="event-category">Catastrophe</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        A mysterious period of collapse affects major civilizations around the Mediterranean and Near East, including the Mycenaean, Hittite, and Egyptian civilizations.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Led to the fall of several major civilizations and a dark age, but also enabled the rise of new cultures and the Iron Age. Theories include climate change, invasions by 'Sea Peoples,' and systems collapse.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="-776">
+                <a href="https://en.wikipedia.org/wiki/Ancient_Olympic_Games" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Culture</div>
+                        <div class="event-details">
+                            <div class="event-year">776 BCE</div>
+                            <div class="event-title">First Olympic Games</div>
+                            <span class="event-category">Culture</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        The first recorded Olympic Games are held in Olympia, Greece, marking a tradition that continues today. Initially featuring only a single sprint race, the Olympics grew to include various athletic competitions.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Established athletics as a cultural institution and created a tradition of international competition and unity. A sacred truce was declared during the games, halting all conflicts.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="-563">
+                <a href="https://en.wikipedia.org/wiki/Gautama_Buddha" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Faith</div>
+                        <div class="event-details">
+                            <div class="event-year">563 BCE</div>
+                            <div class="event-title">Birth of Buddha</div>
+                            <span class="event-category">Religion</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Siddhartha Gautama is born in Lumbini (modern-day Nepal). After witnessing suffering, he renounces his princely life to seek enlightenment.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Founded Buddhism, one of the world's major religions, influencing millions across Asia and beyond. His teachings on the Four Noble Truths and the Eightfold Path became foundational to Buddhism.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+        </div>
+
+        <!-- CLASSICAL ERA (500 BCE - 500 CE) -->
+        <div class="era-section">
+            <div class="era-header">
+                <h2 class="era-title">Classical Era</h2>
+                <div class="era-timespan">500 BCE - 500 CE</div>
+            </div>
+
+            <div class="event" data-year="-490">
+                <a href="https://en.wikipedia.org/wiki/Battle_of_Marathon" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">War</div>
+                        <div class="event-details">
+                            <div class="event-year">490 BCE</div>
+                            <div class="event-title">Battle of Marathon</div>
+                            <span class="event-category">Military</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Athens defeats the Persian Empire at Marathon, preserving Greek independence. The outnumbered Athenians used innovative tactics to defeat the Persians.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Prevented Persian conquest of Greece, allowing Greek culture and democracy to flourish and influence Western civilization. Legend says a messenger ran 26 miles to Athens to announce victory, inspiring the modern marathon race.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="-399">
+                <a href="https://en.wikipedia.org/wiki/Trial_of_Socrates" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Mind</div>
+                        <div class="event-details">
+                            <div class="event-year">399 BCE</div>
+                            <div class="event-title">Death of Socrates</div>
+                            <span class="event-category">Philosophy</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        The Greek philosopher Socrates is executed in Athens, becoming a martyr for philosophy. Accused of corrupting youth and impiety, Socrates chose death over exile.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">His method of questioning and pursuit of truth became foundational to Western philosophy and the scientific method. His teachings, preserved by Plato, influenced countless philosophers and established ethics as a core philosophical discipline.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="-356">
+                <a href="https://en.wikipedia.org/wiki/Alexander_the_Great" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Power</div>
+                        <div class="event-details">
+                            <div class="event-year">356 BCE</div>
+                            <div class="event-title">Birth of Alexander the Great</div>
+                            <span class="event-category">Leadership</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Alexander III of Macedon is born, destined to create one of history's largest empires. Tutored by Aristotle, Alexander conquered the Persian Empire and reached India before his death at 32.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">His conquests spread Greek culture across three continents, creating the Hellenistic world and connecting East and West. He founded over 20 cities, many named Alexandria.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="-221">
+                <a href="https://en.wikipedia.org/wiki/Qin_Shi_Huang" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Empire</div>
+                        <div class="event-details">
+                            <div class="event-year">221 BCE</div>
+                            <div class="event-title">Qin Dynasty Unifies China</div>
+                            <span class="event-category">Politics</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Qin Shi Huang becomes the first emperor of a unified China, establishing the Qin Dynasty. The emperor ordered the construction of the Great Wall and the Terracotta Army.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Standardized writing, currency, and measurements across China, laying foundations for Chinese imperial system that lasted 2,000 years. He standardized Chinese script, enabling communication across diverse regions.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="-44">
+                <a href="https://en.wikipedia.org/wiki/Assassination_of_Julius_Caesar" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Revolt</div>
+                        <div class="event-details">
+                            <div class="event-year">44 BCE</div>
+                            <div class="event-title">Assassination of Julius Caesar</div>
+                            <span class="event-category">Politics</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Roman dictator Julius Caesar is assassinated by senators, ending the Roman Republic. Caesar was stabbed 23 times by a group of senators led by Brutus and Cassius.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">His death led to civil war and ultimately the rise of the Roman Empire under Augustus. His famous last words "Et tu, Brute?" have echoed through history.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="0">
+                <a href="https://en.wikipedia.org/wiki/Jesus" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Faith</div>
+                        <div class="event-details">
+                            <div class="event-year">1 CE</div>
+                            <div class="event-title">Birth of Jesus Christ</div>
+                            <span class="event-category">Religion</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Traditional year for the birth of Jesus Christ in Bethlehem. Jesus's teachings emphasized love, forgiveness, and salvation.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Founded Christianity, which became the world's largest religion and profoundly shaped Western civilization. Though crucified around 33 CE, his followers spread his message, creating a global religion.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="79">
+                <a href="https://en.wikipedia.org/wiki/Eruption_of_Mount_Vesuvius_in_79_AD" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Nature</div>
+                        <div class="event-details">
+                            <div class="event-year">79 CE</div>
+                            <div class="event-title">Eruption of Mount Vesuvius</div>
+                            <span class="event-category">Catastrophe</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Mount Vesuvius erupts, burying the Roman cities of Pompeii and Herculaneum. The eruption killed thousands and buried the cities under volcanic ash.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">The preserved cities provide an invaluable snapshot of Roman life, offering insights into ancient daily living. Rediscovered in the 18th century, Pompeii revealed remarkably preserved buildings, artifacts, and even bodies.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="313">
+                <a href="https://en.wikipedia.org/wiki/Edict_of_Milan" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Faith</div>
+                        <div class="event-details">
+                            <div class="event-year">313 CE</div>
+                            <div class="event-title">Edict of Milan</div>
+                            <span class="event-category">Religion</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Roman Emperor Constantine issues the Edict of Milan, legalizing Christianity and ending persecution of Christians.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Led to Christianity becoming the dominant religion of the Roman Empire and Europe. Constantine's conversion and support transformed Christianity from a persecuted sect to the empire's official religion.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="476">
+                <a href="https://en.wikipedia.org/wiki/Fall_of_the_Western_Roman_Empire" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Culture</div>
+                        <div class="event-details">
+                            <div class="event-year">476 CE</div>
+                            <div class="event-title">Fall of Western Roman Empire</div>
+                            <span class="event-category">Politics</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        The last Western Roman Emperor, Romulus Augustulus, is deposed by Germanic leader Odoacer, marking the end of ancient Rome.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Ended classical antiquity and began the Middle Ages in Europe, fragmenting the empire into various kingdoms. This date traditionally marks the transition from ancient to medieval times.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+        </div>
+
+        <!-- MEDIEVAL ERA (500-1400 CE) -->
+        <div class="era-section">
+            <div class="era-header">
+                <h2 class="era-title">Medieval Era</h2>
+                <div class="era-timespan">500 CE - 1400 CE</div>
+            </div>
+
+            <div class="event" data-year="622">
+                <a href="https://en.wikipedia.org/wiki/Hegira" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Faith</div>
+                        <div class="event-details">
+                            <div class="event-year">622 CE</div>
+                            <div class="event-title">The Hijra - Birth of Islamic Calendar</div>
+                            <span class="event-category">Religion</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Prophet Muhammad migrates from Mecca to Medina, marking the beginning of the Islamic calendar and establishing the first Islamic state.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">This event established the first Islamic state and began the rapid expansion of Islam across three continents. The migration established a Muslim community in Medina where Muhammad could practice Islam freely.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="800">
+                <a href="https://en.wikipedia.org/wiki/Charlemagne" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Power</div>
+                        <div class="event-details">
+                            <div class="event-year">800 CE</div>
+                            <div class="event-title">Charlemagne Crowned Emperor</div>
+                            <span class="event-category">Politics</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Charlemagne is crowned Holy Roman Emperor by Pope Leo III, reviving the concept of empire in the West. His empire stretched from modern France to Germany and Italy.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">United much of Western Europe and sparked the Carolingian Renaissance, preserving classical learning. He promoted education, standardized writing, and strengthened ties between church and state.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1066">
+                <a href="https://en.wikipedia.org/wiki/Battle_of_Hastings" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">War</div>
+                        <div class="event-details">
+                            <div class="event-year">1066 CE</div>
+                            <div class="event-title">Battle of Hastings</div>
+                            <span class="event-category">Military</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        William the Conqueror defeats King Harold II, beginning Norman rule of England. The battle lasted all day, ending with Harold's death allegedly from an arrow to the eye.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Fundamentally transformed English language, culture, law, and architecture, connecting England to continental Europe. The Norman conquest introduced French culture and language to England.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1095">
+                <a href="https://en.wikipedia.org/wiki/First_Crusade" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">War</div>
+                        <div class="event-details">
+                            <div class="event-year">1095 CE</div>
+                            <div class="event-title">First Crusade Begins</div>
+                            <span class="event-category">Religion</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Pope Urban II calls for the First Crusade to reclaim Jerusalem from Muslim control. Thousands of Europeans marched to the Holy Land.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Initiated centuries of conflict between Christianity and Islam, but also increased trade and cultural exchange between East and West. The crusades lasted for nearly 200 years.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1206">
+                <a href="https://en.wikipedia.org/wiki/Genghis_Khan" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Conquest</div>
+                        <div class="event-details">
+                            <div class="event-year">1206 CE</div>
+                            <div class="event-title">Genghis Khan Unites the Mongols</div>
+                            <span class="event-category">Politics</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Temüjin is proclaimed Genghis Khan, ruler of all Mongols, beginning the Mongol Empire. He conquered from China to Eastern Europe.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Created the largest contiguous land empire in history, facilitating trade and cultural exchange across Eurasia. The Mongol Empire connected East and West through the Silk Road.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1215">
+                <a href="https://en.wikipedia.org/wiki/Magna_Carta" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Rights</div>
+                        <div class="event-details">
+                            <div class="event-year">1215 CE</div>
+                            <div class="event-title">Magna Carta Signed</div>
+                            <span class="event-category">Law</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        King John of England signs the Magna Carta, limiting royal power and establishing rule of law. Forced upon King John by rebellious barons.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Became a cornerstone of constitutional law and individual rights, influencing democracies worldwide. It influenced the US Constitution and UN Declaration of Human Rights.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1347">
+                <a href="https://en.wikipedia.org/wiki/Black_Death" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Death</div>
+                        <div class="event-details">
+                            <div class="event-year">1347 CE</div>
+                            <div class="event-title">Black Death Arrives in Europe</div>
+                            <span class="event-category">Catastrophe</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        The bubonic plague reaches Europe, beginning the deadliest pandemic in human history. The plague spread via trade routes from Asia.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Killed 30-60% of Europe's population, causing massive social, economic, and religious upheaval that transformed medieval society. It caused labor shortages that improved conditions for survivors and weakened feudalism.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1368">
+                <a href="https://en.wikipedia.org/wiki/Ming_dynasty" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Dynasty</div>
+                        <div class="event-details">
+                            <div class="event-year">1368 CE</div>
+                            <div class="event-title">Ming Dynasty Established</div>
+                            <span class="event-category">Politics</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Zhu Yuanzhang founds the Ming Dynasty, ending Mongol rule in China. The Ming Dynasty rebuilt the Great Wall and created porcelain masterpieces.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Restored Chinese culture and power, built the Forbidden City, and saw the famous voyages of Zheng He that reached Africa before European exploration.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+        </div>
+
+        <!-- RENAISSANCE ERA (1400-1800 CE) -->
+        <div class="era-section">
+            <div class="era-header">
+                <h2 class="era-title">Renaissance Era</h2>
+                <div class="era-timespan">1400 CE - 1800 CE</div>
+            </div>
+
+            <div class="event" data-year="1440">
+                <a href="https://en.wikipedia.org/wiki/Printing_press" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Print</div>
+                        <div class="event-details">
+                            <div class="event-year">1440 CE</div>
+                            <div class="event-title">Gutenberg Invents Printing Press</div>
+                            <span class="event-category">Technology</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Johannes Gutenberg invents movable-type printing, revolutionizing the spread of information. The first mass-produced book was the Gutenberg Bible.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Made books affordable and accessible, enabling the Renaissance, Reformation, and Scientific Revolution. Printing transformed literacy rates, standardized languages, and accelerated the spread of ideas.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1492">
+                <a href="https://en.wikipedia.org/wiki/Voyages_of_Christopher_Columbus" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Explore</div>
+                        <div class="event-details">
+                            <div class="event-year">1492 CE</div>
+                            <div class="event-title">Columbus Reaches the Americas</div>
+                            <span class="event-category">Exploration</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Christopher Columbus lands in the Caribbean, initiating permanent European contact with the Americas. Columbus believed he reached Asia.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Began the Columbian Exchange and European colonization, fundamentally changing both hemispheres forever. His voyage opened the Americas to European exploration with devastating consequences for indigenous peoples.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1517">
+                <a href="https://en.wikipedia.org/wiki/Reformation" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Reform</div>
+                        <div class="event-details">
+                            <div class="event-year">1517 CE</div>
+                            <div class="event-title">Protestant Reformation Begins</div>
+                            <span class="event-category">Religion</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Martin Luther publishes his 95 Theses, challenging Catholic Church practices. Luther's challenge to papal authority spread rapidly via printing press.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Split Western Christianity, sparked religious wars, and promoted ideas of individual conscience and literacy. The Reformation transformed European politics, culture, and religion.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1543">
+                <a href="https://en.wikipedia.org/wiki/Copernican_Revolution" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Science</div>
+                        <div class="event-details">
+                            <div class="event-year">1543 CE</div>
+                            <div class="event-title">Copernican Revolution</div>
+                            <span class="event-category">Science</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Nicolaus Copernicus publishes his heliocentric model, placing the Sun at the center of the solar system, contradicting Ptolemy's Earth-centered universe.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Challenged geocentric worldview and church authority, launching the Scientific Revolution. It paved the way for Galileo, Kepler, and Newton's discoveries.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1687">
+                <a href="https://en.wikipedia.org/wiki/Philosophi%C3%A6_Naturalis_Principia_Mathematica" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Physics</div>
+                        <div class="event-details">
+                            <div class="event-year">1687 CE</div>
+                            <div class="event-title">Newton's Principia Published</div>
+                            <span class="event-category">Science</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Isaac Newton publishes Principia Mathematica, laying foundations of classical mechanics with laws of motion and universal gravitation.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Revolutionized physics and mathematics, enabling the Industrial Revolution and space age. Newton's work unified terrestrial and celestial physics.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1776">
+                <a href="https://en.wikipedia.org/wiki/United_States_Declaration_of_Independence" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Liberty</div>
+                        <div class="event-details">
+                            <div class="event-year">1776 CE</div>
+                            <div class="event-title">American Declaration of Independence</div>
+                            <span class="event-category">Politics</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Thirteen American colonies declare independence from British rule. The Declaration, primarily written by Thomas Jefferson, proclaimed that "all men are created equal."
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Inspired democratic revolutions worldwide and established principles of natural rights and self-governance. It became a model for independence movements globally.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1789">
+                <a href="https://en.wikipedia.org/wiki/French_Revolution" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Revolt</div>
+                        <div class="event-details">
+                            <div class="event-year">1789 CE</div>
+                            <div class="event-title">French Revolution Begins</div>
+                            <span class="event-category">Revolution</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        The French Revolution begins with the storming of the Bastille. The revolution overthrew the monarchy and executed King Louis XVI.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Ended absolute monarchy in France, spread revolutionary ideals of liberty and equality, and reshaped European politics. It promoted concepts of citizenship, nationalism, and human rights.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+        </div>
+
+        <!-- MODERN ERA (1800-1950 CE) -->
+        <div class="era-section">
+            <div class="era-header">
+                <h2 class="era-title">Modern Era</h2>
+                <div class="era-timespan">1800 CE - 1950 CE</div>
+            </div>
+
+            <div class="event" data-year="1859">
+                <a href="https://en.wikipedia.org/wiki/On_the_Origin_of_Species" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Biology</div>
+                        <div class="event-details">
+                            <div class="event-year">1859 CE</div>
+                            <div class="event-title">Darwin's Origin of Species</div>
+                            <span class="event-category">Science</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Charles Darwin publishes On the Origin of Species, introducing the theory of evolution by natural selection.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Revolutionized biology and our understanding of life's diversity, challenging traditional views of creation. Darwin's theory explained how species adapt and evolve over time through natural selection.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1876">
+                <a href="https://en.wikipedia.org/wiki/Invention_of_the_telephone" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Comm</div>
+                        <div class="event-details">
+                            <div class="event-year">1876 CE</div>
+                            <div class="event-title">Telephone Invented</div>
+                            <span class="event-category">Technology</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Alexander Graham Bell patents the telephone, enabling voice communication over distance. Bell's first words were "Mr. Watson, come here, I want to see you."
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Transformed communication, business, and social interaction, shrinking distances and connecting people globally. The invention rapidly spread, creating global communication networks.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1903">
+                <a href="https://en.wikipedia.org/wiki/Wright_brothers" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Flight</div>
+                        <div class="event-details">
+                            <div class="event-year">1903 CE</div>
+                            <div class="event-title">First Powered Flight</div>
+                            <span class="event-category">Technology</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        The Wright Brothers achieve the first sustained, powered, heavier-than-air flight at Kitty Hawk, North Carolina. Orville Wright flew for 12 seconds covering 120 feet.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Opened the age of aviation, revolutionizing travel, commerce, warfare, and bringing the world closer together. Within decades, aviation transformed from impossible dream to global reality.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1914">
+                <a href="https://en.wikipedia.org/wiki/World_War_I" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">War</div>
+                        <div class="event-details">
+                            <div class="event-year">1914 CE</div>
+                            <div class="event-title">World War I Begins</div>
+                            <span class="event-category">War</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        The assassination of Archduke Franz Ferdinand triggers World War I. The 'Great War' involved industrialized warfare with trenches, machine guns, and poison gas.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Killed 17 million people, ended empires, redrew maps, and set the stage for World War II. It shattered European optimism and traditional social orders.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1928">
+                <a href="https://en.wikipedia.org/wiki/Penicillin" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Medicine</div>
+                        <div class="event-details">
+                            <div class="event-year">1928 CE</div>
+                            <div class="event-title">Penicillin Discovered</div>
+                            <span class="event-category">Medicine</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Alexander Fleming discovers penicillin, the first antibiotic. Fleming noticed that mold killed bacteria in a petri dish.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Saved countless lives, transformed medicine, and enabled modern surgery by making bacterial infections treatable. Mass production during WWII saved millions of soldiers' lives.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1939">
+                <a href="https://en.wikipedia.org/wiki/World_War_II" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Global</div>
+                        <div class="event-details">
+                            <div class="event-year">1939 CE</div>
+                            <div class="event-title">World War II Begins</div>
+                            <span class="event-category">War</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Germany invades Poland, starting the deadliest conflict in human history. WWII involved most of the world's nations in total war.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Killed 70-85 million people, ended colonialism, created the United Nations, and began the nuclear age. It ended with nuclear weapons and the Holocaust's horrors.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1945">
+                <a href="https://en.wikipedia.org/wiki/Atomic_bombings_of_Hiroshima_and_Nagasaki" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Nuclear</div>
+                        <div class="event-details">
+                            <div class="event-year">1945 CE</div>
+                            <div class="event-title">Atomic Bombs Dropped on Japan</div>
+                            <span class="event-category">Technology</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        The United States drops atomic bombs on Hiroshima and Nagasaki, ending World War II. The bombs killed over 200,000 people.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Demonstrated nuclear weapons' devastating power, beginning the nuclear age and Cold War tensions. They ended WWII but created existential threats that persist today.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+        </div>
+
+        <!-- DIGITAL AGE (1950-Present) -->
+        <div class="era-section">
+            <div class="era-header">
+                <h2 class="era-title">Digital Age</h2>
+                <div class="era-timespan">1950 CE - Present</div>
+            </div>
+
+            <div class="event" data-year="1957">
+                <a href="https://en.wikipedia.org/wiki/Sputnik_1" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Space</div>
+                        <div class="event-details">
+                            <div class="event-year">1957 CE</div>
+                            <div class="event-title">Space Age Begins</div>
+                            <span class="event-category">Space</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Soviet Union launches Sputnik 1, the first artificial satellite. Sputnik's beeping radio signal shocked the world.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Started the Space Race, led to moon landings, GPS, satellites, and changed humanity's perspective of Earth. It sparked massive investment in science education and space technology.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1969">
+                <a href="https://en.wikipedia.org/wiki/Apollo_11" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Moon</div>
+                        <div class="event-details">
+                            <div class="event-year">1969 CE</div>
+                            <div class="event-title">Moon Landing</div>
+                            <span class="event-category">Space</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Apollo 11 lands humans on the Moon for the first time. Neil Armstrong's "one small step" was watched by 600 million people.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Represented humanity's greatest technological achievement and fulfilled ancient dreams of reaching the Moon. The Moon landing demonstrated what human ingenuity could accomplish.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1989">
+                <a href="https://en.wikipedia.org/wiki/Berlin_Wall" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Peace</div>
+                        <div class="event-details">
+                            <div class="event-year">1989 CE</div>
+                            <div class="event-title">Fall of the Berlin Wall</div>
+                            <span class="event-category">Politics</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        The Berlin Wall falls, symbolizing the end of the Cold War. The wall, which divided Berlin for 28 years, fell peacefully as East Germans demanded freedom.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Reunified Germany, ended Soviet domination of Eastern Europe, and marked the triumph of democracy over communism. It symbolized the end of the Cold War's ideological divide.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="1991">
+                <a href="https://en.wikipedia.org/wiki/World_Wide_Web" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Web</div>
+                        <div class="event-details">
+                            <div class="event-year">1991 CE</div>
+                            <div class="event-title">World Wide Web Goes Public</div>
+                            <span class="event-category">Technology</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Tim Berners-Lee releases the World Wide Web to the public, revolutionizing information access. The web grew from one website in 1991 to billions today.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Created the internet as we know it, transforming communication, commerce, education, and virtually every aspect of modern life. Berners-Lee's invention made the internet user-friendly.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="2007">
+                <a href="https://en.wikipedia.org/wiki/IPhone" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Mobile</div>
+                        <div class="event-details">
+                            <div class="event-year">2007 CE</div>
+                            <div class="event-title">iPhone Released</div>
+                            <span class="event-category">Technology</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Apple releases the iPhone, revolutionizing mobile computing and communication. The iPhone combined phone, computer, and internet in a pocket-sized device.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Created the smartphone era, transforming how billions of people communicate, work, and access information. It launched the app economy and changed daily life globally.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="2020">
+                <a href="https://en.wikipedia.org/wiki/COVID-19_pandemic" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">Virus</div>
+                        <div class="event-details">
+                            <div class="event-year">2020 CE</div>
+                            <div class="event-title">COVID-19 Pandemic</div>
+                            <span class="event-category">Pandemic</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        COVID-19 becomes a global pandemic, affecting every country on Earth. The pandemic led to unprecedented global lockdowns and rapid vaccine development.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">Caused millions of deaths, economic disruption, and accelerated digital transformation of work, education, and healthcare. Led to lasting changes in how we work, learn, and interact.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+
+            <div class="event" data-year="2022">
+                <a href="https://en.wikipedia.org/wiki/ChatGPT" target="_blank" class="event-card">
+                    <div class="event-header-info">
+                        <div class="event-icon">AI</div>
+                        <div class="event-details">
+                            <div class="event-year">2022 CE</div>
+                            <div class="event-title">AI Revolution Accelerates</div>
+                            <span class="event-category">Technology</span>
+                        </div>
+                    </div>
+                    <div class="event-description">
+                        Large language models and AI systems like ChatGPT demonstrate unprecedented capabilities, bringing AI to mainstream attention.
+                    </div>
+                    <div class="event-impact">
+                        <div class="impact-title">Historical Impact</div>
+                        <div class="impact-text">AI begins transforming industries from art to science, raising questions about work, creativity, and human-AI collaboration. The technology promises to revolutionize education, healthcare, and research.</div>
+                    </div>
+                                    <button class="share-x-btn" onclick="event.preventDefault(); event.stopPropagation(); shareToX(this);">Share to X</button>
+                </a>
+            </div>
+        </div>
+
+        <div style="text-align: center; padding: 100px 20px; opacity: 0.7;">
+            <h2 style="font-family: 'Cinzel', serif; font-size: 2.5em; color: #ffd700; margin-bottom: 20px;">
+                The Journey Continues...
+            </h2>
+            <p style="font-size: 1.3em;">You've traveled through 5,000 years of human history. What will the next chapter hold?</p>
+        </div>
+    </div>
+
+    <button class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        ↑
+    </button>
+
+    <script>
+        // Historical events by date (month-day)
+        const historicalEventsByDate = {
+            '1-1': [
+                { year: 1863, title: 'Emancipation Proclamation', description: 'President Lincoln issued the Emancipation Proclamation, freeing all slaves in Confederate states.' },
+                { year: 1959, title: 'Cuban Revolution Triumphs', description: 'Fidel Castro and his forces successfully overthrew the Batista regime in Cuba.' }
+            ],
+            '4-12': [
+                { year: 1961, title: 'First Human in Space', description: 'Soviet cosmonaut Yuri Gagarin became the first human to journey into outer space.' }
+            ],
+            '4-15': [
+                { year: 1865, title: 'Lincoln Assassination', description: 'President Abraham Lincoln was shot by John Wilkes Booth at Ford\'s Theatre.' }
+            ],
+            '7-4': [
+                { year: 1776, title: 'American Independence', description: 'The Declaration of Independence was adopted, declaring the thirteen colonies free from British rule.' }
+            ],
+            '7-16': [
+                { year: 1945, title: 'First Nuclear Test', description: 'The Trinity Test - the first nuclear weapon was successfully detonated in New Mexico.' },
+                { year: 1969, title: 'Apollo 11 Launch', description: 'NASA launched Apollo 11, beginning humanity\'s first mission to land on the Moon.' }
+            ],
+            '7-20': [
+                { year: 1969, title: 'Moon Landing', description: 'Neil Armstrong and Buzz Aldrin became the first humans to walk on the Moon.' }
+            ],
+            '8-6': [
+                { year: 1945, title: 'Atomic Bomb on Hiroshima', description: 'The United States dropped the first atomic bomb used in warfare on Hiroshima, Japan.' }
+            ],
+            '8-28': [
+                { year: 1963, title: 'I Have a Dream Speech', description: 'Martin Luther King Jr. delivered his historic speech during the March on Washington.' }
+            ],
+            '9-11': [
+                { year: 2001, title: 'September 11 Attacks', description: 'Terrorist attacks on the World Trade Center and Pentagon killed nearly 3,000 people.' }
+            ],
+            '10-12': [
+                { year: 1492, title: 'Columbus Reaches Americas', description: 'Christopher Columbus landed in the Bahamas, beginning European exploration of the Americas.' }
+            ],
+            '10-24': [
+                { year: 1929, title: 'Black Thursday', description: 'The stock market crash began, leading to the Great Depression.' }
+            ],
+            '11-9': [
+                { year: 1989, title: 'Fall of Berlin Wall', description: 'The Berlin Wall fell, symbolizing the end of the Cold War.' }
+            ],
+            '11-20': [
+                { year: 1945, title: 'Nuremberg Trials Begin', description: 'The Nuremberg trials of Nazi war criminals began in Germany.' },
+                { year: 1985, title: 'Windows 1.0 Released', description: 'Microsoft released Windows 1.0, the first version of the Windows operating system.' }
+            ],
+            '12-7': [
+                { year: 1941, title: 'Pearl Harbor Attack', description: 'Japan attacked the U.S. naval base at Pearl Harbor, leading to America entering WWII.' }
+            ],
+            '12-25': [
+                { year: 800, title: 'Charlemagne Crowned Emperor', description: 'Charlemagne was crowned Emperor of the Romans, establishing the Holy Roman Empire.' },
+                { year: 1991, title: 'Soviet Union Dissolution', description: 'The Soviet Union officially dissolved, ending the Cold War era.' }
+            ]
+        };
+
+        // Display "On This Day" events
+        function displayOnThisDay() {
+            const today = new Date();
+            const month = today.getMonth() + 1;
+            const day = today.getDate();
+            const dateKey = `${month}-${day}`;
+
+            // Format date
+            const dateOptions = { month: 'long', day: 'numeric' };
+            const formattedDate = today.toLocaleDateString('en-US', dateOptions);
+            document.getElementById('today-date').textContent = formattedDate;
+
+            // Get today's events
+            const todayEvents = historicalEventsByDate[dateKey];
+            const container = document.getElementById('today-events-container');
+
+            if (todayEvents && todayEvents.length > 0) {
+                container.innerHTML = todayEvents.map(event => `
+                    <div class="today-event-item">
+                        <div class="today-event-year">${event.year}</div>
+                        <div class="today-event-title">${event.title}</div>
+                        <div class="today-event-description">${event.description}</div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<div class="no-events-message">No major historical events recorded for this date. Check back tomorrow!</div>';
+            }
+        }
+
+        // Initialize on page load
+        displayOnThisDay();
+
+        // Update year display as user scrolls
+        window.addEventListener('scroll', () => {
+            const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+
+            // Calculate current year based on scroll position (3000 BCE to 2024 CE)
+            const yearRange = 2024 - (-3000);
+            const currentYear = Math.round(-3000 + (scrollPercent * yearRange));
+
+            // Format display
+            const displayYear = document.getElementById('display-year');
+            if (currentYear < 0) {
+                displayYear.textContent = Math.abs(currentYear) + ' BCE';
+            } else {
+                displayYear.textContent = currentYear + ' CE';
+            }
+
+            // Show/hide scroll to top button
+            const scrollBtn = document.getElementById('scrollTopBtn');
+            if (window.scrollY > 500) {
+                scrollBtn.classList.add('visible');
+            } else {
+                scrollBtn.classList.remove('visible');
+            }
+        });
+
+        // Add intersection observer for fade-in animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateX(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all event cards
+        document.querySelectorAll('.event').forEach(event => {
+            observer.observe(event);
+        });
+
+        console.log('📜 Scroll Through Time loaded successfully!');
+        console.log('Total events on timeline:', document.querySelectorAll('.event').length);
+
+        // Share to X (Twitter) function
+        function shareToX(button) {
+            // Get the event card (parent of button)
+            const eventCard = button.closest('.event-card');
+            const eventDiv = button.closest('.event');
+
+            // Extract event details
+            const title = eventCard.querySelector('.event-title').textContent;
+            const year = eventCard.querySelector('.event-year').textContent;
+
+            // Create tweet text with link to qafizz.com
+            const tweetText = `${title} (${year})\n\nExplore 5000 years of history at qafizz.com\n\n#History #ScrollThroughTime`;
+
+            // Open Twitter share dialog
+            const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+            window.open(twitterUrl, '_blank', 'width=550,height=420');
+        }
+    </script>
+</body>
+</html>
