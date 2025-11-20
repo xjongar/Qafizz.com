@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Rich Are You?</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        h1 {
+            font-size: 5em;
+            font-weight: 900;
+            margin-bottom: 20px;
+            letter-spacing: -3px;
+        }
+
+        .subtitle {
+            font-size: 1.5em;
+            opacity: 0.6;
+            font-weight: 400;
+        }
+
+        .input-section {
+            background: #111;
+            border: 2px solid #333;
+            border-radius: 0;
+            padding: 60px;
+            text-align: center;
+            margin-bottom: 80px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .input-label {
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .wealth-input-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .dollar-sign {
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3em;
+            font-weight: 900;
+            color: #fff;
+            pointer-events: none;
+        }
+
+        .wealth-input {
+            width: 100%;
+            padding: 30px 30px 30px 80px;
+            font-size: 3em;
+            font-weight: 900;
+            text-align: left;
+            border: 3px solid #fff;
+            border-radius: 0;
+            background: #000;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .wealth-input:focus {
+            outline: none;
+            background: #111;
+        }
+
+        .compare-btn {
+            padding: 25px 70px;
+            font-size: 1.5em;
+            font-weight: 900;
+            background: #fff;
+            border: none;
+            border-radius: 0;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .compare-btn:hover {
+            background: #000;
+            color: #fff;
+            border: 3px solid #fff;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 40px;
+            margin-bottom: 80px;
+            display: none;
+        }
+
+        .person-card {
+            background: #111;
+            border: 2px solid #333;
+            border-radius: 0;
+            padding: 40px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .person-card:hover {
+            border-color: #fff;
+        }
+
+        .person-card.you {
+            border-color: #fff;
+            background: #1a1a1a;
+        }
+
+        .person-header {
+            margin-bottom: 30px;
+        }
+
+        .person-name {
+            font-size: 2em;
+            font-weight: 900;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .person-wealth {
+            font-size: 1.8em;
+            color: #999;
+            font-weight: 700;
+            font-family: 'Inter', monospace;
+        }
+
+        .printer-container {
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+            background: #000;
+            border: 2px solid #333;
+            margin: 30px 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .money-stack {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #fff;
+            transition: height 0.5s ease-out;
+            display: flex;
+            flex-direction: column-reverse;
+            overflow: hidden;
+        }
+
+        .bill-line {
+            width: 100%;
+            height: 8px;
+            background: #fff;
+            border-bottom: 2px solid #000;
+        }
+
+        .print-speed {
+            background: #000;
+            padding: 25px;
+            text-align: center;
+            border-top: 2px solid #fff;
+        }
+
+        .speed-value {
+            font-size: 2.5em;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 5px;
+            font-family: 'Inter', monospace;
+        }
+
+        .speed-label {
+            font-size: 0.9em;
+            opacity: 0.6;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .comparison-stats {
+            background: #000;
+            border: 2px solid #333;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: 900;
+            margin-bottom: 5px;
+            font-family: 'Inter', monospace;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            opacity: 0.6;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .facts-section {
+            background: #111;
+            border: 2px solid #333;
+            border-radius: 0;
+            padding: 60px;
+            margin-top: 80px;
+            display: none;
+        }
+
+        .facts-section h3 {
+            font-size: 3em;
+            margin-bottom: 50px;
+            text-align: center;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .facts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .fact-item {
+            padding: 30px;
+            background: #000;
+            border: 2px solid #333;
+            transition: all 0.3s;
+        }
+
+        .fact-item:hover {
+            border-color: #fff;
+        }
+
+        .fact-number {
+            font-size: 2.5em;
+            font-weight: 900;
+            margin-bottom: 15px;
+        }
+
+        .fact-text {
+            font-size: 1.1em;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 15px 30px;
+            background: #000;
+            border: 2px solid #fff;
+            border-radius: 0;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s;
+            z-index: 100;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .back-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3em;
+            }
+
+            .wealth-input {
+                font-size: 2em;
+                padding: 20px 20px 20px 60px;
+            }
+
+            .dollar-sign {
+                font-size: 2em;
+                left: 20px;
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .input-section {
+                padding: 40px 20px;
+            }
+
+            .facts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-btn">← Back</a>
+
+    <div class="container">
+        <header>
+            <h1>How Rich Are You?</h1>
+            <p class="subtitle">Watch how fast your money prints compared to billionaires</p>
+        </header>
+
+        <div class="input-section">
+            <div class="input-label">Enter Your Net Worth</div>
+
+            <div class="wealth-input-container">
+                <span class="dollar-sign">$</span>
+                <input type="number" class="wealth-input" id="userWealth" placeholder="50000" value="50000">
+            </div>
+
+            <button class="compare-btn" onclick="compare()">Compare</button>
+        </div>
+
+        <div class="comparison-grid" id="comparison-grid"></div>
+
+        <div class="facts-section" id="facts-section"></div>
+    </div>
+
+    <script>
+        const billionaires = [
+            { name: 'Elon Musk', wealth: 250000000000, perSecond: 7936 },
+            { name: 'Jeff Bezos', wealth: 165000000000, perSecond: 5238 },
+            { name: 'Bernard Arnault', wealth: 200000000000, perSecond: 6349 },
+            { name: 'Bill Gates', wealth: 135000000000, perSecond: 4285 },
+            { name: 'Warren Buffett', wealth: 120000000000, perSecond: 3805 },
+            { name: 'Mark Zuckerberg', wealth: 115000000000, perSecond: 3650 }
+        ];
+
+        function formatMoney(num) {
+            if (num >= 1000000000) {
+                return '$' + (num / 1000000000).toFixed(2) + 'B';
+            } else if (num >= 1000000) {
+                return '$' + (num / 1000000).toFixed(2) + 'M';
+            } else if (num >= 1000) {
+                return '$' + (num / 1000).toFixed(1) + 'K';
+            } else {
+                return '$' + num.toFixed(0);
+            }
+        }
+
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        function animatePrinter(container, speed, maxHeight) {
+            const stack = container.querySelector('.money-stack');
+            let currentHeight = 0;
+            const targetHeight = maxHeight;
+
+            // Create bill lines
+            for (let i = 0; i < 20; i++) {
+                const line = document.createElement('div');
+                line.className = 'bill-line';
+                stack.appendChild(line);
+            }
+
+            const interval = setInterval(() => {
+                currentHeight += speed / 10;
+                if (currentHeight >= targetHeight) {
+                    currentHeight = targetHeight;
+                    clearInterval(interval);
+                }
+                stack.style.height = currentHeight + '%';
+            }, 50);
+        }
+
+        function compare() {
+            const userWealth = parseFloat(document.getElementById('userWealth').value) || 0;
+
+            if (userWealth <= 0) {
+                alert('Please enter a valid amount!');
+                return;
+            }
+
+            const grid = document.getElementById('comparison-grid');
+            grid.innerHTML = '';
+            grid.style.display = 'grid';
+
+            // Calculate user's money per second (assume 1 year to earn it)
+            const userPerSecond = userWealth / (365 * 24 * 60 * 60);
+
+            // Add user card
+            const userCard = document.createElement('div');
+            userCard.className = 'person-card you';
+            userCard.innerHTML = `
+                <div class="person-header">
+                    <div class="person-name">YOU</div>
+                    <div class="person-wealth">${formatMoney(userWealth)}</div>
+                </div>
+                <div class="printer-container">
+                    <div class="money-stack"></div>
+                    <div class="print-speed">
+                        <div class="speed-value">$${userPerSecond.toFixed(2)}/sec</div>
+                        <div class="speed-label">Money Printing Speed</div>
+                    </div>
+                </div>
+                <div class="comparison-stats">
+                    <div class="stat-number">1×</div>
+                    <div class="stat-label">Your Baseline</div>
+                </div>
+            `;
+            grid.appendChild(userCard);
+
+            setTimeout(() => {
+                animatePrinter(userCard.querySelector('.printer-container'), 2, 10);
+            }, 100);
+
+            // Add billionaire cards
+            billionaires.forEach((person, index) => {
+                const card = document.createElement('div');
+                card.className = 'person-card';
+
+                const timesRicher = (person.wealth / userWealth);
+                const speedMultiplier = person.perSecond / userPerSecond;
+
+                let comparison;
+                if (timesRicher > 1000000) {
+                    comparison = (timesRicher / 1000000).toFixed(2) + 'M×';
+                } else if (timesRicher > 1000) {
+                    comparison = (timesRicher / 1000).toFixed(1) + 'K×';
+                } else {
+                    comparison = timesRicher.toFixed(0) + '×';
+                }
+
+                // Calculate printer height based on wealth
+                const printerHeight = Math.min(100, (timesRicher / 1000) * 10);
+
+                card.innerHTML = `
+                    <div class="person-header">
+                        <div class="person-name">${person.name}</div>
+                        <div class="person-wealth">${formatMoney(person.wealth)}</div>
+                    </div>
+                    <div class="printer-container">
+                        <div class="money-stack"></div>
+                        <div class="print-speed">
+                            <div class="speed-value">$${formatNumber(person.perSecond)}/sec</div>
+                            <div class="speed-label">Money Printing Speed</div>
+                        </div>
+                    </div>
+                    <div class="comparison-stats">
+                        <div class="stat-number">${comparison}</div>
+                        <div class="stat-label">Richer Than You</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+
+                setTimeout(() => {
+                    animatePrinter(card.querySelector('.printer-container'), 20, printerHeight);
+                }, 200 + index * 150);
+            });
+
+            showFacts(userWealth);
+        }
+
+        function showFacts(userWealth) {
+            const factsSection = document.getElementById('facts-section');
+            factsSection.style.display = 'block';
+
+            const elonWealth = 250000000000;
+            const bezosPerSecond = 5238;
+
+            factsSection.innerHTML = `
+                <h3>The Reality of Wealth</h3>
+                <div class="facts-grid">
+                    <div class="fact-item">
+                        <div class="fact-number">${formatNumber(Math.floor(elonWealth / userWealth))}</div>
+                        <div class="fact-text">Times you would need to save your entire net worth to match Elon Musk</div>
+                    </div>
+                    <div class="fact-item">
+                        <div class="fact-number">${formatNumber(Math.floor(userWealth / bezosPerSecond))}</div>
+                        <div class="fact-text">Seconds for Jeff Bezos to earn your entire net worth</div>
+                    </div>
+                    <div class="fact-item">
+                        <div class="fact-number">${formatNumber(Math.floor(elonWealth / 400000))}</div>
+                        <div class="fact-text">Average American homes Elon Musk could buy with his wealth</div>
+                    </div>
+                    <div class="fact-item">
+                        <div class="fact-number">${formatNumber(Math.floor(elonWealth / 1000 / 365))}</div>
+                        <div class="fact-text">Years Elon's wealth would last if he spent $1,000 every single day</div>
+                    </div>
+                    <div class="fact-item">
+                        <div class="fact-number">43%</div>
+                        <div class="fact-text">Of all global wealth is owned by just 1% of the population</div>
+                    </div>
+                    <div class="fact-item">
+                        <div class="fact-number">$2.15</div>
+                        <div class="fact-text">What 700 million people in extreme poverty live on per day</div>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                factsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 500);
+        }
+
+        document.getElementById('userWealth').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') compare();
+        });
+    </script>
+</body>
+</html>
