@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breathe</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <a href="index.html" class="back-button">← back</a>
+
+    <div class="project-page">
+        <h1>Take 60 seconds to breathe</h1>
+
+        <div class="breathe-container">
+            <div class="breathe-circle" id="breathe-circle">
+                <span id="breathe-text">Breathe in</span>
+            </div>
+            <div class="breathe-timer" id="timer">60</div>
+        </div>
+    </div>
+
+    <script>
+        const circle = document.getElementById('breathe-circle');
+        const text = document.getElementById('breathe-text');
+        const timer = document.getElementById('timer');
+
+        let timeLeft = 60;
+        let phase = 'inhale';
+
+        function breatheCycle() {
+            if (phase === 'inhale') {
+                circle.classList.remove('exhale');
+                circle.classList.add('inhale');
+                text.textContent = 'Breathe in';
+                phase = 'exhale';
+            } else {
+                circle.classList.remove('inhale');
+                circle.classList.add('exhale');
+                text.textContent = 'Breathe out';
+                phase = 'inhale';
+            }
+        }
+
+        // Start first breath
+        circle.classList.add('inhale');
+
+        // Alternate breathing every 4 seconds
+        setInterval(breatheCycle, 4000);
+
+        // Countdown timer
+        const countdown = setInterval(() => {
+            timeLeft--;
+            timer.textContent = timeLeft;
+
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                text.textContent = 'All done!';
+                circle.classList.remove('inhale', 'exhale');
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
