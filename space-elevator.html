@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Elevator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Patrick Hand', cursive;
+            background: linear-gradient(to bottom, #e8f4f8 0%, #b8d9e8 100%);
+            overflow: hidden;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            color: #333;
+            text-decoration: none;
+            font-size: 1.2rem;
+            z-index: 1000;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Qafizz logo style */
+        .logo {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            font-size: 1.5rem;
+            color: white;
+            z-index: 1001;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 400;
+            letter-spacing: 1px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .logo:hover {
+            opacity: 0.8;
+        }
+
+        /* Temperature display */
+        .temperature {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 1.3rem;
+            color: #333;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Altitude counter at bottom */
+        .altitude-counter {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .altitude-digit {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            width: 30px;
+            text-align: center;
+        }
+
+        .altitude-unit {
+            font-size: 1.5rem;
+            color: #666;
+        }
+
+        /* Elevator with stick figure */
+        .elevator {
+            position: fixed;
+            left: 30px;
+            bottom: 120px;
+            width: 100px;
+            height: 140px;
+            background: rgba(200, 220, 240, 0.8);
+            border: 3px solid #333;
+            border-radius: 10px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .elevator::before {
+            content: '';
+            position: absolute;
+            top: -100vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 100vh;
+            background: #999;
+            z-index: -1;
+        }
+
+        .stick-figure {
+            width: 60px;
+            height: 100px;
+        }
+
+        /* Fog overlay for cloud layer */
+        .fog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.5);
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .fog-overlay.active {
+            opacity: 1;
+        }
+
+        .cloud {
+            position: absolute;
+            z-index: 2;
+        }
+
+        /* End of journey message */
+        .end-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px 60px;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .end-message.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .end-message h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .end-message p {
+            font-size: 1.3rem;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .end-message button {
+            background: #4169E1;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: 'Patrick Hand', cursive;
+            box-shadow: 0 4px 15px rgba(65, 105, 225, 0.3);
+            transition: transform 0.2s ease;
+            margin: 0 10px;
+        }
+
+        .end-message button:hover {
+            transform: scale(1.05);
+            background: #1E90FF;
+        }
+
+        /* Scroll container */
+        .scroll-container {
+            height: 100vh;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+
+        .scroll-content {
+            height: 100000px;
+            position: relative;
+        }
+
+        /* Ground at bottom */
+        .ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(to bottom, #7fc97f 0%, #5a9a5a 50%, #4a7c4a 100%);
+            z-index: 1;
+        }
+
+        .ground::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(to bottom, #4a7c4a 0%, #3d5c3d 100%);
+        }
+
+        /* Objects */
+        .object {
+            position: absolute;
+            z-index: 2;
+        }
+
+        .object img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .label {
+            background: white;
+            padding: 8px 14px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            color: #333;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            white-space: nowrap;
+            margin-top: 10px;
+        }
+
+        /* Fact bubbles */
+        .fact-bubble {
+            position: absolute;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 20px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.15);
+            max-width: 300px;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #333;
+            z-index: 3;
+        }
+
+        @media (max-width: 768px) {
+            .elevator {
+                width: 80px;
+                height: 120px;
+            }
+
+            .altitude-digit {
+                font-size: 1.5rem;
+                width: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="logo">Qafizz</a>
+    <div class="temperature" id="temperature">21°C</div>
+
+    <!-- Fog overlay for cloud layer -->
+    <div class="fog-overlay" id="fogOverlay"></div>
+
+    <!-- End of journey message -->
+    <div class="end-message" id="endMessage">
+        <h1>🚀 Congratulations! 🌟</h1>
+        <p>You've reached 100,000 meters - the edge of space!</p>
+        <button onclick="location.reload()">Start Over</button>
+        <button onclick="window.location.href='index.html'">Back to Home</button>
+    </div>
+
+    <!-- Altitude counter -->
+    <div class="altitude-counter">
+        <span class="altitude-digit" id="digit1">0</span>
+        <span class="altitude-digit" id="digit2">0</span>
+        <span class="altitude-digit" id="digit3">0</span>
+        <span class="altitude-digit" id="digit4">0</span>
+        <span class="altitude-digit" id="digit5">0</span>
+        <span class="altitude-unit">m</span>
+    </div>
+
+    <!-- Elevator with stick figure -->
+    <div class="elevator">
+        <svg class="stick-figure" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg" id="stickFigure">
+            <circle cx="30" cy="20" r="12" fill="none" stroke="#333" stroke-width="3"/>
+            <line x1="30" y1="32" x2="30" y2="60" stroke="#333" stroke-width="3"/>
+            <line x1="30" y1="40" x2="15" y2="55" stroke="#333" stroke-width="3"/>
+            <line x1="30" y1="40" x2="45" y2="55" stroke="#333" stroke-width="3"/>
+            <line x1="30" y1="60" x2="15" y2="85" stroke="#333" stroke-width="3"/>
+            <line x1="30" y1="60" x2="45" y2="85" stroke="#333" stroke-width="3"/>
+        </svg>
+    </div>
+
+    <div class="scroll-container" id="scrollContainer">
+        <div class="scroll-content">
+            <!-- Ground -->
+            <div class="ground" style="top: 99700px;">
+                <!-- Multiple trees -->
+                <svg style="position: absolute; left: 10%; bottom: 100px; width: 80px; height: 100px;">
+                    <rect x="35" y="60" width="10" height="40" fill="#8B4513"/>
+                    <circle cx="40" cy="40" r="30" fill="#228B22"/>
+                </svg>
+                <svg style="position: absolute; left: 25%; bottom: 90px; width: 70px; height: 90px;">
+                    <rect x="30" y="55" width="10" height="35" fill="#654321"/>
+                    <circle cx="35" cy="38" r="28" fill="#2d5016"/>
+                </svg>
+                <svg style="position: absolute; right: 30%; bottom: 120px; width: 60px; height: 80px;">
+                    <rect x="25" y="50" width="10" height="30" fill="#8B4513"/>
+                    <circle cx="30" cy="35" r="25" fill="#2d5016"/>
+                </svg>
+                <svg style="position: absolute; right: 15%; bottom: 95px; width: 75px; height: 95px;">
+                    <rect x="32" y="58" width="11" height="37" fill="#8B4513"/>
+                    <circle cx="37" cy="40" r="29" fill="#228B22"/>
+                </svg>
+                <svg style="position: absolute; left: 50%; bottom: 105px; width: 65px; height: 85px;">
+                    <rect x="27" y="52" width="11" height="33" fill="#654321"/>
+                    <circle cx="32" cy="36" r="26" fill="#2d5016"/>
+                </svg>
+            </div>
+
+            <!-- Cloud layer (1000-4000m altitude = 96000-99000px) -->
+            <div class="cloud" style="top: 96200px; left: 10%;">
+                <svg width="120" height="60">
+                    <ellipse cx="30" cy="30" rx="25" ry="20" fill="white" opacity="0.8"/>
+                    <ellipse cx="60" cy="25" rx="30" ry="22" fill="white" opacity="0.8"/>
+                    <ellipse cx="90" cy="30" rx="25" ry="20" fill="white" opacity="0.8"/>
+                </svg>
+            </div>
+            <div class="cloud" style="top: 96800px; right: 15%;">
+                <svg width="140" height="70">
+                    <ellipse cx="35" cy="35" rx="30" ry="25" fill="white" opacity="0.9"/>
+                    <ellipse cx="70" cy="30" rx="35" ry="27" fill="white" opacity="0.9"/>
+                    <ellipse cx="105" cy="35" rx="30" ry="25" fill="white" opacity="0.9"/>
+                </svg>
+            </div>
+            <div class="cloud" style="top: 97200px; left: 35%;">
+                <svg width="100" height="50">
+                    <ellipse cx="25" cy="25" rx="22" ry="18" fill="white" opacity="0.85"/>
+                    <ellipse cx="50" cy="22" rx="25" ry="20" fill="white" opacity="0.85"/>
+                    <ellipse cx="75" cy="25" rx="22" ry="18" fill="white" opacity="0.85"/>
+                </svg>
+            </div>
+            <div class="cloud" style="top: 97600px; right: 30%;">
+                <svg width="130" height="65">
+                    <ellipse cx="32" cy="32" rx="28" ry="23" fill="white" opacity="0.8"/>
+                    <ellipse cx="65" cy="28" rx="32" ry="25" fill="white" opacity="0.8"/>
+                    <ellipse cx="98" cy="32" rx="28" ry="23" fill="white" opacity="0.8"/>
+                </svg>
+            </div>
+            <div class="cloud" style="top: 98100px; left: 18%;">
+                <svg width="110" height="55">
+                    <ellipse cx="27" cy="27" rx="24" ry="20" fill="white" opacity="0.9"/>
+                    <ellipse cx="55" cy="24" rx="28" ry="22" fill="white" opacity="0.9"/>
+                    <ellipse cx="83" cy="27" rx="24" ry="20" fill="white" opacity="0.9"/>
+                </svg>
+            </div>
+            <div class="cloud" style="top: 98500px; right: 20%;">
+                <svg width="125" height="62">
+                    <ellipse cx="31" cy="31" rx="27" ry="22" fill="white" opacity="0.85"/>
+                    <ellipse cx="62" cy="27" rx="31" ry="24" fill="white" opacity="0.85"/>
+                    <ellipse cx="93" cy="31" rx="27" ry="22" fill="white" opacity="0.85"/>
+                </svg>
+            </div>
+            <div class="cloud" style="top: 98900px; left: 50%;">
+                <svg width="115" height="58">
+                    <ellipse cx="28" cy="29" rx="25" ry="21" fill="white" opacity="0.8"/>
+                    <ellipse cx="57" cy="25" rx="29" ry="23" fill="white" opacity="0.8"/>
+                    <ellipse cx="86" cy="29" rx="25" ry="21" fill="white" opacity="0.8"/>
+                </svg>
+            </div>
+            <div class="cloud" style="top: 96500px; left: 60%;">
+                <svg width="105" height="52">
+                    <ellipse cx="26" cy="26" rx="23" ry="19" fill="white" opacity="0.9"/>
+                    <ellipse cx="52" cy="23" rx="27" ry="21" fill="white" opacity="0.9"/>
+                    <ellipse cx="78" cy="26" rx="23" ry="19" fill="white" opacity="0.9"/>
+                </svg>
+            </div>
+            <div class="cloud" style="top: 97800px; left: 5%;">
+                <svg width="135" height="67">
+                    <ellipse cx="33" cy="33" rx="29" ry="24" fill="white" opacity="0.85"/>
+                    <ellipse cx="67" cy="29" rx="33" ry="26" fill="white" opacity="0.85"/>
+                    <ellipse cx="101" cy="33" rx="29" ry="24" fill="white" opacity="0.85"/>
+                </svg>
+            </div>
+            <div class="cloud" style="top: 98300px; right: 10%;">
+                <svg width="120" height="60">
+                    <ellipse cx="30" cy="30" rx="26" ry="21" fill="white" opacity="0.8"/>
+                    <ellipse cx="60" cy="26" rx="30" ry="23" fill="white" opacity="0.8"/>
+                    <ellipse cx="90" cy="30" rx="26" ry="21" fill="white" opacity="0.8"/>
+                </svg>
+            </div>
+
+            <!-- Fun facts every 1000m - repositioned to avoid overlaps -->
+            <div class="fact-bubble" style="top: 99000px; right: 5%;">
+                <strong>1,000m:</strong> The typical cruising altitude for hot air balloons!
+            </div>
+
+            <div class="fact-bubble" style="top: 98200px; left: 5%;">
+                <strong>2,000m:</strong> You'd start feeling altitude sickness without acclimatization.
+            </div>
+
+            <div class="fact-bubble" style="top: 97000px; right: 8%;">
+                <strong>3,000m:</strong> Higher than most ski resorts. The air contains about 30% less oxygen.
+            </div>
+
+            <div class="fact-bubble" style="top: 96000px; left: 8%;">
+                <strong>4,000m:</strong> Altitude where water boils at just 86°C instead of 100°C.
+            </div>
+
+            <div class="fact-bubble" style="top: 95000px; right: 10%;">
+                <strong>5,000m:</strong> The typical altitude of Mount Kilimanjaro's summit.
+            </div>
+
+            <div class="fact-bubble" style="top: 94200px; left: 10%;">
+                <strong>6,000m:</strong> Above this, you're in the "death zone" without supplemental oxygen.
+            </div>
+
+            <div class="fact-bubble" style="top: 93500px; right: 5%;">
+                <strong>7,000m:</strong> Only a few hundred meters below Mount Everest's summit!
+            </div>
+
+            <div class="fact-bubble" style="top: 92500px; left: 5%;">
+                <strong>8,000m:</strong> Mount Everest (8,849m) - the highest point on Earth.
+            </div>
+
+            <div class="fact-bubble" style="top: 91000px; right: 8%;">
+                <strong>9,000m:</strong> Higher than any mountain peak. Most birds can't fly this high.
+            </div>
+
+            <div class="fact-bubble" style="top: 90500px; left: 8%;">
+                <strong>10,000m:</strong> Commercial airliners cruise around this altitude.
+            </div>
+
+            <div class="fact-bubble" style="top: 85500px; right: 5%;">
+                <strong>15,000m:</strong> The jet stream flows around here at speeds up to 400 km/h.
+            </div>
+
+            <div class="fact-bubble" style="top: 80500px; left: 5%;">
+                <strong>20,000m:</strong> The stratosphere. Ozone layer protects us from UV radiation.
+            </div>
+
+            <div class="fact-bubble" style="top: 75000px; right: 10%;">
+                <strong>25,000m:</strong> You'd need a pressurized suit. Your blood would boil without one!
+            </div>
+
+            <div class="fact-bubble" style="top: 70000px; left: 10%;">
+                <strong>30,000m:</strong> The SR-71 Blackbird spy plane flew at this altitude.
+            </div>
+
+            <div class="fact-bubble" style="top: 65000px; right: 8%;">
+                <strong>35,000m:</strong> Above 99% of Earth's atmosphere.
+            </div>
+
+            <div class="fact-bubble" style="top: 60000px; left: 5%;">
+                <strong>40,000m:</strong> Felix Baumgartner jumped from 39km for his record skydive.
+            </div>
+
+            <div class="fact-bubble" style="top: 50000px; right: 5%;">
+                <strong>50,000m:</strong> The mesosphere begins. Meteors burn up here!
+            </div>
+
+            <div class="fact-bubble" style="top: 40000px; left: 8%;">
+                <strong>60,000m:</strong> The edge of space is getting close...
+            </div>
+
+            <div class="fact-bubble" style="top: 30000px; right: 10%;">
+                <strong>70,000m:</strong> Nearly at the Kármán line (100km), the official edge of space.
+            </div>
+
+            <div class="fact-bubble" style="top: 20500px; left: 8%;">
+                <strong>80,000m:</strong> Astronauts earn their wings flying above 80km!
+            </div>
+
+            <div class="fact-bubble" style="top: 10500px; right: 8%;">
+                <strong>90,000m:</strong> You're officially in space. Welcome to the thermosphere!
+            </div>
+
+            <!-- Moon in deep space -->
+            <div class="object" style="top: 500px; right: 20%;">
+                <svg width="180" height="180" viewBox="0 0 180 180">
+                    <defs>
+                        <radialGradient id="moonGradient" cx="45%" cy="45%">
+                            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+                            <stop offset="60%" style="stop-color:#e8e8e8;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#d0d0d0;stop-opacity:1" />
+                        </radialGradient>
+                    </defs>
+                    <circle cx="90" cy="90" r="85" fill="url(#moonGradient)" stroke="#ccc" stroke-width="2"/>
+                    <!-- Large craters -->
+                    <circle cx="65" cy="70" r="18" fill="#c0c0c0" opacity="0.5"/>
+                    <circle cx="115" cy="85" r="22" fill="#b8b8b8" opacity="0.4"/>
+                    <circle cx="90" cy="120" r="15" fill="#c0c0c0" opacity="0.5"/>
+                    <!-- Medium craters -->
+                    <circle cx="75" cy="105" r="11" fill="#b8b8b8" opacity="0.4"/>
+                    <circle cx="120" cy="65" r="9" fill="#c0c0c0" opacity="0.4"/>
+                    <circle cx="55" cy="95" r="8" fill="#b8b8b8" opacity="0.5"/>
+                    <!-- Small craters -->
+                    <circle cx="105" cy="110" r="6" fill="#c0c0c0" opacity="0.4"/>
+                    <circle cx="80" cy="80" r="5" fill="#b8b8b8" opacity="0.4"/>
+                    <circle cx="110" cy="120" r="5" fill="#c0c0c0" opacity="0.3"/>
+                </svg>
+                <div class="label">The Moon</div>
+            </div>
+
+            <div class="fact-bubble" style="top: 700px; right: 5%;">
+                The Moon is about 384,400 km away from Earth. Our space elevator only goes to 100 km!
+            </div>
+
+            <!-- MORE SPACE OBJECTS AT HIGH ALTITUDE -->
+
+            <!-- Stars scattered throughout space -->
+            <div class="object" style="top: 3000px; left: 15%;">
+                <svg width="30" height="30">
+                    <circle cx="15" cy="15" r="3" fill="white"/>
+                    <circle cx="15" cy="15" r="1" fill="#FFD700"/>
+                </svg>
+            </div>
+            <div class="object" style="top: 5500px; right: 25%;">
+                <svg width="25" height="25">
+                    <circle cx="12" cy="12" r="2.5" fill="white"/>
+                </svg>
+            </div>
+            <div class="object" style="top: 8000px; left: 40%;">
+                <svg width="28" height="28">
+                    <circle cx="14" cy="14" r="3" fill="white"/>
+                    <circle cx="14" cy="14" r="1" fill="#87CEEB"/>
+                </svg>
+            </div>
+            <div class="object" style="top: 12000px; right: 35%;">
+                <svg width="26" height="26">
+                    <circle cx="13" cy="13" r="2.8" fill="white"/>
+                </svg>
+            </div>
+            <div class="object" style="top: 16000px; left: 60%;">
+                <svg width="24" height="24">
+                    <circle cx="12" cy="12" r="2.5" fill="white"/>
+                </svg>
+            </div>
+            <div class="object" style="top: 22000px; right: 18%;">
+                <svg width="27" height="27">
+                    <circle cx="13" cy="13" r="3" fill="white"/>
+                    <circle cx="13" cy="13" r="1" fill="#FFD700"/>
+                </svg>
+            </div>
+            <div class="object" style="top: 27000px; left: 28%;">
+                <svg width="25" height="25">
+                    <circle cx="12" cy="12" r="2.6" fill="white"/>
+                </svg>
+            </div>
+            <div class="object" style="top: 34000px; right: 42%;">
+                <svg width="29" height="29">
+                    <circle cx="14" cy="14" r="3.2" fill="white"/>
+                    <circle cx="14" cy="14" r="1" fill="#87CEEB"/>
+                </svg>
+            </div>
+            <div class="object" style="top: 38000px; left: 22%;">
+                <svg width="26" height="26">
+                    <circle cx="13" cy="13" r="2.7" fill="white"/>
+                </svg>
+            </div>
+            <div class="object" style="top: 44000px; right: 30%;">
+                <svg width="28" height="28">
+                    <circle cx="14" cy="14" r="3" fill="white"/>
+                </svg>
+            </div>
+
+            <!-- Asteroids -->
+            <div class="object" style="top: 6000px; left: 55%;">
+                <svg width="60" height="60">
+                    <circle cx="30" cy="30" r="18" fill="#696969" stroke="#333" stroke-width="2"/>
+                    <circle cx="22" cy="25" r="4" fill="#555"/>
+                    <circle cx="35" cy="32" r="3" fill="#555"/>
+                    <circle cx="28" cy="35" r="2.5" fill="#555"/>
+                </svg>
+                <div class="label">Asteroid</div>
+            </div>
+
+            <div class="object" style="top: 14000px; right: 22%;">
+                <svg width="50" height="50">
+                    <ellipse cx="25" cy="25" rx="16" ry="20" fill="#808080" stroke="#333" stroke-width="2"/>
+                    <circle cx="20" cy="22" r="3" fill="#666"/>
+                    <circle cx="28" cy="28" r="2.5" fill="#666"/>
+                </svg>
+                <div class="label">Asteroid</div>
+            </div>
+
+            <div class="object" style="top: 32000px; left: 48%;">
+                <svg width="55" height="55">
+                    <circle cx="27" cy="27" r="17" fill="#696969" stroke="#333" stroke-width="2"/>
+                    <circle cx="22" cy="23" r="3.5" fill="#555"/>
+                    <circle cx="30" cy="30" r="2.8" fill="#555"/>
+                    <circle cx="26" cy="32" r="2" fill="#555"/>
+                </svg>
+                <div class="label">Asteroid</div>
+            </div>
+
+            <!-- Comet -->
+            <div class="object" style="top: 4000px; left: 35%;">
+                <svg width="120" height="60">
+                    <circle cx="100" cy="30" r="12" fill="white" stroke="#87CEEB" stroke-width="2"/>
+                    <ellipse cx="50" cy="30" rx="40" ry="8" fill="rgba(135, 206, 235, 0.4)"/>
+                    <ellipse cx="30" cy="30" rx="25" ry="5" fill="rgba(135, 206, 235, 0.2)"/>
+                </svg>
+                <div class="label">Comet</div>
+            </div>
+
+            <!-- More Advanced Satellites -->
+            <div class="object" style="top: 11000px; left: 25%;">
+                <svg width="110" height="80">
+                    <rect x="45" y="35" width="20" height="15" fill="#C0C0C0" stroke="#333" stroke-width="2"/>
+                    <rect x="25" y="40" width="15" height="10" fill="#FFD700" stroke="#333" stroke-width="1.5"/>
+                    <rect x="70" y="40" width="15" height="10" fill="#FFD700" stroke="#333" stroke-width="1.5"/>
+                    <circle cx="55" cy="42" r="4" fill="#4169E1"/>
+                </svg>
+                <div class="label">Imaging Satellite</div>
+            </div>
+
+            <div class="object" style="top: 24000px; right: 38%;">
+                <svg width="100" height="75">
+                    <rect x="40" y="32" width="20" height="16" fill="#A9A9A9" stroke="#333" stroke-width="2"/>
+                    <rect x="20" y="37" width="16" height="11" fill="#4682B4" stroke="#333" stroke-width="1.5"/>
+                    <rect x="64" y="37" width="16" height="11" fill="#4682B4" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Navigation Sat</div>
+            </div>
+
+            <!-- Space Telescope -->
+            <div class="object" style="top: 17000px; right: 45%;">
+                <svg width="115" height="75">
+                    <rect x="42" y="32" width="28" height="18" fill="#C0C0C0" stroke="#333" stroke-width="2"/>
+                    <rect x="23" y="37" width="17" height="14" fill="#FFD700" stroke="#333" stroke-width="1.5"/>
+                    <rect x="75" y="37" width="17" height="14" fill="#FFD700" stroke="#333" stroke-width="1.5"/>
+                    <circle cx="56" cy="41" r="7" fill="#1E90FF" stroke="#333" stroke-width="2"/>
+                </svg>
+                <div class="label">Space Telescope</div>
+            </div>
+
+            <!-- Aurora at high altitude -->
+            <div class="object" style="top: 9000px; left: 10%;">
+                <svg width="200" height="120">
+                    <path d="M10 60 Q50 20 90 60 T170 60" stroke="#00FF88" stroke-width="3" fill="none" opacity="0.6"/>
+                    <path d="M15 70 Q55 30 95 70 T175 70" stroke="#88FFAA" stroke-width="2" fill="none" opacity="0.5"/>
+                    <path d="M20 80 Q60 40 100 80 T180 80" stroke="#AAFFCC" stroke-width="2" fill="none" opacity="0.4"/>
+                </svg>
+                <div class="label">Aurora</div>
+            </div>
+
+            <!-- Meteor -->
+            <div class="object" style="top: 48000px; right: 20%;">
+                <svg width="90" height="50">
+                    <circle cx="70" cy="25" r="10" fill="#FF4500" stroke="#FF6347" stroke-width="2"/>
+                    <ellipse cx="35" cy="25" rx="30" ry="8" fill="rgba(255, 69, 0, 0.4)"/>
+                    <ellipse cx="15" cy="25" rx="15" ry="5" fill="rgba(255, 140, 0, 0.3)"/>
+                </svg>
+                <div class="label">Meteor</div>
+            </div>
+
+            <!-- Solar Panel Array -->
+            <div class="object" style="top: 21000px; left: 42%;">
+                <svg width="130" height="60">
+                    <rect x="10" y="22" width="25" height="18" fill="#1E90FF" stroke="#333" stroke-width="1.5"/>
+                    <rect x="38" y="22" width="25" height="18" fill="#1E90FF" stroke="#333" stroke-width="1.5"/>
+                    <rect x="66" y="22" width="25" height="18" fill="#1E90FF" stroke="#333" stroke-width="1.5"/>
+                    <rect x="94" y="22" width="25" height="18" fill="#1E90FF" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Solar Array</div>
+            </div>
+
+            <!-- Party Balloons - scattered at top -->
+            <div class="object" style="top: 1200px; right: 15%;">
+                <svg width="80" height="100">
+                    <ellipse cx="20" cy="25" rx="15" ry="20" fill="#FF6B9D"/>
+                    <ellipse cx="40" cy="20" rx="15" ry="20" fill="#95E1D3"/>
+                    <ellipse cx="60" cy="25" rx="15" ry="20" fill="#FEC368"/>
+                    <line x1="20" y1="45" x2="40" y2="90" stroke="#333" stroke-width="1"/>
+                    <line x1="40" y1="40" x2="40" y2="90" stroke="#333" stroke-width="1"/>
+                    <line x1="60" y1="45" x2="40" y2="90" stroke="#333" stroke-width="1"/>
+                </svg>
+                <div class="label">Party Balloons</div>
+            </div>
+
+            <div class="fact-bubble" style="top: 1400px; left: 25%;">
+                If you ever wondered where your lost balloons went, at this height a typical party balloon will pop.
+            </div>
+
+            <!-- MANY Birds scattered at different heights -->
+            <div class="object" style="top: 99500px; left: 15%;">
+                <svg width="70" height="50" viewBox="0 0 70 50">
+                    <path d="M10 25 Q20 15 35 25 Q50 15 60 25" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    <ellipse cx="35" cy="27" rx="8" ry="5" fill="#333"/>
+                </svg>
+                <div class="label">Bird</div>
+            </div>
+
+            <div class="object" style="top: 99400px; right: 25%;">
+                <svg width="65" height="45" viewBox="0 0 65 45">
+                    <path d="M8 22 Q18 13 32 22 Q46 13 57 22" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    <ellipse cx="32" cy="24" rx="7" ry="4" fill="#000"/>
+                </svg>
+                <div class="label">Swallow</div>
+            </div>
+
+            <div class="object" style="top: 99300px; left: 55%;">
+                <svg width="60" height="42" viewBox="0 0 60 42">
+                    <path d="M50 21 Q40 12 30 21 Q20 12 10 21" stroke="#444" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    <ellipse cx="30" cy="23" rx="6" ry="4" fill="#444"/>
+                </svg>
+                <div class="label">Pigeon</div>
+            </div>
+
+            <div class="object" style="top: 99200px; left: 35%;">
+                <svg width="75" height="52" viewBox="0 0 75 52">
+                    <path d="M12 26 Q24 16 37 26 Q50 16 63 26" stroke="#222" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+                    <ellipse cx="37" cy="28" rx="9" ry="5" fill="#222"/>
+                </svg>
+                <div class="label">Crow</div>
+            </div>
+
+            <div class="object" style="top: 99100px; right: 40%;">
+                <svg width="70" height="48" viewBox="0 0 70 48">
+                    <path d="M60 24 Q50 14 35 24 Q20 14 10 24" stroke="#DC143C" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    <ellipse cx="35" cy="26" rx="8" ry="5" fill="#DC143C"/>
+                </svg>
+                <div class="label">Cardinal</div>
+            </div>
+
+            <div class="object" style="top: 98000px; left: 20%;">
+                <svg width="85" height="60" viewBox="0 0 85 60">
+                    <path d="M10 30 Q25 18 42 30 Q59 18 75 30" stroke="#654321" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    <path d="M42 30 L42 42" stroke="#654321" stroke-width="2.5"/>
+                    <ellipse cx="42" cy="32" rx="11" ry="7" fill="#8B4513"/>
+                </svg>
+                <div class="label">Hawk</div>
+            </div>
+
+            <div class="object" style="top: 97500px; right: 30%;">
+                <svg width="90" height="65" viewBox="0 0 90 65">
+                    <path d="M12 32 Q28 20 45 32 Q62 20 78 32" stroke="#4a3728" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+                    <path d="M45 32 L45 45" stroke="#4a3728" stroke-width="2.8"/>
+                    <ellipse cx="45" cy="34" rx="12" ry="8" fill="#654321"/>
+                    <circle cx="43" cy="32" r="2" fill="#FFD700"/>
+                </svg>
+                <div class="label">Eagle</div>
+            </div>
+
+            <div class="object" style="top: 97000px; left: 45%;">
+                <svg width="80" height="58" viewBox="0 0 80 58">
+                    <path d="M70 29 Q55 17 40 29 Q25 17 10 29" stroke="#333" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    <path d="M40 29 L40 40" stroke="#333" stroke-width="2.5"/>
+                    <ellipse cx="40" cy="31" rx="10" ry="6" fill="#444"/>
+                </svg>
+                <div class="label">Vulture</div>
+            </div>
+
+            <div class="object" style="top: 95000px; left: 25%;">
+                <svg width="85" height="58" viewBox="0 0 85 58">
+                    <path d="M10 29 Q26 18 42 29 Q58 18 75 29" stroke="#666" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+                    <ellipse cx="42" cy="31" rx="10" ry="6" fill="#777"/>
+                </svg>
+                <div class="label">Bar-headed Goose</div>
+            </div>
+
+            <div class="object" style="top: 94500px; right: 35%;">
+                <svg width="80" height="56" viewBox="0 0 80 56">
+                    <path d="M10 28 Q24 17 40 28 Q56 17 70 28" stroke="#f0f0f0" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    <ellipse cx="40" cy="30" rx="11" ry="7" fill="white" stroke="#ddd" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Whooper Swan</div>
+            </div>
+
+            <div class="object" style="top: 96000px; left: 60%;">
+                <svg width="65" height="46" viewBox="0 0 65 46">
+                    <path d="M55 23 Q43 14 32 23 Q21 14 10 23" stroke="#555" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    <ellipse cx="32" cy="25" rx="7" ry="4" fill="#666"/>
+                </svg>
+                <div class="label">Common Crane</div>
+            </div>
+
+            <div class="object" style="top: 93000px; left: 50%;">
+                <svg width="75" height="58" viewBox="0 0 75 58">
+                    <path d="M10 29 Q23 18 37 29 Q51 18 65 29" stroke="#888" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+                    <path d="M37 29 L37 42" stroke="#888" stroke-width="2"/>
+                    <ellipse cx="37" cy="31" rx="9" ry="6" fill="#999"/>
+                </svg>
+                <div class="label">Stork</div>
+            </div>
+
+            <!-- Clouds -->
+            <div class="object" style="top: 92000px; left: 40%;">
+                <svg width="150" height="80" viewBox="0 0 150 80">
+                    <ellipse cx="40" cy="45" rx="30" ry="22" fill="white" opacity="0.9"/>
+                    <ellipse cx="75" cy="40" rx="35" ry="25" fill="white" opacity="0.95"/>
+                    <ellipse cx="110" cy="45" rx="28" ry="20" fill="white" opacity="0.9"/>
+                </svg>
+                <div class="label">Clouds</div>
+            </div>
+
+            <!-- Mount Everest -->
+            <div class="object" style="top: 85000px; left: 50%; transform: translateX(-50%);">
+                <svg width="350" height="280" viewBox="0 0 350 280">
+                    <defs>
+                        <linearGradient id="mountainGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#f5f5f5;stop-opacity:1" />
+                            <stop offset="30%" style="stop-color:#d0d0d0;stop-opacity:1" />
+                            <stop offset="70%" style="stop-color:#8B8B8B;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#696969;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M30 250 L90 140 L175 40 L260 140 L320 250 Z" fill="url(#mountainGrad)" stroke="#555" stroke-width="2"/>
+                    <!-- Snow cap -->
+                    <path d="M150 50 L175 40 L200 50 L185 65 L175 60 L165 65 Z" fill="white" opacity="0.95"/>
+                    <path d="M165 65 L175 60 L185 65 L185 85 L165 85 Z" fill="#e8e8e8"/>
+                    <!-- Rock details -->
+                    <path d="M120 130 L140 110 L160 130" fill="none" stroke="#666" stroke-width="1.5"/>
+                    <path d="M190 130 L210 110 L230 130" fill="none" stroke="#666" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Mount Everest Peak</div>
+            </div>
+
+            <div class="fact-bubble" style="top: 83000px; left: 55%;">
+                Above this altitude is known as the 'death zone', because there isn't enough oxygen for human life.
+            </div>
+
+            <!-- Small Plane -->
+            <div class="object" style="top: 98000px; left: 70%;">
+                <svg width="110" height="55" viewBox="0 0 110 55">
+                    <ellipse cx="55" cy="27" rx="42" ry="11" fill="#FFD700" stroke="#333" stroke-width="2"/>
+                    <ellipse cx="55" cy="27" rx="50" ry="6" fill="#FFD700" stroke="#333" stroke-width="2"/>
+                    <path d="M92 27 L103 20 L103 34 Z" fill="#FFD700" stroke="#333" stroke-width="2"/>
+                    <circle cx="43" cy="27" r="5" fill="#87CEEB" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Cessna</div>
+            </div>
+
+            <!-- Helicopter -->
+            <div class="object" style="top: 96500px; right: 18%;">
+                <svg width="110" height="75" viewBox="0 0 110 75">
+                    <rect x="35" y="15" width="40" height="4" fill="#333"/>
+                    <rect x="53" y="19" width="4" height="18" fill="#333"/>
+                    <ellipse cx="55" cy="45" rx="30" ry="14" fill="#FF4500" stroke="#333" stroke-width="2"/>
+                    <circle cx="48" cy="45" r="7" fill="#87CEEB" stroke="#333" stroke-width="1.5"/>
+                    <rect x="82" y="47" width="15" height="3" fill="#FF4500" stroke="#333" stroke-width="1"/>
+                </svg>
+                <div class="label">Helicopter</div>
+            </div>
+
+            <!-- Commercial Airplane -->
+            <div class="object" style="top: 90000px; right: 20%;">
+                <svg width="140" height="70" viewBox="0 0 140 70">
+                    <ellipse cx="70" cy="35" rx="52" ry="15" fill="white" stroke="#333" stroke-width="2.5"/>
+                    <ellipse cx="70" cy="35" rx="67" ry="9" fill="white" stroke="#333" stroke-width="2.5"/>
+                    <path d="M122 35 L135 27 L135 43 Z" fill="white" stroke="#333" stroke-width="2.5"/>
+                    <circle cx="53" cy="35" r="7" fill="#87CEEB" stroke="#333" stroke-width="1.5"/>
+                    <circle cx="70" cy="35" r="7" fill="#87CEEB" stroke="#333" stroke-width="1.5"/>
+                    <circle cx="87" cy="35" r="7" fill="#87CEEB" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Commercial Airplane</div>
+            </div>
+
+            <!-- Another plane -->
+            <div class="object" style="top: 88000px; left: 30%;">
+                <svg width="130" height="65" viewBox="0 0 130 65">
+                    <ellipse cx="65" cy="32" rx="48" ry="13" fill="#1E90FF" stroke="#333" stroke-width="2.5"/>
+                    <ellipse cx="65" cy="32" rx="62" ry="8" fill="#1E90FF" stroke="#333" stroke-width="2.5"/>
+                    <path d="M5 32 L18 24 L18 40 Z" fill="#1E90FF" stroke="#333" stroke-width="2.5"/>
+                    <circle cx="50" cy="32" r="6" fill="#87CEEB" stroke="#333" stroke-width="1.5"/>
+                    <circle cx="65" cy="32" r="6" fill="#87CEEB" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Airliner</div>
+            </div>
+
+            <!-- Jet -->
+            <div class="object" style="top: 92000px; left: 65%;">
+                <svg width="125" height="62" viewBox="0 0 125 62">
+                    <ellipse cx="62" cy="31" rx="46" ry="12" fill="#C0C0C0" stroke="#333" stroke-width="2"/>
+                    <ellipse cx="62" cy="31" rx="58" ry="7" fill="#C0C0C0" stroke="#333" stroke-width="2"/>
+                    <path d="M105 31 L118 23 L118 39 Z" fill="#C0C0C0" stroke="#333" stroke-width="2"/>
+                    <circle cx="52" cy="31" r="5" fill="#4682B4" stroke="#333" stroke-width="1"/>
+                </svg>
+                <div class="label">Private Jet</div>
+            </div>
+
+            <!-- Drone -->
+            <div class="object" style="top: 99000px; left: 80%;">
+                <svg width="70" height="55" viewBox="0 0 70 55">
+                    <rect x="28" y="22" width="14" height="10" fill="#333"/>
+                    <circle cx="20" cy="18" r="8" fill="#666" stroke="#333" stroke-width="1.5"/>
+                    <circle cx="50" cy="18" r="8" fill="#666" stroke="#333" stroke-width="1.5"/>
+                    <circle cx="20" cy="38" r="8" fill="#666" stroke="#333" stroke-width="1.5"/>
+                    <circle cx="50" cy="38" r="8" fill="#666" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Drone</div>
+            </div>
+
+            <!-- Blimp -->
+            <div class="object" style="top: 97800px; right: 45%;">
+                <svg width="120" height="65" viewBox="0 0 120 65">
+                    <ellipse cx="60" cy="28" rx="52" ry="20" fill="#FF6347" stroke="#333" stroke-width="2.5"/>
+                    <rect x="50" y="48" width="20" height="12" fill="#8B4513" stroke="#333" stroke-width="2"/>
+                    <line x1="50" y1="48" x2="30" y2="42" stroke="#333" stroke-width="1.5"/>
+                    <line x1="70" y1="48" x2="90" y2="42" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Blimp</div>
+            </div>
+
+            <!-- Parachutist -->
+            <div class="object" style="top: 94000px; left: 38%;">
+                <svg width="80" height="95" viewBox="0 0 80 95">
+                    <path d="M10 22 Q40 8 70 22" stroke="#FF1493" stroke-width="4" fill="#FF69B4" opacity="0.7"/>
+                    <line x1="15" y1="22" x2="35" y2="55" stroke="#333" stroke-width="2"/>
+                    <line x1="65" y1="22" x2="45" y2="55" stroke="#333" stroke-width="2"/>
+                    <circle cx="40" cy="62" r="7" fill="#FFE4B5" stroke="#333" stroke-width="2"/>
+                    <line x1="40" y1="69" x2="40" y2="85" stroke="#333" stroke-width="2.5"/>
+                    <line x1="40" y1="75" x2="35" y2="85" stroke="#333" stroke-width="2"/>
+                    <line x1="40" y1="75" x2="45" y2="85" stroke="#333" stroke-width="2"/>
+                </svg>
+                <div class="label">Skydiver</div>
+            </div>
+
+            <!-- Space Station -->
+            <div class="object" style="top: 20000px; left: 45%;">
+                <svg width="160" height="90" viewBox="0 0 160 90">
+                    <rect x="25" y="38" width="35" height="28" fill="#4169E1" stroke="#333" stroke-width="2.5"/>
+                    <rect x="100" y="38" width="35" height="28" fill="#4169E1" stroke="#333" stroke-width="2.5"/>
+                    <rect x="65" y="43" width="45" height="18" fill="white" stroke="#333" stroke-width="2.5"/>
+                    <circle cx="87" cy="52" r="7" fill="#FFD700" stroke="#333" stroke-width="1.5"/>
+                    <!-- Solar panels -->
+                    <rect x="5" y="35" width="15" height="34" fill="#1E90FF" stroke="#333" stroke-width="1.5"/>
+                    <rect x="140" y="35" width="15" height="34" fill="#1E90FF" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">ISS</div>
+            </div>
+
+            <!-- Satellite -->
+            <div class="object" style="top: 15000px; right: 25%;">
+                <svg width="110" height="75" viewBox="0 0 110 75">
+                    <rect x="43" y="32" width="24" height="18" fill="#C0C0C0" stroke="#333" stroke-width="2.5"/>
+                    <rect x="20" y="38" width="18" height="12" fill="#4169E1" stroke="#333" stroke-width="2"/>
+                    <rect x="72" y="38" width="18" height="12" fill="#4169E1" stroke="#333" stroke-width="2"/>
+                    <circle cx="55" cy="41" r="5" fill="#FFD700"/>
+                </svg>
+                <div class="label">Satellite</div>
+            </div>
+
+            <!-- Rocket -->
+            <div class="object" style="top: 10000px; left: 55%;">
+                <svg width="100" height="115" viewBox="0 0 100 115">
+                    <path d="M50 15 L60 38 L60 85 L50 85 L40 85 L40 38 Z" fill="#FF4500" stroke="#333" stroke-width="2.5"/>
+                    <!-- Nose cone -->
+                    <path d="M40 38 L50 15 L60 38 Z" fill="#DC143C" stroke="#333" stroke-width="2.5"/>
+                    <!-- Fins -->
+                    <path d="M40 38 L28 55 L40 55 Z" fill="#FF6347" stroke="#333" stroke-width="2"/>
+                    <path d="M60 38 L72 55 L60 55 Z" fill="#FF6347" stroke="#333" stroke-width="2"/>
+                    <!-- Window -->
+                    <circle cx="50" cy="60" r="6" fill="#87CEEB" stroke="#333" stroke-width="2"/>
+                    <!-- Flame -->
+                    <path d="M43 85 L43 100 L50 95 L57 100 L57 85" fill="#FFA500" opacity="0.7"/>
+                </svg>
+                <div class="label">Rocket</div>
+            </div>
+
+            <!-- MORE HIGH ALTITUDE AIRCRAFT AND SPACE OBJECTS -->
+
+            <!-- More Commercial Jets around 10-12km -->
+            <div class="object" style="top: 89000px; right: 35%;">
+                <svg width="135" height="68">
+                    <ellipse cx="67" cy="34" rx="48" ry="13" fill="#E0E0E0" stroke="#333" stroke-width="2"/>
+                    <ellipse cx="67" cy="34" rx="62" ry="8" fill="#E0E0E0" stroke="#333" stroke-width="2"/>
+                    <path d="M112 34 L125 26 L125 42 Z" fill="#E0E0E0" stroke="#333" stroke-width="2"/>
+                    <circle cx="52" cy="34" r="6" fill="#87CEEB" stroke="#333" stroke-width="1.5"/>
+                    <circle cx="67" cy="34" r="6" fill="#87CEEB" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Boeing 777</div>
+            </div>
+
+            <div class="object" style="top: 87500px; left: 45%;">
+                <svg width="125" height="62">
+                    <ellipse cx="62" cy="31" rx="44" ry="12" fill="#1E90FF" stroke="#333" stroke-width="2"/>
+                    <ellipse cx="62" cy="31" rx="58" ry="7" fill="#1E90FF" stroke="#333" stroke-width="2"/>
+                    <path d="M105 31 L118 24 L118 38 Z" fill="#1E90FF" stroke="#333" stroke-width="2"/>
+                    <circle cx="50" cy="31" r="5" fill="#87CEEB" stroke="#333" stroke-width="1"/>
+                </svg>
+                <div class="label">Airbus A380</div>
+            </div>
+
+            <!-- Fighter Jets at 15-20km -->
+            <div class="object" style="top: 82000px; left: 25%;">
+                <svg width="110" height="55">
+                    <path d="M10 27 L55 22 L95 27 L55 32 Z" fill="#696969" stroke="#333" stroke-width="2"/>
+                    <path d="M80 27 L95 20 L95 34 Z" fill="#696969" stroke="#333" stroke-width="2"/>
+                    <circle cx="40" cy="27" r="4" fill="#FFD700"/>
+                </svg>
+                <div class="label">F-16 Fighter Jet</div>
+            </div>
+
+            <div class="object" style="top: 78000px; right: 28%;">
+                <svg width="115" height="58">
+                    <path d="M10 29 L60 24 L100 29 L60 34 Z" fill="#4B0082" stroke="#333" stroke-width="2"/>
+                    <path d="M85 29 L100 22 L100 36 Z" fill="#4B0082" stroke="#333" stroke-width="2"/>
+                    <circle cx="45" cy="29" r="4" fill="#FF4500"/>
+                </svg>
+                <div class="label">F-22 Raptor</div>
+            </div>
+
+            <!-- SR-71 Blackbird at 25-30km -->
+            <div class="object" style="top: 72000px; right: 40%;">
+                <svg width="140" height="65">
+                    <path d="M10 32 L70 27 L120 32 L70 37 Z" fill="#1a1a1a" stroke="#333" stroke-width="2"/>
+                    <path d="M105 32 L120 25 L120 39 Z" fill="#1a1a1a" stroke="#333" stroke-width="2"/>
+                    <circle cx="55" cy="32" r="5" fill="#FFD700"/>
+                </svg>
+                <div class="label">SR-71 Blackbird</div>
+            </div>
+
+            <!-- U-2 Spy Plane at 21km -->
+            <div class="object" style="top: 79000px; left: 55%;">
+                <svg width="130" height="60">
+                    <ellipse cx="65" cy="30" rx="50" ry="10" fill="#2F4F4F" stroke="#333" stroke-width="2"/>
+                    <ellipse cx="65" cy="30" rx="70" ry="5" fill="#2F4F4F" stroke="#333" stroke-width="2"/>
+                    <path d="M110 30 L125 23 L125 37 Z" fill="#2F4F4F" stroke="#333" stroke-width="2"/>
+                </svg>
+                <div class="label">U-2 Spy Plane</div>
+            </div>
+
+            <!-- Weather Balloons at 20-35km -->
+            <div class="object" style="top: 76000px; left: 35%;">
+                <svg width="70" height="90">
+                    <circle cx="35" cy="30" r="28" fill="white" stroke="#333" stroke-width="2" opacity="0.7"/>
+                    <line x1="35" y1="58" x2="35" y2="75" stroke="#666" stroke-width="1.5"/>
+                    <rect x="25" y="75" width="20" height="12" fill="#8B4513" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Weather Balloon</div>
+            </div>
+
+            <div class="object" style="top: 68000px; right: 20%;">
+                <svg width="65" height="85">
+                    <circle cx="32" cy="28" r="26" fill="white" stroke="#333" stroke-width="2" opacity="0.6"/>
+                    <line x1="32" y1="54" x2="32" y2="70" stroke="#666" stroke-width="1.5"/>
+                    <rect x="23" y="70" width="18" height="11" fill="#8B4513" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Weather Balloon</div>
+            </div>
+
+            <!-- X-15 Rocket Plane at 50km -->
+            <div class="object" style="top: 52000px; left: 48%;">
+                <svg width="130" height="60">
+                    <path d="M10 30 L70 25 L110 30 L70 35 Z" fill="#000" stroke="#FFD700" stroke-width="2"/>
+                    <path d="M95 30 L110 23 L110 37 Z" fill="#000" stroke="#FFD700" stroke-width="2"/>
+                    <circle cx="50" cy="30" r="4" fill="#FF4500"/>
+                </svg>
+                <div class="label">X-15 Rocket Plane</div>
+            </div>
+
+            <!-- High Altitude Research Balloon at 38km -->
+            <div class="object" style="top: 62000px; left: 20%;">
+                <svg width="75" height="95">
+                    <circle cx="37" cy="32" r="30" fill="#FFE4E1" stroke="#333" stroke-width="2" opacity="0.8"/>
+                    <line x1="37" y1="62" x2="37" y2="80" stroke="#666" stroke-width="2"/>
+                    <rect x="27" y="80" width="20" height="13" fill="#4169E1" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Research Balloon</div>
+            </div>
+
+            <!-- More Satellites at various altitudes -->
+            <div class="object" style="top: 55000px; right: 30%;">
+                <svg width="95" height="65">
+                    <rect x="37" y="27" width="21" height="16" fill="#C0C0C0" stroke="#333" stroke-width="2"/>
+                    <rect x="18" y="33" width="16" height="11" fill="#4169E1" stroke="#333" stroke-width="1.5"/>
+                    <rect x="61" y="33" width="16" height="11" fill="#4169E1" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">GPS Satellite</div>
+            </div>
+
+            <div class="object" style="top: 45000px; left: 38%;">
+                <svg width="90" height="60">
+                    <rect x="35" y="25" width="20" height="15" fill="#808080" stroke="#333" stroke-width="2"/>
+                    <rect x="17" y="30" width="14" height="10" fill="#1E90FF" stroke="#333" stroke-width="1.5"/>
+                    <rect x="59" y="30" width="14" height="10" fill="#1E90FF" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Weather Satellite</div>
+            </div>
+
+            <div class="object" style="top: 35000px; right: 35%;">
+                <svg width="100" height="70">
+                    <rect x="40" y="30" width="20" height="15" fill="#A9A9A9" stroke="#333" stroke-width="2"/>
+                    <rect x="20" y="35" width="15" height="10" fill="#4682B4" stroke="#333" stroke-width="1.5"/>
+                    <rect x="65" y="35" width="15" height="10" fill="#4682B4" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Comm Satellite</div>
+            </div>
+
+            <div class="object" style="top: 25000px; left: 30%;">
+                <svg width="105" height="75">
+                    <rect x="42" y="32" width="21" height="16" fill="#696969" stroke="#333" stroke-width="2"/>
+                    <rect x="22" y="37" width="16" height="11" fill="#4169E1" stroke="#333" stroke-width="1.5"/>
+                    <rect x="67" y="37" width="16" height="11" fill="#4169E1" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Spy Satellite</div>
+            </div>
+
+            <!-- Hubble Space Telescope at 67km -->
+            <div class="object" style="top: 33000px; left: 50%;">
+                <svg width="120" height="80">
+                    <rect x="45" y="35" width="30" height="20" fill="#C0C0C0" stroke="#333" stroke-width="2"/>
+                    <rect x="25" y="40" width="18" height="15" fill="#FFD700" stroke="#333" stroke-width="1.5"/>
+                    <rect x="77" y="40" width="18" height="15" fill="#FFD700" stroke="#333" stroke-width="1.5"/>
+                    <circle cx="60" cy="45" r="8" fill="#4169E1" stroke="#333" stroke-width="2"/>
+                </svg>
+                <div class="label">Hubble Telescope</div>
+            </div>
+
+            <!-- More Space Stations -->
+            <div class="object" style="top: 18000px; right: 28%;">
+                <svg width="145" height="75">
+                    <rect x="18" y="32" width="28" height="23" fill="#4682B4" stroke="#333" stroke-width="2"/>
+                    <rect x="98" y="32" width="28" height="23" fill="#4682B4" stroke="#333" stroke-width="2"/>
+                    <rect x="52" y="37" width="38" height="14" fill="white" stroke="#333" stroke-width="2"/>
+                    <circle cx="71" cy="44" r="5" fill="#FFD700" stroke="#333" stroke-width="1"/>
+                </svg>
+                <div class="label">Tiangong Station</div>
+            </div>
+
+            <!-- Space Debris at various altitudes -->
+            <div class="object" style="top: 42000px; right: 18%;">
+                <svg width="50" height="50">
+                    <rect x="15" y="15" width="20" height="20" fill="#666" stroke="#333" stroke-width="1.5" transform="rotate(25 25 25)"/>
+                </svg>
+                <div class="label">Space Debris</div>
+            </div>
+
+            <div class="object" style="top: 28000px; right: 15%;">
+                <svg width="45" height="45">
+                    <circle cx="22" cy="22" r="12" fill="#555" stroke="#333" stroke-width="1.5"/>
+                </svg>
+                <div class="label">Space Junk</div>
+            </div>
+
+            <!-- More Rockets -->
+            <div class="object" style="top: 12000px; right: 32%;">
+                <svg width="75" height="95">
+                    <path d="M37 8 L46 28 L46 68 L37 68 L28 68 L28 28 Z" fill="#4169E1" stroke="#333" stroke-width="2"/>
+                    <path d="M28 28 L18 42 L28 42 Z" fill="#1E90FF" stroke="#333" stroke-width="1.5"/>
+                    <path d="M46 28 L56 42 L46 42 Z" fill="#1E90FF" stroke="#333" stroke-width="1.5"/>
+                    <circle cx="37" cy="48" r="4" fill="#FFD700"/>
+                </svg>
+                <div class="label">SpaceX Falcon</div>
+            </div>
+
+            <div class="object" style="top: 8000px; left: 25%;">
+                <svg width="85" height="105">
+                    <path d="M42 12 L52 32 L52 75 L42 75 L32 75 L32 32 Z" fill="#DC143C" stroke="#333" stroke-width="2"/>
+                    <path d="M32 32 L22 48 L32 48 Z" fill="#FF6347" stroke="#333" stroke-width="1.5"/>
+                    <path d="M52 32 L62 48 L52 48 Z" fill="#FF6347" stroke="#333" stroke-width="1.5"/>
+                    <circle cx="42" cy="55" r="5" fill="#87CEEB"/>
+                </svg>
+                <div class="label">Atlas V Rocket</div>
+            </div>
+
+            <!-- More high-altitude planes -->
+            <div class="object" style="top: 86000px; right: 15%;">
+                <svg width="122" height="60">
+                    <ellipse cx="61" cy="30" rx="43" ry="11" fill="#FF8C00" stroke="#333" stroke-width="2"/>
+                    <ellipse cx="61" cy="30" rx="56" ry="7" fill="#FF8C00" stroke="#333" stroke-width="2"/>
+                    <path d="M104 30 L117 23 L117 37 Z" fill="#FF8C00" stroke="#333" stroke-width="2"/>
+                    <circle cx="48" cy="30" r="5" fill="#87CEEB" stroke="#333" stroke-width="1"/>
+                </svg>
+                <div class="label">Cargo Plane</div>
+            </div>
+
+            <div class="object" style="top: 84500px; left: 60%;">
+                <svg width="118" height="58">
+                    <ellipse cx="59" cy="29" rx="41" ry="10" fill="#32CD32" stroke="#333" stroke-width="2"/>
+                    <ellipse cx="59" cy="29" rx="54" ry="6" fill="#32CD32" stroke="#333" stroke-width="2"/>
+                    <path d="M100 29 L113 22 L113 36 Z" fill="#32CD32" stroke="#333" stroke-width="2"/>
+                    <circle cx="47" cy="29" r="5" fill="#87CEEB" stroke="#333" stroke-width="1"/>
+                </svg>
+                <div class="label">Regional Jet</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const scrollContainer = document.getElementById('scrollContainer');
+        const stickFigure = document.getElementById('stickFigure');
+        const temperature = document.getElementById('temperature');
+        const fogOverlay = document.getElementById('fogOverlay');
+        const endMessage = document.getElementById('endMessage');
+
+        function updateAltitude(meters) {
+            const digits = String(Math.floor(meters)).padStart(5, '0');
+            document.getElementById('digit1').textContent = digits[0];
+            document.getElementById('digit2').textContent = digits[1];
+            document.getElementById('digit3').textContent = digits[2];
+            document.getElementById('digit4').textContent = digits[3];
+            document.getElementById('digit5').textContent = digits[4];
+        }
+
+        function updateTemperature(altitude) {
+            // Temperature decreases by ~6.5°C per 1000m
+            const temp = 21 - (altitude / 1000) * 6.5;
+            temperature.textContent = Math.round(temp) + '°C';
+        }
+
+        scrollContainer.addEventListener('scroll', function() {
+            const scrollTop = scrollContainer.scrollTop;
+            const scrollHeight = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+            const scrollPercent = scrollTop / scrollHeight;
+
+            // Calculate altitude (0m at ground/top, 100,000m at space/bottom)
+            const altitude = (1 - scrollPercent) * 100000; // Up to 100km
+
+            updateAltitude(altitude);
+            updateTemperature(altitude);
+
+            // Activate fog overlay in cloud layer (1000-4000m)
+            if (altitude >= 1000 && altitude <= 4000) {
+                fogOverlay.classList.add('active');
+            } else {
+                fogOverlay.classList.remove('active');
+            }
+
+            // Show end message at 100km (99,000m+)
+            if (altitude >= 99000) {
+                endMessage.classList.add('active');
+            } else {
+                endMessage.classList.remove('active');
+            }
+
+            // Change background based on altitude
+            if (altitude < 2000) {
+                document.body.style.background = 'linear-gradient(to bottom, #e8f4f8 0%, #b8d9e8 100%)';
+                document.body.style.backgroundSize = 'cover';
+            } else if (altitude < 8000) {
+                document.body.style.background = 'linear-gradient(to bottom, #b8d9e8 0%, #7ab8d4 100%)';
+                document.body.style.backgroundSize = 'cover';
+            } else if (altitude < 15000) {
+                document.body.style.background = 'linear-gradient(to bottom, #7ab8d4 0%, #4a90c8 100%)';
+                document.body.style.backgroundSize = 'cover';
+            } else if (altitude < 30000) {
+                document.body.style.background = 'linear-gradient(to bottom, #4a90c8 0%, #2c5f8d 100%)';
+                document.body.style.backgroundSize = 'cover';
+            } else if (altitude < 50000) {
+                document.body.style.background = 'linear-gradient(to bottom, #2c5f8d 0%, #1a1a3e 100%)';
+                document.body.style.backgroundSize = 'cover';
+            } else {
+                // Space background image at 50k-100k
+                document.body.style.background = 'url("/Users/qafizz/Downloads/images (5).jpeg") center/cover no-repeat, linear-gradient(to bottom, #000 0%, #1a1a3e 100%)';
+                document.body.style.backgroundSize = 'cover';
+            }
+
+            // Add space suit at high altitude
+            if (altitude > 25000) {
+                stickFigure.innerHTML = `
+                    <circle cx="30" cy="20" r="15" fill="white" stroke="#333" stroke-width="2"/>
+                    <circle cx="30" cy="20" r="12" fill="rgba(135, 206, 235, 0.3)"/>
+                    <rect x="20" y="32" width="20" height="28" rx="3" fill="white" stroke="#333" stroke-width="2"/>
+                    <rect x="26" y="36" width="8" height="10" fill="#ccc"/>
+                    <line x1="20" y1="42" x2="12" y2="55" stroke="white" stroke-width="5" stroke-linecap="round"/>
+                    <line x1="40" y1="42" x2="48" y2="55" stroke="white" stroke-width="5" stroke-linecap="round"/>
+                    <line x1="24" y1="60" x2="20" y2="85" stroke="white" stroke-width="5" stroke-linecap="round"/>
+                    <line x1="36" y1="60" x2="40" y2="85" stroke="white" stroke-width="5" stroke-linecap="round"/>
+                    <ellipse cx="20" cy="87" rx="5" ry="4" fill="#666"/>
+                    <ellipse cx="40" cy="87" rx="5" ry="4" fill="#666"/>
+                `;
+            } else {
+                stickFigure.innerHTML = `
+                    <circle cx="30" cy="20" r="12" fill="none" stroke="#333" stroke-width="3"/>
+                    <line x1="30" y1="32" x2="30" y2="60" stroke="#333" stroke-width="3"/>
+                    <line x1="30" y1="40" x2="15" y2="55" stroke="#333" stroke-width="3"/>
+                    <line x1="30" y1="40" x2="45" y2="55" stroke="#333" stroke-width="3"/>
+                    <line x1="30" y1="60" x2="15" y2="85" stroke="#333" stroke-width="3"/>
+                    <line x1="30" y1="60" x2="45" y2="85" stroke="#333" stroke-width="3"/>
+                `;
+            }
+        });
+
+        // Start at the bottom (ground level, 0m) on page load
+        window.addEventListener('load', function() {
+            scrollContainer.scrollTop = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+        });
+    </script>
+</body>
+</html>
