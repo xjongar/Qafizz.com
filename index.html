@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fun Experiments</title>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Patrick+Hand&family=Indie+Flower&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .logo {
+            font-size: 6rem;
+            font-weight: 400;
+            font-style: normal;
+            font-family: 'Caveat', cursive;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 60px;
+        }
+
+        .project-card {
+            height: 160px;
+            border-radius: 12px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+
+        .project-card:hover {
+            transform: translateY(-4px);
+        }
+
+        /* Deep Sea - Green with gradient */
+        .card-ocean {
+            background: linear-gradient(135deg, #4a9b7f 0%, #2d6a53 100%);
+            border: 3px solid #2d6a53;
+        }
+
+        .card-ocean .card-content {
+            color: white;
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .card-ocean .arrow {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        /* Size of Space - Red */
+        .card-space {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border: 3px solid #991b1b;
+        }
+
+        .card-space .card-content {
+            color: white;
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-space .emoji {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        /* Draw - Black with circle */
+        .card-draw {
+            background: #000;
+            border: 3px solid #000;
+        }
+
+        .card-draw .card-content {
+            color: white;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 400;
+            font-family: 'Comic Sans MS', cursive;
+        }
+
+        .card-draw .circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid;
+            border-color: #ff6b6b #4ecdc4 #ffe66d #ff6b6b;
+            margin-bottom: 10px;
+        }
+
+        /* Password - Beige with border */
+        .card-password {
+            background: #f5f1e8;
+            border: 3px solid #333;
+        }
+
+        .card-password .card-content {
+            color: #333;
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 400;
+            font-family: Georgia, serif;
+        }
+
+        .card-password .star {
+            font-size: 2rem;
+            margin-right: 10px;
+        }
+
+        /* Breathe - Beige */
+        .card-breathe {
+            background: #f5ebe0;
+            border: 3px solid #d4a373;
+        }
+
+        .card-breathe .card-content {
+            color: #5a4a3a;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 400;
+            font-family: 'Times New Roman', serif;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .card-breathe .emoji {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        /* Type Race - Yellow caution */
+        .card-typerace {
+            background: repeating-linear-gradient(
+                45deg,
+                #fbbf24,
+                #fbbf24 20px,
+                #000 20px,
+                #000 40px
+            );
+            border: 4px solid #000;
+        }
+
+        .card-typerace .card-content {
+            background: white;
+            color: #000;
+            padding: 20px 40px;
+            border: 3px solid #000;
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Rewind the Web - Purple gradient with retro feel */
+        .card-rewind {
+            background: linear-gradient(135deg, #9333ea 0%, #6b21a8 100%);
+            border: 3px solid #581c87;
+        }
+
+        .card-rewind .card-content {
+            color: white;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .card-rewind .emoji {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        /* Scroll Through Time - Gold gradient with ancient feel */
+        .card-scrolltime {
+            background: linear-gradient(135deg, #ffd700 0%, #ffb700 50%, #ff8c00 100%);
+            border: 3px solid #b8860b;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-scrolltime::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .card-scrolltime .card-content {
+            color: #000;
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: 'Cinzel', 'Georgia', serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-scrolltime .emoji {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            animation: rotate 4s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Space Elevator - Neal.fun thumbnail */
+        .card-space-elevator {
+            background: url('images/space-elevator-thumbnail.svg') center/cover no-repeat;
+            border: 3px solid #4a9fd5;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-space-elevator .card-content {
+            opacity: 0;
+        }
+
+        footer {
+            text-align: center;
+            color: #999;
+            font-size: 0.9rem;
+            padding: 40px 0;
+        }
+
+        @media (max-width: 768px) {
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .logo {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                Qafizz
+            </div>
+            <div class="subtitle">experiments and stuff</div>
+        </header>
+
+        <main class="projects-grid">
+            <!-- Scroll Through Time -->
+            <a href="scroll-time.html" class="project-card card-scrolltime">
+                <div class="card-content">
+                    <div class="emoji">⏳</div>
+                    <div>Scroll Through Time</div>
+                </div>
+            </a>
+
+            <!-- Space Elevator -->
+            <a href="space-elevator.html" class="project-card card-space-elevator">
+                <div class="card-content">
+                    <div class="emoji">🚀</div>
+                    <div>Space Elevator</div>
+                </div>
+            </a>
+
+        </main>
+
+        <footer>
+            <p>made for fun</p>
+        </footer>
+    </div>
+</body>
+</html>
