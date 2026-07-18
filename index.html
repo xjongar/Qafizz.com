@@ -6,6 +6,10 @@
   <title>Trust Me Bro — Tier Lists That Matter</title>
   <meta name="description" content="Browse thousands of community tier lists. Vote, argue, repeat." />
   <link rel="stylesheet" href="css/styles.css" />
+  <!-- AdSense site verification / Auto ads. Static so Google's reviewer sees it
+       in the served HTML; ads.js skips its own injection when this is present. -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6047624815480207"
+     crossorigin="anonymous" id="adsbygoogle-sdk"></script>
 </head>
 <body>
 
@@ -187,9 +191,27 @@
   <div class="detail-overlay" id="createOverlay" hidden>
     <form class="create-panel" id="createForm" role="dialog" aria-modal="true" aria-labelledby="createHeading">
       <h2 id="createHeading">Create a Tier List</h2>
-      <input type="text" id="createTitle" placeholder="Title (e.g. Best WC 2026 Goals)" maxlength="90" required />
-      <input type="text" id="createCategory" placeholder="Category (e.g. World Cup)" maxlength="24" />
-      <textarea id="createItems" rows="8" placeholder="One item per line — best at the top" required></textarea>
+
+      <section class="create-panel-section">
+        <h3 class="create-panel-title">1. What's it about?</h3>
+        <label class="create-field">
+          <span class="create-label">Title</span>
+          <input type="text" id="createTitle" placeholder="e.g. Best WC 2026 Goals" maxlength="90" required />
+        </label>
+        <label class="create-field">
+          <span class="create-label">Category</span>
+          <input type="text" id="createCategory" placeholder="e.g. World Cup" maxlength="24" />
+        </label>
+      </section>
+
+      <section class="create-panel-section">
+        <h3 class="create-panel-title">2. What's being ranked?</h3>
+        <p class="create-hint">Order doesn't matter — every item starts at 0% and
+          the community's votes decide the tiers.</p>
+        <div class="create-items" id="createItemsList"></div>
+        <button type="button" class="btn btn-outline btn-add-item" id="createAddItem">+ Add item</button>
+      </section>
+
       <div class="create-actions">
         <button type="button" class="btn btn-outline" id="createCancel">Cancel</button>
         <button type="submit" class="btn btn-primary">Publish</button>
@@ -231,6 +253,11 @@
 
       <p class="auth-error" id="authError" role="alert" hidden></p>
 
+      <p class="auth-switch">
+        <span id="authSwitchText">Already have an account?</span>
+        <button type="button" class="auth-switch-btn" id="authSwitch">Sign in</button>
+      </p>
+
       <div class="create-actions">
         <button type="button" class="btn btn-outline" id="authCancel">Cancel</button>
         <button type="submit" class="btn btn-primary" id="authSubmit">Create account</button>
@@ -250,7 +277,7 @@
     <div class="footer-inner">
       <p class="footer-brand">Trust Me <em>Bro</em></p>
       <nav class="footer-links" aria-label="Footer">
-        <a href="#">About</a><a href="#">Terms</a><a href="#">Privacy</a><a href="#">Advertise</a><a href="#">Contact</a>
+        <a href="/about.html">About</a><a href="/terms.html">Terms</a><a href="/privacy.html">Privacy</a><a href="/advertise.html">Advertise</a><a href="/contact.html">Contact</a>
       </nav>
       <p class="footer-note">Opinions are ranked. Feelings are not our problem. © 2026</p>
     </div>
@@ -290,6 +317,11 @@
   <!-- ads.js before app.js: app.js hands it each in-feed slot as it builds one -->
   <script src="js/ads.js"></script>
   <!-- auth.js before app.js: the feed asks who's signed in as it wires up -->
+  <!-- Supabase client, then our wrapper. Both load before auth/app so the
+       backend is available at init; if the CDN fails the site falls back to
+       local-only votes rather than breaking. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+  <script src="js/backend.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
 </body>

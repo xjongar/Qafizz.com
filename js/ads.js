@@ -13,7 +13,7 @@
 
 window.Ads = (() => {
   /* From AdSense → Account → Settings. Empty = every slot stays a placeholder. */
-  const PUBLISHER_ID = ""; // e.g. "ca-pub-0000000000000000"
+  const PUBLISHER_ID = "ca-pub-6047624815480207";
 
   /* Per-unit slot ids from AdSense → Ads → By ad unit. Every in-feed unit
      shares one id; `infeed` is the fallback for the infeed-N slots app.js
@@ -47,13 +47,21 @@ window.Ads = (() => {
     document.head.appendChild(s);
   }
 
+  /* Nothing to show: collapse the slot entirely rather than leaving a grey
+     placeholder box on a live page. Reserved height only helps when a creative
+     is actually coming. */
+  function collapse(el) {
+    el.classList.add("is-empty");
+    el.style.display = "none";
+  }
+
   function mount(el) {
     if (el.dataset.adMounted) return;
     el.dataset.adMounted = "1";
-    if (!isLive()) return; // stays a reserved placeholder
+    if (!isLive()) return collapse(el);
 
     const slotId = slotIdFor(el.dataset.adSlot || "");
-    if (!slotId) return; // no unit configured yet — leave the placeholder up
+    if (!slotId) return collapse(el); // no unit configured yet
 
     const ins = document.createElement("ins");
     ins.className = "adsbygoogle";
@@ -70,9 +78,10 @@ window.Ads = (() => {
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch (err) {
-      // Blocked or SDK missing — fall back to the placeholder rather than a gap.
+      // Blocked or SDK missing — collapse rather than show an empty frame.
       ins.remove();
       el.classList.remove("is-filled");
+      collapse(el);
     }
   }
 
@@ -93,6 +102,12 @@ window.Ads = (() => {
   /* app.js calls this for in-feed slots it builds during scroll. */
   function register(el) {
     if (!el || !el.dataset || el.dataset.adSlot === undefined) return;
+    /* No unit behind this slot: collapse now instead of waiting for it to near
+       the viewport, so no placeholder is ever visible. */
+    if (!isLive() || !slotIdFor(el.dataset.adSlot || "")) {
+      el.dataset.adMounted = "1";
+      return collapse(el);
+    }
     if (io) io.observe(el);
     else mount(el);
   }

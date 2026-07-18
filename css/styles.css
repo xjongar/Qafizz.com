@@ -547,6 +547,66 @@ input { font: inherit; }
 .create-panel ::placeholder { color: var(--text-faint); }
 .create-actions { display: flex; justify-content: flex-end; gap: .6rem; }
 
+/* Create form panels: the dialog is two grouped steps rather than a stack of
+   bare inputs, and the item list is one row per item so the count is obvious.
+   The dialog can outgrow the viewport once rows pile up, hence the scroll. */
+.create-panel { max-height: min(88vh, 780px); overflow-y: auto; }
+.create-panel-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.1rem 1.1rem 1.25rem;
+  display: flex; flex-direction: column; gap: .7rem;
+}
+.create-panel-title {
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-faint);
+  margin: 0;
+}
+.create-field { display: flex; flex-direction: column; gap: .35rem; }
+.create-label { font-size: .8rem; font-weight: 600; color: var(--text-muted); }
+.create-hint { margin: -.25rem 0 .15rem; font-size: .82rem; line-height: 1.5; color: var(--text-muted); }
+.create-items { display: flex; flex-direction: column; gap: .5rem; }
+.create-item { display: flex; align-items: center; gap: .5rem; }
+.create-item-input { flex: 1; }
+.create-item-remove {
+  flex: none;
+  width: 2rem; height: 2rem;
+  display: grid; place-items: center;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-faint);
+  font-size: 1.1rem; line-height: 1;
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.create-item-remove:hover { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); }
+.btn-add-item { align-self: flex-start; }
+
+/* Sign-up / sign-in toggle inside the auth modal. */
+.auth-switch {
+  margin: -.25rem 0 .25rem;
+  font-size: .85rem;
+  color: var(--text-muted);
+  display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
+}
+.auth-switch-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.auth-switch-btn:hover { color: var(--accent-strong); }
+
 /* ---------- 9b. SIGN UP ---------- */
 
 /* Borrows .create-panel for the shell — only the username field is bespoke. */
@@ -688,3 +748,57 @@ input { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ==========================================================================
+   STATIC PAGES (about / terms / privacy / advertise / contact)
+   Long-form prose. Narrow measure for readability; everything else inherits
+   the theme tokens so these pages track light/dark with the rest of the site.
+   ========================================================================== */
+.legal {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 5rem;
+}
+.legal-title {
+  font-size: clamp(1.9rem, 5vw, 2.6rem);
+  line-height: 1.15;
+  letter-spacing: -.02em;
+  margin: 0 0 .5rem;
+}
+.legal-updated {
+  color: var(--text-faint);
+  font-size: .85rem;
+  margin: 0 0 2.5rem;
+}
+.legal h2 {
+  font-size: 1.15rem;
+  margin: 2.5rem 0 .75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.legal h2:first-of-type { border-top: 0; padding-top: 0; }
+.legal h3 { font-size: 1rem; margin: 1.5rem 0 .5rem; color: var(--text); }
+.legal p, .legal li { color: var(--text-muted); line-height: 1.7; }
+.legal p { margin: 0 0 1rem; }
+.legal ul { margin: 0 0 1rem; padding-left: 1.25rem; }
+.legal li { margin-bottom: .5rem; }
+.legal a { color: var(--accent); }
+.legal strong { color: var(--text); }
+.legal-callout {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin: 0 0 2rem;
+}
+.legal-callout p { margin: 0; }
+.legal-contact {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+.legal-contact p { margin: 0 0 .35rem; }
+.legal-contact p:last-child { margin: 0; }

@@ -669,8 +669,33 @@ const MockAPI = (() => {
 
 /* ---------- VOTES (shared by cards, items, comments) ---------- */
 const Votes = (() => {
-  // userVotes[id] = 1 | -1 | undefined — mirrors what the backend would track per-user
-  const userVotes = {};
+  /* userVotes[id] = 1 | -1 — mirrors what the backend would track per-user, and
+     persists to localStorage so a refresh doesn't wipe what you voted on. Zeroed
+     entries are deleted rather than stored so the blob stays small. */
+  const STORAGE_KEY = "tmb-votes";
+  let userVotes = {};
+
+  try {
+    userVotes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  } catch (e) {
+    userVotes = {}; // corrupt or unavailable storage — start clean rather than throw
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(userVotes));
+    } catch (e) {
+      // Quota or private mode: votes still work for this session, just don't persist.
+    }
+  }
+
+  /* Everyone's votes, keyed the same way: { targetKey: netScore }. Populated from
+     the database for whatever is currently on screen. Seeded lists have no rows
+     until someone actually votes, so a missing key just means zero. */
+  const serverScores = {};
+  const repaints = new Map(); // targetKey -> Set of callbacks to re-run on sync
+
+  const live = () => Boolean(window.Backend && Backend.ready());
 
   function format(n) {
     const abs = Math.abs(n);
@@ -678,15 +703,79 @@ const Votes = (() => {
     return String(n);
   }
 
-  /** Toggle/switch a vote. Returns the new displayed total and the user's vote state. */
+  /** How the user voted on `id`: 1, -1, or 0. */
+  function stateOf(id) {
+    return userVotes[id] || 0;
+  }
+
+  /** Everyone's net score for `id` — 0 until the sync lands. */
+  function scoreOf(id) {
+    return serverScores[id] || 0;
+  }
+
+  /** Register a callback to re-run when `id`'s score arrives from the server. */
+  function onSync(id, fn) {
+    if (!repaints.has(id)) repaints.set(id, new Set());
+    repaints.get(id).add(fn);
+  }
+
+  function flush(keys) {
+    keys.forEach((k) => {
+      const set = repaints.get(k);
+      if (set) set.forEach((fn) => fn());
+    });
+  }
+
+  /* Pull real tallies (and this user's own votes) for a batch of targets, then
+     repaint whatever registered an interest. Called per feed page and per detail
+     open, so one round trip covers everything on screen. */
+  async function sync(keys) {
+    if (!live() || !keys.length) return;
+    const [scores, mine] = await Promise.all([
+      Backend.tallies(keys),
+      Backend.myVotes(keys),
+    ]);
+    keys.forEach((k) => (serverScores[k] = scores[k] || 0));
+    keys.forEach((k) => {
+      if (mine[k]) userVotes[k] = mine[k];
+      else delete userVotes[k];
+    });
+    save();
+    flush(keys);
+  }
+
+  /**
+   * Toggle/switch a vote. Writes through to the database when signed in;
+   * falls back to local-only when there's no backend configured.
+   * Returns the user's new vote state.
+   */
   function cast(id, baseVotes, direction) {
-    const prev = userVotes[id] || 0;
+    const prev = stateOf(id);
     const next = prev === direction ? 0 : direction; // clicking again removes the vote
-    userVotes[id] = next;
+
+    // Optimistic: move the number now, reconcile if the server disagrees.
+    if (next) userVotes[id] = next;
+    else delete userVotes[id];
+    serverScores[id] = scoreOf(id) - prev + next;
+    save();
+
+    if (live()) {
+      Backend.vote(id, direction, prev).then((res) => {
+        if (!res.error) return;
+        // Roll back so the UI never claims a vote the database refused.
+        if (prev) userVotes[id] = prev;
+        else delete userVotes[id];
+        serverScores[id] = scoreOf(id) + prev - next;
+        save();
+        flush([id]);
+        console.warn("[votes] rejected:", res.error);
+      });
+    }
+
     return { total: baseVotes + next, state: next };
   }
 
-  return { cast, format };
+  return { cast, format, stateOf, scoreOf, sync, onSync };
 })();
 
 /* ---------- FEED ---------- */
@@ -762,16 +851,29 @@ const Feed = (() => {
     const countEl = card.querySelector(".vote-count");
     const upBtn = card.querySelector(".vote-btn--up");
     const downBtn = card.querySelector(".vote-btn--down");
-    countEl.textContent = Votes.format(list.votes);
 
-    function onVote(direction) {
-      const { total, state: voteState } = Votes.cast("list-" + list.id, list.votes, direction);
-      countEl.textContent = Votes.format(total);
+    const voteKey = "list:" + list.id;
+
+    /* Displayed total = the list's seeded base + everyone's real votes. Paints
+       the user's own state too, so a reload looks like they left it. */
+    function paint() {
+      const voteState = Votes.stateOf(voteKey);
+      countEl.textContent = Votes.format(list.votes + Votes.scoreOf(voteKey));
       countEl.classList.toggle("is-up", voteState === 1);
       countEl.classList.toggle("is-down", voteState === -1);
       upBtn.classList.toggle("is-voted", voteState === 1);
       downBtn.classList.toggle("is-voted", voteState === -1);
-      MockAPI.submitVote(list.id, voteState); // fire-and-forget; backend later
+    }
+    paint();
+    Votes.onSync(voteKey, paint); // repaint when the real tally arrives
+
+    function onVote(direction) {
+      // Voting is for account holders — the gate re-runs the click after sign-up.
+      Auth.require("Sign up to vote — it takes about ten seconds.", () => {
+        Votes.cast(voteKey, list.votes, direction);
+        paint();
+        MockAPI.submitVote(list.id, direction);
+      });
     }
     upBtn.addEventListener("click", () => onVote(1));
     downBtn.addEventListener("click", () => onVote(-1));
@@ -852,6 +954,9 @@ const Feed = (() => {
         sinceAd = 0;
       }
     });
+    /* One round trip for everything now on screen; each card repaints itself
+       when its real tally lands. */
+    Votes.sync(lists.map((l) => "list:" + l.id));
   }
 
   function syncChips() {
@@ -912,9 +1017,46 @@ const Feed = (() => {
     }
   }
 
+  /* Lists real people published, mapped into the same shape as the seeded ones.
+     Items arrive unranked — tiers get earned from vote share, so they all start
+     in the D bucket as a container. */
+  async function loadUserLists() {
+    if (!window.Backend || !Backend.ready()) return [];
+    const rows = await Backend.fetchLists(60);
+    return rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      category: row.category,
+      author: row.author,
+      time: relativeTime(row.createdAt),
+      hoursAgo: hoursSince(row.createdAt),
+      votes: 0,
+      comments: 0,
+      tiers: { D: row.items },
+      userCreated: true,
+    }));
+  }
+
+  const hoursSince = (iso) => Math.max(0, (Date.now() - new Date(iso).getTime()) / 36e5);
+
+  function relativeTime(iso) {
+    const h = hoursSince(iso);
+    if (h < 1) return "just now";
+    if (h < 24) return `${Math.floor(h)}h ago`;
+    const d = Math.floor(h / 24);
+    return d === 1 ? "1d ago" : `${d}d ago`;
+  }
+
   async function init() {
     all = await MockAPI.getLists(1);
     corpus = await MockAPI.getAll();
+
+    // Real lists go to the front — they're the newest thing on the site.
+    const mine = await loadUserLists();
+    if (mine.length) {
+      all = mine.concat(all);
+      corpus = mine.concat(corpus);
+    }
     render();
 
     const sortFor = { hot: "hot", top: "top", controversial: "controversial", new: "fresh" };
@@ -939,35 +1081,82 @@ const Detail = (() => {
   const tiersEl = document.getElementById("detailTiers");
   let currentList = null;
 
-  /* Vote-share model: every item gets a weight (tier sets the ballpark, the
-     item name nudges it), then shares are normalized so the list totals 100%. */
-  function itemWeights(tiers) {
-    const base = { S: 95, A: 70, B: 48, C: 30, D: 16 };
+  /* Vote-share model: each item holds a running vote count, and shares are that
+     count as a percentage of the list total. Seeded lists get a synthetic starting
+     count (tier sets the ballpark, the item name nudges it) so they read as
+     established. Lists you create start every item at zero — nothing is ranked
+     until someone votes, so the first vote cast puts that item at 100%.
+
+     Your own votes are folded in on top, which is what makes the bars move when
+     you click and stay moved after a reload. */
+  const SEED_BASE = { S: 95, A: 70, B: 48, C: 30, D: 16 };
+
+  /* Vote keys are shared with the database, so they have to be stable and
+     identical for every visitor — id plus the item text, nothing per-session. */
+  const itemKey = (list, item) => `item:${list ? list.id : ""}:${item}`;
+
+  function tierForShare(share, hasVotes) {
+    if (!hasVotes) return "D";  // nothing voted yet — flat grey
+    if (share >= 40) return "S";
+    if (share >= 25) return "A";
+    if (share >= 15) return "B";
+    if (share >= 7) return "C";
+    return "D";
+  }
+
+  function itemShares(tiers, list) {
+    const fresh = Boolean(list && list.userCreated);
     const entries = [];
+
     MockAPI.TIERS.forEach((tier) => {
       (tiers[tier] || []).forEach((item) => {
-        let hash = 0;
-        for (let i = 0; i < item.length; i++) hash = (hash * 31 + item.charCodeAt(i)) % 97;
-        entries.push({ tier, item, weight: base[tier] + (hash % 9) - 4 });
+        let base = 0;
+        if (!fresh) {
+          let hash = 0;
+          for (let i = 0; i < item.length; i++) hash = (hash * 31 + item.charCodeAt(i)) % 97;
+          base = SEED_BASE[tier] + (hash % 9) - 4;
+        }
+        /* Seeded base + everyone's real votes. A downvote can't push an item
+           below zero, so a fresh list can't go negative on its first click. */
+        const key = itemKey(list, item);
+        entries.push({
+          tier,
+          item,
+          votes: Math.max(0, base + Votes.scoreOf(key)),
+          mine: Votes.stateOf(key),
+        });
       });
     });
-    const total = entries.reduce((sum, e) => sum + e.weight, 0);
-    entries.forEach((e) => (e.share = Math.round((e.weight / total) * 1000) / 10));
+
+    const total = entries.reduce((sum, e) => sum + e.votes, 0);
+    if (!total) {
+      // Brand-new list, nobody has voted: everything sits at a true 0%.
+      entries.forEach((e) => { e.share = 0; e.tier = fresh ? "D" : e.tier; });
+      return entries;
+    }
+
+    entries.forEach((e) => (e.share = Math.round((e.votes / total) * 1000) / 10));
     // Absorb rounding drift into the biggest share so it sums to exactly 100.0
     const drift = Math.round((100 - entries.reduce((s, e) => s + e.share, 0)) * 10) / 10;
     entries.sort((a, b) => b.share - a.share);
     entries[0].share = Math.round((entries[0].share + drift) * 10) / 10;
+
+    // On lists you made, the tier badge is earned by vote share rather than by
+    // whatever order the items happened to be typed in.
+    if (fresh) entries.forEach((e) => (e.tier = tierForShare(e.share, e.votes > 0)));
     return entries;
   }
 
   function renderTiers(tiers) {
     tiersEl.innerHTML = "";
     // One row per item, benchmark-chart style: bar length = share of the vote
-    const entries = itemWeights(tiers);
-    const maxShare = entries[0].share;
+    const entries = itemShares(tiers, currentList);
+    const maxShare = entries[0] ? entries[0].share : 0;
     entries.forEach(({ tier, item, share }) => {
       {
-        const width = (share / maxShare) * 100;
+        // Bars are scaled against the leader, so the top item always fills the
+        // track. With no votes anywhere, every bar is empty.
+        const width = maxShare > 0 ? (share / maxShare) * 100 : 0;
         const row = document.createElement("div");
         row.className = "tier-row";
         row.innerHTML =
@@ -985,11 +1174,18 @@ const Detail = (() => {
 
         const upBtn = row.querySelector(".item-vote--up");
         const downBtn = row.querySelector(".item-vote--down");
-        const voteKey = `item-${currentList.id}-${item}`;
+        const voteKey = itemKey(currentList, item);
+        const mine = Votes.stateOf(voteKey);
+        upBtn.classList.toggle("is-on", mine === 1);
+        downBtn.classList.toggle("is-on", mine === -1);
+
         function onItemVote(direction) {
-          const { state } = Votes.cast(voteKey, 0, direction);
-          upBtn.classList.toggle("is-on", state === 1);
-          downBtn.classList.toggle("is-on", state === -1);
+          Auth.require("Sign up to vote on items.", () => {
+            Votes.cast(voteKey, 0, direction);
+            /* Shares are relative, so one vote changes every row — re-render the
+               whole set rather than patching this one. */
+            renderTiers(tiers);
+          });
         }
         upBtn.addEventListener("click", () => onItemVote(1));
         downBtn.addEventListener("click", () => onItemVote(-1));
@@ -1004,6 +1200,12 @@ const Detail = (() => {
     titleEl.textContent = list.title;
     metaEl.textContent = `${list.category} · by @${list.author} · ${list.time} · ${Votes.format(list.votes)} votes`;
     renderTiers(list.tiers);
+    /* Pull the real per-item tallies, then redraw with everyone's votes folded
+       in. Painting twice beats holding the panel closed on a network round trip. */
+    const keys = MockAPI.TIERS.flatMap((t) => (list.tiers[t] || []).map((i) => itemKey(list, i)));
+    Votes.sync(keys).then(() => {
+      if (currentList === list) renderTiers(list.tiers);
+    });
     await Comments.load(list.id);
     overlay.hidden = false;
     document.body.style.overflow = "hidden";
@@ -1232,7 +1434,46 @@ const Create = (() => {
   const form = document.getElementById("createForm");
   const titleInput = document.getElementById("createTitle");
   const categoryInput = document.getElementById("createCategory");
-  const itemsInput = document.getElementById("createItems");
+  const itemsList = document.getElementById("createItemsList");
+  const addItemBtn = document.getElementById("createAddItem");
+  const MIN_ROWS = 4;
+
+  /* One input per item rather than a textarea: it makes the count obvious, lets
+     rows be removed individually, and stops people typing a ranked list when
+     ranking is the community's job. */
+  function addRow(focus) {
+    const row = document.createElement("div");
+    row.className = "create-item";
+    row.innerHTML =
+      `<input type="text" class="create-item-input" maxlength="80" placeholder="Add something to rank" />` +
+      `<button type="button" class="create-item-remove" aria-label="Remove item">&times;</button>`;
+    row.querySelector(".create-item-remove").addEventListener("click", () => {
+      row.remove();
+      if (!itemsList.children.length) addRow(true); // never leave the panel empty
+      renumber();
+    });
+    // Typing in the last row spawns the next one, so you never hunt for the button.
+    const input = row.querySelector(".create-item-input");
+    input.addEventListener("input", () => {
+      if (input.value.trim() && row === itemsList.lastElementChild) addRow(false);
+    });
+    itemsList.appendChild(row);
+    renumber();
+    if (focus) input.focus();
+    return row;
+  }
+
+  function renumber() {
+    [...itemsList.children].forEach((row, i) => {
+      row.querySelector(".create-item-input").placeholder =
+        i === 0 ? "Add something to rank" : `Item ${i + 1}`;
+    });
+  }
+
+  function reset() {
+    itemsList.innerHTML = "";
+    for (let i = 0; i < MIN_ROWS; i++) addRow(false);
+  }
 
   function open() {
     overlay.hidden = false;
@@ -1244,6 +1485,7 @@ const Create = (() => {
     overlay.hidden = true;
     document.body.style.overflow = "";
     form.reset();
+    reset();
   }
 
   function init() {
@@ -1253,29 +1495,51 @@ const Create = (() => {
       )
     );
     document.getElementById("createCancel").addEventListener("click", close);
+    addItemBtn.addEventListener("click", () => addRow(true));
+    reset();
     overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && !overlay.hidden) close();
     });
 
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const lines = itemsInput.value.split("\n").map((l) => l.trim()).filter(Boolean);
+      const seen = new Set();
+      const lines = [...itemsList.querySelectorAll(".create-item-input")]
+        .map((input) => input.value.trim())
+        .filter((v) => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
       if (!lines.length || !titleInput.value.trim()) return;
 
-      // Distribute items across tiers by position — best at the top
-      const tiers = {};
-      lines.forEach((item, i) => {
-        const tier = MockAPI.TIERS[Math.min(4, Math.floor((i * 5) / lines.length))];
-        (tiers[tier] = tiers[tier] || []).push(item);
-      });
+      /* Everything lands unranked. Tiers here are just a container — the detail
+         view derives the real tier from vote share, so nothing is pre-ranked by
+         the order it was typed. */
+      const tiers = { D: lines };
+
+      const title = titleInput.value.trim();
+      const category = categoryInput.value.trim() || "Random";
+
+      /* Publish server-side so everyone sees it. The database id becomes the
+         list id, which is what vote keys are built from — a local id would mean
+         nobody else's votes could ever match yours. */
+      let id = "local-" + Math.random().toString(36).slice(2, 8);
+      if (window.Backend && Backend.ready()) {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        const res = await Backend.createList(title, category, lines);
+        submitBtn.disabled = false;
+        if (res.error) {
+          window.alert("Couldn't publish: " + res.error);
+          return; // keep the form open with their work in it
+        }
+        id = res.id;
+      }
 
       const list = {
-        id: "local-" + Math.random().toString(36).slice(2, 8),
-        title: titleInput.value.trim(),
-        category: categoryInput.value.trim() || "Random",
+        id,
+        title,
+        category,
         author: Auth.user() || "you", time: "just now", hoursAgo: 0,
-        votes: 1, comments: 0, tiers,
+        votes: 0, comments: 0, tiers, userCreated: true,
       };
       close();
       Feed.addList(list);

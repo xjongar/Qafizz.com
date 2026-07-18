@@ -77,6 +77,8 @@ window.Auth = (() => {
     try {
       localStorage.removeItem(KEY);
     } catch (err) {}
+    // Drop the server session too, or a reload would silently sign you back in.
+    if (window.Backend && Backend.ready()) Backend.signOut();
     emit();
   }
 
@@ -142,8 +144,24 @@ window.Auth = (() => {
 
   /* ---- the seam a real backend replaces ---- */
 
+  const backendLive = () => Boolean(window.Backend && Backend.ready());
+
   async function signUpRequest(payload) {
-    const { username, email } = payload;
+    const { username, email, password } = payload;
+
+    /* Real accounts when Supabase is configured. Passwords go straight to
+       Supabase Auth, which hashes them server-side — nothing sensitive is
+       kept here. The profiles row is created by a database trigger. */
+    if (backendLive()) {
+      const { error } = await Backend.signUp(email, password, username);
+      if (error) return { ok: false, error: friendlyAuthError(error) };
+      // With email confirmation on, there's no session yet — say so plainly.
+      if (!Backend.currentUser()) {
+        return { ok: false, error: "Check your email to confirm your account, then sign in." };
+      }
+      return { ok: true, username: Backend.currentUser().username };
+    }
+
     if (await taken(username)) {
       return { ok: false, error: "@" + username + " is taken. Try another." };
     }
@@ -152,6 +170,30 @@ window.Auth = (() => {
        Persisting it in the browser would be worse than useless. */
     addUser({ username, email, createdAt: new Date().toISOString(), provider: "password" });
     return { ok: true, username };
+  }
+
+  async function signInRequest({ email, password }) {
+    if (!backendLive()) {
+      return { ok: false, error: "Sign-in needs the server. Create an account instead." };
+    }
+    const { error } = await Backend.signIn(email, password);
+    if (error) return { ok: false, error: friendlyAuthError(error) };
+    const u = Backend.currentUser();
+    return { ok: true, username: u ? u.username : email.split("@")[0] };
+  }
+
+  /* Supabase messages are accurate but terse; these are the ones users hit. */
+  function friendlyAuthError(msg) {
+    const m = String(msg).toLowerCase();
+    if (m.includes("already registered") || m.includes("already been registered"))
+      return "That email already has an account. Try signing in.";
+    if (m.includes("invalid login")) return "Wrong email or password.";
+    if (m.includes("email not confirmed")) return "Confirm your email first — check your inbox.";
+    if (m.includes("duplicate key") && m.includes("username"))
+      return "That username is taken. Try another.";
+    if (m.includes("rate limit") || m.includes("too many"))
+      return "Too many attempts. Wait a minute and try again.";
+    return msg;
   }
 
   /* ---- google ---- */
@@ -181,11 +223,33 @@ window.Auth = (() => {
     errorEl.hidden = !msg;
   }
 
+  /* The modal does double duty: "signup" asks for a handle, "signin" just takes
+     credentials for an account that already exists. */
+  let mode = "signup";
+  let switchBtn, switchText, headingEl, nameField, nameHint, passHint;
+
+  function setMode(next) {
+    mode = next;
+    const signin = mode === "signin";
+    if (headingEl) headingEl.textContent = signin ? "Welcome back" : "Create your account";
+    if (nameField) nameField.hidden = signin;
+    if (nameHint) nameHint.hidden = signin;
+    if (passHint) passHint.hidden = signin;
+    if (nameInput) nameInput.required = !signin;
+    if (submitBtn) submitBtn.textContent = signin ? "Sign in" : "Create account";
+    if (switchText) switchText.textContent = signin ? "New here?" : "Already have an account?";
+    if (switchBtn) switchBtn.textContent = signin ? "Create an account" : "Sign in";
+    if (passInput) passInput.setAttribute("autocomplete", signin ? "current-password" : "new-password");
+    showError("");
+    (signin ? emailInput : nameInput).focus();
+  }
+
   function open(reason, cb) {
     pending = cb || null;
     reasonEl.textContent = reason || "You need an account to join in.";
     showError("");
     form.reset();
+    setMode("signup"); // always start on sign-up; the toggle is one click away
     overlay.hidden = false;
     document.body.style.overflow = "hidden";
     nameInput.focus();
@@ -215,14 +279,20 @@ window.Auth = (() => {
     const email = emailInput.value.trim();
     const password = passInput.value;
 
-    const err = validateName(username) || validateEmail(email) || validatePassword(password);
+    /* Signing in only needs credentials — the username field is hidden and the
+       rules that govern picking one don't apply to an account that exists. */
+    const err = mode === "signin"
+      ? validateEmail(email) || (password ? null : "Enter your password.")
+      : validateName(username) || validateEmail(email) || validatePassword(password);
     if (err) {
       showError(err);
       return;
     }
 
     submitBtn.disabled = true;
-    const res = await signUpRequest({ username, email, password });
+    const res = mode === "signin"
+      ? await signInRequest({ email, password })
+      : await signUpRequest({ username, email, password });
     submitBtn.disabled = false;
     if (!res.ok) {
       showError(res.error);
@@ -264,6 +334,26 @@ window.Auth = (() => {
       googleBtn.addEventListener("click", onGoogleClick);
       // Say so up front rather than letting it look broken on click.
       if (!googleAvailable()) googleBtn.classList.add("is-unconfigured");
+    }
+
+    switchBtn = document.getElementById("authSwitch");
+    switchText = document.getElementById("authSwitchText");
+    headingEl = document.getElementById("authHeading");
+    nameField = nameInput.closest(".auth-field");
+    nameHint = document.getElementById("authHint");
+    passHint = document.getElementById("authPassHint");
+    if (switchBtn) {
+      switchBtn.addEventListener("click", () => setMode(mode === "signin" ? "signup" : "signin"));
+      // Signing in requires the server; without it, only local sign-up exists.
+      if (!backendLive()) switchBtn.closest(".auth-switch").hidden = true;
+    }
+
+    /* Supabase restores sessions asynchronously, so adopt whoever comes back. */
+    if (window.Backend && Backend.onAuthChange) {
+      Backend.onAuthChange((p) => {
+        if (p && p.username !== current) save(p.username);
+        else if (!p && backendLive() && current) signOut();
+      });
     }
 
     const btn = document.getElementById("authBtn");
