@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terms of Service — Trust Me Bro</title>
+  <meta name="description" content="The rules for using Trust Me Bro." />
+  <style>
+/* ==========================================================================
+   TRUST ME BRO — styles.css
+   Dual-theme system driven entirely by CSS custom properties.
+   Switch themes by setting  data-theme="dark" | "light"  on <html>.
+   ========================================================================== */
+
+/* ---------- 1. THEME TOKENS ---------- */
+
+:root,
+:root[data-theme="dark"] {
+  /* "Trust Me Green" — dark mode */
+  --bg:            #0c0d0c;
+  --bg-elevated:   #131513;
+  --bg-card:       #171917;
+  --bg-hover:      #1e211e;
+  --bg-input:      #1a1d1a;
+
+  --text:          #f4f6f4;
+  --text-muted:    #9aa39a;
+  --text-faint:    #5f675f;
+
+  --accent:        #b6ff2e;          /* neon lime */
+  --accent-strong: #c9ff4d;
+  --accent-soft:   rgba(182, 255, 46, 0.12);
+  --accent-glow:   rgba(182, 255, 46, 0.35);
+  --on-accent:     #0c0d0c;
+
+  --danger:        #ff5d5d;
+  --danger-soft:   rgba(255, 93, 93, 0.12);
+  --up:            #47e874;
+  --up-soft:       rgba(71, 232, 116, 0.16);
+
+  --border:        #242824;
+  --border-strong: #333833;
+
+  --shadow-card:   0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+  --shadow-pop:    0 24px 64px rgba(0,0,0,.6);
+
+  /* Tier row colors — chart style: winners in neon lime, the rest grey-blue */
+  --tier-s: #b6ff2e;
+  --tier-a: #b6ff2e;
+  --tier-b: #939fb1;
+  --tier-c: #939fb1;
+  --tier-d: #939fb1;
+  --tier-text: #0c0d0c;
+
+  --ad-bg:         #101210;
+  --ad-border:     #2a2f2a;
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  /* "Creamy Orange" — light mode */
+  --bg:            #faf5ec;
+  --bg-elevated:   #fffdf8;
+  --bg-card:       #fffdf8;
+  --bg-hover:      #f4ecdd;
+  --bg-input:      #f5efe3;
+
+  --text:          #2d2620;
+  --text-muted:    #7a6f61;
+  --text-faint:    #b3a793;
+
+  --accent:        #d97b29;          /* muted sophisticated orange */
+  --accent-strong: #c26618;
+  --accent-soft:   rgba(217, 123, 41, 0.12);
+  --accent-glow:   rgba(217, 123, 41, 0.28);
+  --on-accent:     #fffdf8;
+
+  --danger:        #cf4b3d;
+  --danger-soft:   rgba(207, 75, 61, 0.10);
+  --up:            #1e9e46;
+  --up-soft:       rgba(30, 158, 70, 0.12);
+
+  --border:        #e8dfcd;
+  --border-strong: #d8ccb4;
+
+  --shadow-card:   0 1px 2px rgba(90, 70, 40, .06), 0 8px 24px rgba(90, 70, 40, .08);
+  --shadow-pop:    0 24px 64px rgba(90, 70, 40, .22);
+
+  --tier-s: #d97b29;
+  --tier-a: #d97b29;
+  --tier-b: #b9ac97;
+  --tier-c: #b9ac97;
+  --tier-d: #b9ac97;
+  --tier-text: #2d2620;
+
+  --ad-bg:         #f3ecdc;
+  --ad-border:     #e2d7bf;
+
+  color-scheme: light;
+}
+
+/* ---------- 2. RESET / BASE ---------- */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.55;
+  transition: background-color .35s ease, color .35s ease;
+  min-height: 100vh;
+}
+
+[hidden] { display: none !important; }
+
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+img, svg { display: block; }
+input { font: inherit; }
+
+::selection { background: var(--accent); color: var(--on-accent); }
+
+/* ---------- 3. BUTTONS & CHIPS ---------- */
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  padding: .55rem 1.1rem;
+  border-radius: 10px;
+  font-weight: 600; font-size: .875rem;
+  transition: transform .12s ease, box-shadow .2s ease, background-color .2s ease, color .2s ease;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(.97); }
+.btn-sm { padding: .4rem .85rem; font-size: .8rem; }
+.btn-block { width: 100%; }
+
+.btn-primary {
+  background: var(--accent); color: var(--on-accent);
+  box-shadow: 0 0 0 0 var(--accent-glow);
+}
+.btn-primary:hover { background: var(--accent-strong); box-shadow: 0 4px 20px var(--accent-glow); }
+
+.btn-ghost { color: var(--text-muted); padding: .55rem; border-radius: 10px; }
+.btn-ghost:hover { color: var(--text); background: var(--bg-hover); }
+
+.btn-outline {
+  border: 1px solid var(--border-strong); color: var(--text-muted);
+  background: transparent;
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+.chip {
+  padding: .4rem .9rem; border-radius: 999px;
+  font-size: .8rem; font-weight: 600;
+  color: var(--text-muted); background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  transition: all .2s ease;
+}
+.chip:hover { color: var(--text); border-color: var(--border-strong); }
+.chip.is-active {
+  color: var(--on-accent); background: var(--accent); border-color: var(--accent);
+}
+
+/* ---------- 4. HEADER ---------- */
+
+.site-header {
+  position: sticky; top: 0; z-index: 100;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  transition: background-color .35s ease, border-color .35s ease;
+}
+
+.header-inner {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; align-items: center; gap: 2rem;
+  padding: .75rem 1.5rem;
+}
+
+.logo { display: flex; align-items: center; gap: .6rem; font-weight: 800; font-size: 1.05rem; letter-spacing: -.02em; }
+.logo-mark {
+  display: grid; place-items: center;
+  width: 34px; height: 34px; border-radius: 9px;
+  background: var(--accent); color: var(--on-accent);
+  font-size: .8rem; font-weight: 900;
+  box-shadow: 0 2px 12px var(--accent-glow);
+}
+.logo-text em { font-style: normal; color: var(--accent); }
+
+.main-nav { display: flex; gap: .25rem; margin-right: auto; }
+.nav-link {
+  padding: .45rem .85rem; border-radius: 8px;
+  font-size: .875rem; font-weight: 500; color: var(--text-muted);
+  transition: all .2s ease;
+}
+.nav-link:hover { color: var(--text); background: var(--bg-hover); }
+.nav-link.is-active { color: var(--accent); font-weight: 600; }
+
+.header-actions { display: flex; align-items: center; gap: .6rem; }
+
+/* Theme toggle switch */
+.theme-toggle { padding: 4px; }
+.theme-toggle-track {
+  position: relative; display: flex; align-items: center; justify-content: space-between;
+  width: 56px; height: 28px; padding: 0 6px;
+  border-radius: 999px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
+  transition: background-color .35s ease, border-color .35s ease;
+}
+.theme-toggle-icon { color: var(--text-faint); z-index: 1; display: grid; place-items: center; }
+.theme-toggle-thumb {
+  position: absolute; top: 2px; left: 2px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 1px 6px var(--accent-glow);
+  transition: transform .3s cubic-bezier(.34, 1.56, .64, 1);
+}
+:root[data-theme="light"] .theme-toggle-thumb { transform: translateX(28px); }
+
+/* Mobile menu */
+.mobile-menu-btn { display: none; flex-direction: column; gap: 4px; padding: 8px; }
+.mobile-menu-btn span { width: 20px; height: 2px; background: var(--text); border-radius: 2px; transition: all .25s ease; }
+.mobile-nav { display: none; }
+
+/* ---------- 5. AD ZONES ---------- */
+
+.ad-banner {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: var(--ad-bg);
+  border: 1px dashed var(--ad-border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: background-color .35s ease, border-color .35s ease;
+}
+.ad-label {
+  position: absolute; top: 6px; left: 10px;
+  font-size: .6rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-faint);
+}
+.ad-placeholder {
+  color: var(--text-faint); font-size: .8rem; font-weight: 600; letter-spacing: .05em;
+}
+
+.ad-slot-wrap { max-width: 1280px; margin: 1.25rem auto 0; padding: 0 1.5rem; }
+.ad-banner--leaderboard { height: 100px; }
+.ad-banner--rectangle   { height: 260px; }
+.ad-banner--skyscraper  { height: 610px; }
+.ad-banner--inline      { height: 100px; margin: 1.75rem 0; }
+.ad-banner--infeed      { grid-column: 1 / -1; height: 110px; }
+/* Native in-feed unit — occupies one grid cell and matches card height, so a
+   dense feed still scans as a feed rather than a stack of banners. */
+.ad-banner--native      { min-height: 240px; }
+.ad-banner--skyscraper.is-sticky { position: sticky; top: 76px; }
+
+/* Filled slots drop the placeholder chrome — the creative is the content. */
+.ad-banner.is-filled { border-style: solid; background: transparent; }
+.ad-banner.is-filled .ad-placeholder { display: none; }
+
+/* Mobile anchor ad (hidden on desktop) */
+.ad-banner--anchor {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 90;
+  height: 60px; border-radius: 0; border-left: 0; border-right: 0; border-bottom: 0;
+}
+.ad-anchor-close {
+  position: absolute; top: 4px; right: 8px;
+  color: var(--text-faint); font-size: 1.1rem; line-height: 1; padding: 4px;
+}
+
+/* ---------- 6. PAGE LAYOUT ---------- */
+
+.page-shell {
+  max-width: 1280px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 320px; gap: 2rem;
+  padding: 1.75rem 1.5rem 4rem;
+  align-items: start;
+}
+
+.search-bar { position: relative; display: flex; align-items: center; margin-bottom: .75rem; }
+.search-bar input {
+  width: 100%;
+  /* Left pad clears the icon, right pad clears the × button. */
+  padding: .75rem 2.6rem .75rem 2.75rem;
+  border-radius: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: .95rem;
+}
+.search-bar input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.search-bar input::placeholder { color: var(--text-faint); }
+/* The native search widget would sit next to our own clear button. */
+.search-bar input::-webkit-search-cancel-button { display: none; }
+
+.search-icon {
+  position: absolute; left: 1rem;
+  color: var(--text-faint); pointer-events: none;
+}
+.search-bar input:focus ~ .search-icon { color: var(--accent); }
+
+.search-clear {
+  position: absolute; right: .75rem;
+  display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  color: var(--text-faint); font-size: 1.1rem; line-height: 1;
+  background: var(--bg-elevated);
+}
+.search-clear:hover { color: var(--text); }
+
+.search-count {
+  margin: -.25rem 0 1rem;
+  color: var(--text-faint); font-size: .8rem; font-weight: 600;
+}
+.search-count kbd {
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 4px; padding: 0 .3rem; font-size: .7rem; font-family: inherit;
+}
+
+.feed-empty { color: var(--text-muted); padding: 2rem 0; grid-column: 1 / -1; }
+
+.feed-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.feed-title { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; }
+.feed-filters { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+.feed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.feed-footer { margin-top: 2rem; }
+
+.sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+
+/* ---------- 7. TIER CARD ---------- */
+
+.tier-card {
+  display: flex;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: transform .18s ease, border-color .2s ease, background-color .35s ease;
+  animation: cardIn .35s ease backwards;
+}
+.tier-card:hover { transform: translateY(-3px); border-color: var(--border-strong); }
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Vote rail */
+.vote-rail {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .15rem;
+  padding: .75rem .5rem;
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--border);
+  min-width: 52px;
+  transition: background-color .35s ease;
+}
+.vote-btn {
+  display: grid; place-items: center;
+  width: 40px; height: 40px; border-radius: 11px;
+  transition: all .15s ease;
+}
+.vote-btn--up { color: var(--up); }
+.vote-btn--down { color: var(--danger); }
+.vote-btn--up svg { transform: rotate(-3deg); }
+.vote-btn--down svg { transform: rotate(3deg); }
+.vote-btn:hover { background: var(--bg-hover); transform: scale(1.12); }
+.vote-btn--up.is-voted { background: var(--up-soft); }
+.vote-btn--down.is-voted { background: var(--danger-soft); }
+.vote-btn.is-voted svg { animation: votePop .3s cubic-bezier(.34, 1.8, .64, 1); }
+
+@keyframes votePop {
+  0% { transform: scale(1); } 45% { transform: scale(1.35); } 100% { transform: scale(1); }
+}
+
+.vote-count { font-size: .85rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.vote-count.is-up { color: var(--accent); }
+.vote-count.is-down { color: var(--danger); }
+
+/* Card body */
+.tier-card-main { flex: 1; padding: .9rem 1.1rem 1rem; min-width: 0; cursor: pointer; }
+.tier-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: .35rem; }
+.tier-card-category {
+  font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: .15rem .55rem; border-radius: 999px;
+}
+.tier-card-time { font-size: .72rem; color: var(--text-faint); }
+
+.tier-card-title { font-size: 1rem; line-height: 1.35; margin-bottom: .7rem; }
+.tier-card-link {
+  font-weight: 700; text-align: left; letter-spacing: -.01em;
+  transition: color .15s ease;
+}
+.tier-card-link:hover { color: var(--accent); }
+
+/* Mini tier bar preview — clean bars only, no letters */
+.tier-preview { display: flex; flex-direction: column; gap: 5px; margin-bottom: .8rem; }
+.tier-preview-row { display: flex; align-items: center; }
+.tier-preview-bar {
+  height: 9px; border-radius: 4px;
+  transition: width .6s cubic-bezier(.25, 1, .35, 1);
+}
+
+.tier-card-footer { display: flex; justify-content: space-between; align-items: center; }
+.tier-card-author { font-size: .78rem; color: var(--text-muted); }
+.tier-card-author b { color: var(--text); font-weight: 600; }
+.tier-card-comments {
+  display: inline-flex; align-items: center; gap: .35rem;
+  font-size: .78rem; font-weight: 600; color: var(--text-muted);
+  padding: .3rem .6rem; border-radius: 8px;
+  transition: all .15s ease;
+}
+.tier-card-comments:hover { color: var(--accent); background: var(--accent-soft); }
+
+/* ---------- 8. SIDEBAR WIDGETS ---------- */
+
+.widget {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.1rem 1.2rem;
+  box-shadow: var(--shadow-card);
+  transition: background-color .35s ease, border-color .35s ease;
+}
+.widget-title { font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: .9rem; }
+
+.mini-leaderboard { list-style: none; display: flex; flex-direction: column; gap: .65rem; }
+.mini-leaderboard li { display: flex; align-items: center; gap: .7rem; font-size: .85rem; }
+.mini-leaderboard .rank { font-weight: 800; color: var(--text-faint); width: 1.1rem; font-variant-numeric: tabular-nums; }
+.mini-leaderboard .rank--gold { color: var(--accent); }
+.mini-leaderboard .points { margin-left: auto; font-weight: 700; color: var(--accent); font-size: .78rem; }
+
+.avatar {
+  display: grid; place-items: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent);
+  font-size: .72rem; font-weight: 800; flex-shrink: 0;
+}
+.avatar--you { background: var(--accent); color: var(--on-accent); }
+
+.tag-cloud { display: flex; flex-wrap: wrap; gap: .45rem; }
+.tag {
+  font-size: .78rem; font-weight: 600;
+  padding: .3rem .75rem; border-radius: 999px;
+  background: var(--bg-input); color: var(--text-muted);
+  border: 1px solid var(--border);
+  transition: all .15s ease;
+}
+.tag:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ---------- 9. DETAIL OVERLAY (tier list + comments) ---------- */
+
+.detail-overlay[hidden] { display: none; }
+
+.detail-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 4vh 1rem;
+  background: rgba(0, 0, 0, .6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  overflow-y: auto;
+  animation: overlayIn .25s ease;
+}
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+.detail-panel {
+  width: 100%; max-width: 780px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-pop);
+  animation: panelIn .3s cubic-bezier(.25, 1, .35, 1);
+}
+@keyframes panelIn { from { opacity: 0; transform: translateY(24px) scale(.98); } to { opacity: 1; transform: none; } }
+
+.detail-header {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
+  padding: 1.5rem 1.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.detail-title { font-size: 1.35rem; font-weight: 800; letter-spacing: -.02em; }
+.detail-meta { font-size: .8rem; color: var(--text-muted); margin-top: .25rem; }
+.detail-body { padding: 1.5rem 1.75rem 2rem; }
+
+/* Full tier rows — 1:1 benchmark-chart style:
+   name (left) | solid bar, length by tier | tier letter after the bar */
+.tier-rows { display: flex; flex-direction: column; gap: 22px; padding: .75rem 0; }
+.tier-row { display: flex; align-items: center; gap: 16px; }
+.tier-row-label {
+  width: 28%; max-width: 190px; flex-shrink: 0;
+  font-size: .92rem; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tier-row-track { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; }
+.tier-row-bar {
+  height: 36px; border-radius: 5px;
+  transition: width .5s cubic-bezier(.25, 1, .35, 1);
+}
+.tier-row-pct {
+  font-size: .95rem; font-weight: 800; color: var(--text);
+  font-variant-numeric: tabular-nums; flex-shrink: 0;
+}
+
+/* Up/down brush triangles beside every item */
+.item-votes { display: flex; align-items: center; gap: 6px; margin-left: 12px; flex-shrink: 0; }
+.item-vote {
+  display: grid; place-items: center;
+  width: 36px; height: 36px; border-radius: 10px;
+  transition: all .15s ease;
+}
+.item-vote--up { color: var(--up); }
+.item-vote--down { color: var(--danger); }
+.item-vote--up svg { transform: rotate(-3deg); }
+.item-vote--down svg { transform: rotate(3deg); }
+.item-vote:hover { background: var(--bg-hover); transform: scale(1.15); }
+.item-vote--up.is-on { background: var(--up-soft); }
+.item-vote--down.is-on { background: var(--danger-soft); }
+.item-vote.is-on svg { animation: votePop .3s cubic-bezier(.34, 1.8, .64, 1); }
+
+/* Create tier list panel */
+.create-panel {
+  width: 100%; max-width: 520px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-pop);
+  padding: 1.75rem;
+  display: flex; flex-direction: column; gap: 1rem;
+  animation: panelIn .3s cubic-bezier(.25, 1, .35, 1);
+}
+.create-panel h2 { font-size: 1.3rem; font-weight: 800; letter-spacing: -.02em; }
+.create-panel input,
+.create-panel textarea {
+  width: 100%;
+  padding: .7rem 1rem;
+  border-radius: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  resize: vertical;
+}
+.create-panel input:focus,
+.create-panel textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.create-panel ::placeholder { color: var(--text-faint); }
+.create-actions { display: flex; justify-content: flex-end; gap: .6rem; }
+
+/* Create form panels: the dialog is two grouped steps rather than a stack of
+   bare inputs, and the item list is one row per item so the count is obvious.
+   The dialog can outgrow the viewport once rows pile up, hence the scroll. */
+.create-panel { max-height: min(88vh, 780px); overflow-y: auto; }
+.create-panel-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.1rem 1.1rem 1.25rem;
+  display: flex; flex-direction: column; gap: .7rem;
+}
+.create-panel-title {
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-faint);
+  margin: 0;
+}
+.create-field { display: flex; flex-direction: column; gap: .35rem; }
+.create-label { font-size: .8rem; font-weight: 600; color: var(--text-muted); }
+.create-hint { margin: -.25rem 0 .15rem; font-size: .82rem; line-height: 1.5; color: var(--text-muted); }
+.create-items { display: flex; flex-direction: column; gap: .5rem; }
+.create-item { display: flex; align-items: center; gap: .5rem; }
+.create-item-input { flex: 1; }
+.create-item-remove {
+  flex: none;
+  width: 2rem; height: 2rem;
+  display: grid; place-items: center;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-faint);
+  font-size: 1.1rem; line-height: 1;
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.create-item-remove:hover { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); }
+.btn-add-item { align-self: flex-start; }
+
+/* Sign-up / sign-in toggle inside the auth modal. */
+.auth-switch {
+  margin: -.25rem 0 .25rem;
+  font-size: .85rem;
+  color: var(--text-muted);
+  display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
+}
+.auth-switch-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.auth-switch-btn:hover { color: var(--accent-strong); }
+
+/* ---------- 9b. SIGN UP ---------- */
+
+/* Borrows .create-panel for the shell — only the username field is bespoke. */
+.auth-panel { max-width: 420px; gap: .75rem; }
+.auth-reason { color: var(--text-muted); font-size: .9rem; line-height: 1.5; }
+
+.auth-field { position: relative; display: flex; align-items: center; }
+.auth-at {
+  position: absolute; left: 1rem;
+  color: var(--text-faint); font-weight: 700; pointer-events: none;
+}
+/* Room for the @ so the caret never lands on top of it. */
+.auth-panel .auth-field input { padding-left: 2rem; }
+
+.auth-hint  { color: var(--text-faint); font-size: .75rem; margin-top: -.4rem; }
+.auth-error { color: var(--danger); font-size: .8rem; font-weight: 600; }
+
+/* Google's brand guidelines want their mark on a neutral surface, so this one
+   opts out of the neon accent the rest of the buttons use. */
+.btn-google {
+  display: flex; align-items: center; justify-content: center; gap: .6rem;
+  width: 100%; padding: .7rem 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  font-weight: 600;
+}
+.btn-google:hover { border-color: var(--text-faint); }
+
+.auth-divider {
+  display: flex; align-items: center; gap: .75rem;
+  color: var(--text-faint); font-size: .75rem; text-transform: uppercase; letter-spacing: .08em;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: ""; flex: 1; height: 1px; background: var(--border);
+}
+
+/* Signed-in state: the button becomes the identity chip. */
+.btn-auth.is-user {
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 700;
+}
+
+/* ---------- 10. COMMENTS ---------- */
+
+.comments { margin-top: .5rem; }
+.comments-title { font-size: 1.05rem; font-weight: 800; margin-bottom: 1rem; }
+.comments-count { color: var(--text-faint); font-weight: 600; font-size: .9rem; }
+
+.comment-composer { display: flex; gap: .7rem; align-items: center; margin-bottom: 1.5rem; }
+.comment-input {
+  flex: 1;
+  padding: .6rem 1rem;
+  border-radius: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.comment-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.comment-input::placeholder { color: var(--text-faint); }
+
+.comment-thread { display: flex; flex-direction: column; gap: 1rem; }
+
+.comment { display: flex; gap: .7rem; }
+.comment-body { flex: 1; min-width: 0; }
+.comment-head { display: flex; align-items: baseline; gap: .5rem; margin-bottom: .15rem; }
+.comment-author { font-size: .82rem; font-weight: 700; }
+.comment-author.is-op { color: var(--accent); }
+.comment-time { font-size: .72rem; color: var(--text-faint); }
+.comment-text { font-size: .875rem; color: var(--text); overflow-wrap: break-word; }
+
+.comment-actions { display: flex; align-items: center; gap: .35rem; margin-top: .3rem; }
+.comment-vote {
+  display: inline-flex; align-items: center; gap: .25rem;
+  font-size: .74rem; font-weight: 700; color: var(--text-faint);
+  padding: .2rem .5rem; border-radius: 6px;
+  transition: all .15s ease;
+}
+.comment-vote:hover { background: var(--bg-hover); color: var(--text); }
+.comment-vote.is-voted { color: var(--accent); background: var(--accent-soft); }
+.comment-reply-btn {
+  font-size: .74rem; font-weight: 600; color: var(--text-faint);
+  padding: .2rem .5rem; border-radius: 6px;
+}
+.comment-reply-btn:hover { color: var(--accent); background: var(--accent-soft); }
+
+/* Nested replies: indent + thread guide line */
+.comment-children {
+  margin-top: 1rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--border);
+  display: flex; flex-direction: column; gap: 1rem;
+}
+
+.reply-composer { display: flex; gap: .5rem; margin-top: .6rem; }
+.reply-composer .comment-input { padding: .45rem .85rem; font-size: .85rem; }
+
+/* ---------- 11. FOOTER ---------- */
+
+.site-footer { border-top: 1px solid var(--border); padding: 2.5rem 1.5rem 5rem; }
+.footer-inner { max-width: 1280px; margin: 0 auto; text-align: center; }
+.footer-brand { font-weight: 800; font-size: 1.1rem; margin-bottom: .75rem; }
+.footer-brand em { font-style: normal; color: var(--accent); }
+.footer-links { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: .75rem; }
+.footer-links a { font-size: .82rem; color: var(--text-muted); }
+.footer-links a:hover { color: var(--accent); }
+.footer-note { font-size: .75rem; color: var(--text-faint); }
+
+/* ---------- 12. RESPONSIVE ---------- */
+
+@media (max-width: 1024px) {
+  .page-shell { grid-template-columns: 1fr; }
+  .sidebar { order: 2; }
+  .ad-banner--skyscraper { display: none; }   /* skyscraper is desktop-only inventory */
+  .feed-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 760px) {
+  .main-nav, .header-actions .btn-primary, .header-actions .btn-ghost { display: none; }
+  .mobile-menu-btn { display: flex; }
+  .mobile-nav.is-open {
+    display: flex; flex-direction: column; gap: .25rem;
+    padding: .75rem 1.25rem 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .feed-grid { grid-template-columns: 1fr; }
+  .ad-banner--leaderboard { height: 70px; }
+  .ad-banner--anchor { display: flex; }        /* anchor ad is mobile-only inventory */
+  body { padding-bottom: 60px; }               /* clear the anchor ad */
+  .detail-header, .detail-body { padding-left: 1.1rem; padding-right: 1.1rem; }
+  .tier-row-label { width: 36%; font-size: .82rem; }
+  .tier-row-bar { height: 28px; }
+}
+
+/* Respect users who prefer no motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ==========================================================================
+   STATIC PAGES (about / terms / privacy / advertise / contact)
+   Long-form prose. Narrow measure for readability; everything else inherits
+   the theme tokens so these pages track light/dark with the rest of the site.
+   ========================================================================== */
+.legal {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 5rem;
+}
+.legal-title {
+  font-size: clamp(1.9rem, 5vw, 2.6rem);
+  line-height: 1.15;
+  letter-spacing: -.02em;
+  margin: 0 0 .5rem;
+}
+.legal-updated {
+  color: var(--text-faint);
+  font-size: .85rem;
+  margin: 0 0 2.5rem;
+}
+.legal h2 {
+  font-size: 1.15rem;
+  margin: 2.5rem 0 .75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.legal h2:first-of-type { border-top: 0; padding-top: 0; }
+.legal h3 { font-size: 1rem; margin: 1.5rem 0 .5rem; color: var(--text); }
+.legal p, .legal li { color: var(--text-muted); line-height: 1.7; }
+.legal p { margin: 0 0 1rem; }
+.legal ul { margin: 0 0 1rem; padding-left: 1.25rem; }
+.legal li { margin-bottom: .5rem; }
+.legal a { color: var(--accent); }
+.legal strong { color: var(--text); }
+.legal-callout {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin: 0 0 2rem;
+}
+.legal-callout p { margin: 0; }
+.legal-contact {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+.legal-contact p { margin: 0 0 .35rem; }
+.legal-contact p:last-child { margin: 0; }
+
+</style>
+  <script>
+    try {
+      var t = localStorage.getItem("tmb-theme");
+      if (t) document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  </script>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="logo" aria-label="Trust Me Bro home">
+        <span class="logo-mark">TM</span>
+        <span class="logo-text">Trust Me <em>Bro</em></span>
+      </a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="/" class="nav-link">Trending</a>
+        <a href="/" class="nav-link">New</a>
+        <a href="/" class="nav-link">Categories</a>
+        <a href="/" class="nav-link">Leaderboard</a>
+      </nav>
+      <div class="header-actions">
+        <a href="/" class="btn btn-primary">Back to site</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="legal">
+    <h1 class="legal-title">Terms of Service</h1>
+    <p class="legal-updated">Last updated: July 18, 2026</p>
+
+    <div class="legal-callout">
+      <p>Be civil, don't cheat the voting, don't post illegal things, and
+      remember that everything you post here is public.</p>
+    </div>
+
+    <h2>1. Accepting these terms</h2>
+    <p>By using qafizz.com ("the site"), you agree to these terms. If you don't
+    agree, don't use the site. If you're using the site on behalf of an
+    organization, you're confirming you have authority to bind it.</p>
+
+    <h2>2. Who can use it</h2>
+    <p>You must be at least 13 years old to use the site, and old enough to form
+    a binding contract where you live. If we learn an account belongs to someone
+    under 13, we'll remove it.</p>
+
+    <h2>3. Your account</h2>
+    <p>You're responsible for what happens under your account and for keeping
+    your password secure. Tell us promptly if you think someone else is using
+    it. Don't impersonate other people or misrepresent your affiliation with
+    anyone.</p>
+
+    <h2>4. Your content</h2>
+    <p>You keep ownership of the tier lists, votes, and comments you post. By
+    posting, you grant us a non-exclusive, worldwide, royalty-free licence to
+    host, display, reproduce, and distribute that content on the site and in
+    site promotion. This licence exists so we can legally show your content to
+    other users — nothing more.</p>
+    <p>You're responsible for what you post, and you confirm you have the right
+    to post it.</p>
+
+    <h2>5. Things you may not do</h2>
+    <ul>
+      <li>Post content that is unlawful, hateful, harassing, defamatory, or
+      that targets a private individual</li>
+      <li>Post sexually explicit material, or content depicting or promoting
+      violence</li>
+      <li>Manipulate votes or rankings — including multiple accounts, bots,
+      scripts, or coordinated brigading</li>
+      <li>Scrape, crawl, or bulk-download the site outside what robots.txt
+      allows</li>
+      <li>Interfere with the site's operation, security, or infrastructure</li>
+      <li>Post spam, advertising, or affiliate links disguised as content</li>
+      <li>Infringe anyone's copyright, trademark, or other rights</li>
+    </ul>
+
+    <h2>6. Moderation</h2>
+    <p>We may remove content, reset manipulated rankings, or suspend accounts
+    that break these terms — at our discretion, with or without notice. We're
+    not obligated to monitor content, but we do act on reports. Contact us if
+    you believe something on the site violates these rules.</p>
+
+    <h2>7. Copyright complaints</h2>
+    <p>If you believe content here infringes your copyright, send us a notice
+    identifying the work, the location of the material on the site, your
+    contact details, and a statement that you have a good-faith belief the use
+    is unauthorized. We remove infringing material when properly notified.</p>
+
+    <h2>8. Advertising</h2>
+    <p>The site displays third-party advertising. We don't endorse advertised
+    products and aren't responsible for advertiser conduct. See the
+    <a href="/privacy.html">Privacy Policy</a> for how advertising affects your
+    data.</p>
+
+    <h2>9. Rankings are opinions</h2>
+    <p>Everything on this site is subjective community opinion. Rankings are not
+    statements of fact, professional advice, or reviews, and shouldn't be
+    treated as any of those. Nobody's product is objectively D tier — the
+    internet just voted that way.</p>
+
+    <h2>10. Availability</h2>
+    <p>The site is provided "as is" and "as available", without warranties of
+    any kind. We don't promise it will be uninterrupted, error-free, or that
+    content will be preserved. We may change or discontinue features at any
+    time.</p>
+
+    <h2>11. Limitation of liability</h2>
+    <p>To the fullest extent permitted by law, we are not liable for indirect,
+    incidental, or consequential damages, or for lost data or lost profits,
+    arising from your use of the site.</p>
+
+    <h2>12. Termination</h2>
+    <p>You may stop using the site at any time. We may suspend or terminate
+    access if you breach these terms. Sections that by their nature should
+    survive termination — content licence, liability, and these general terms —
+    will survive.</p>
+
+    <h2>13. Changes</h2>
+    <p>We may revise these terms. Material changes will be reflected in the
+    "last updated" date above. Continuing to use the site after a change means
+    you accept the revised terms.</p>
+
+    <h2>14. Contact</h2>
+    <div class="legal-contact">
+      <p><strong>Email:</strong> <a href="mailto:qafizz@qafizz.com">qafizz@qafizz.com</a></p>
+      <p><strong>Site:</strong> qafizz.com</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p class="footer-brand">Trust Me <em>Bro</em></p>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="/about.html">About</a><a href="/terms.html">Terms</a><a href="/privacy.html">Privacy</a><a href="/advertise.html">Advertise</a><a href="/contact.html">Contact</a>
+      </nav>
+      <p class="footer-note">Opinions are ranked. Feelings are not our problem. © 2026</p>
+    </div>
+  </footer>
+
+</body>
+</html>
