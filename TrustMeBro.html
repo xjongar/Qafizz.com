@@ -1,0 +1,2845 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trust Me Bro — Tier Lists That Matter</title>
+  <meta name="description" content="Browse thousands of community tier lists. Vote, argue, repeat." />
+  <style>
+/* ==========================================================================
+   TRUST ME BRO — styles.css
+   Dual-theme system driven entirely by CSS custom properties.
+   Switch themes by setting  data-theme="dark" | "light"  on <html>.
+   ========================================================================== */
+
+/* ---------- 1. THEME TOKENS ---------- */
+
+:root,
+:root[data-theme="dark"] {
+  /* "Trust Me Green" — dark mode */
+  --bg:            #0c0d0c;
+  --bg-elevated:   #131513;
+  --bg-card:       #171917;
+  --bg-hover:      #1e211e;
+  --bg-input:      #1a1d1a;
+
+  --text:          #f4f6f4;
+  --text-muted:    #9aa39a;
+  --text-faint:    #5f675f;
+
+  --accent:        #b6ff2e;          /* neon lime */
+  --accent-strong: #c9ff4d;
+  --accent-soft:   rgba(182, 255, 46, 0.12);
+  --accent-glow:   rgba(182, 255, 46, 0.35);
+  --on-accent:     #0c0d0c;
+
+  --danger:        #ff5d5d;
+  --danger-soft:   rgba(255, 93, 93, 0.12);
+  --up:            #47e874;
+  --up-soft:       rgba(71, 232, 116, 0.16);
+
+  --border:        #242824;
+  --border-strong: #333833;
+
+  --shadow-card:   0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+  --shadow-pop:    0 24px 64px rgba(0,0,0,.6);
+
+  /* Tier row colors — chart style: winners in neon lime, the rest grey-blue */
+  --tier-s: #b6ff2e;
+  --tier-a: #b6ff2e;
+  --tier-b: #939fb1;
+  --tier-c: #939fb1;
+  --tier-d: #939fb1;
+  --tier-text: #0c0d0c;
+
+  --ad-bg:         #101210;
+  --ad-border:     #2a2f2a;
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  /* "Creamy Orange" — light mode */
+  --bg:            #faf5ec;
+  --bg-elevated:   #fffdf8;
+  --bg-card:       #fffdf8;
+  --bg-hover:      #f4ecdd;
+  --bg-input:      #f5efe3;
+
+  --text:          #2d2620;
+  --text-muted:    #7a6f61;
+  --text-faint:    #b3a793;
+
+  --accent:        #d97b29;          /* muted sophisticated orange */
+  --accent-strong: #c26618;
+  --accent-soft:   rgba(217, 123, 41, 0.12);
+  --accent-glow:   rgba(217, 123, 41, 0.28);
+  --on-accent:     #fffdf8;
+
+  --danger:        #cf4b3d;
+  --danger-soft:   rgba(207, 75, 61, 0.10);
+  --up:            #1e9e46;
+  --up-soft:       rgba(30, 158, 70, 0.12);
+
+  --border:        #e8dfcd;
+  --border-strong: #d8ccb4;
+
+  --shadow-card:   0 1px 2px rgba(90, 70, 40, .06), 0 8px 24px rgba(90, 70, 40, .08);
+  --shadow-pop:    0 24px 64px rgba(90, 70, 40, .22);
+
+  --tier-s: #d97b29;
+  --tier-a: #d97b29;
+  --tier-b: #b9ac97;
+  --tier-c: #b9ac97;
+  --tier-d: #b9ac97;
+  --tier-text: #2d2620;
+
+  --ad-bg:         #f3ecdc;
+  --ad-border:     #e2d7bf;
+
+  color-scheme: light;
+}
+
+/* ---------- 2. RESET / BASE ---------- */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.55;
+  transition: background-color .35s ease, color .35s ease;
+  min-height: 100vh;
+}
+
+[hidden] { display: none !important; }
+
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+img, svg { display: block; }
+input { font: inherit; }
+
+::selection { background: var(--accent); color: var(--on-accent); }
+
+/* ---------- 3. BUTTONS & CHIPS ---------- */
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  padding: .55rem 1.1rem;
+  border-radius: 10px;
+  font-weight: 600; font-size: .875rem;
+  transition: transform .12s ease, box-shadow .2s ease, background-color .2s ease, color .2s ease;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(.97); }
+.btn-sm { padding: .4rem .85rem; font-size: .8rem; }
+.btn-block { width: 100%; }
+
+.btn-primary {
+  background: var(--accent); color: var(--on-accent);
+  box-shadow: 0 0 0 0 var(--accent-glow);
+}
+.btn-primary:hover { background: var(--accent-strong); box-shadow: 0 4px 20px var(--accent-glow); }
+
+.btn-ghost { color: var(--text-muted); padding: .55rem; border-radius: 10px; }
+.btn-ghost:hover { color: var(--text); background: var(--bg-hover); }
+
+.btn-outline {
+  border: 1px solid var(--border-strong); color: var(--text-muted);
+  background: transparent;
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+.chip {
+  padding: .4rem .9rem; border-radius: 999px;
+  font-size: .8rem; font-weight: 600;
+  color: var(--text-muted); background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  transition: all .2s ease;
+}
+.chip:hover { color: var(--text); border-color: var(--border-strong); }
+.chip.is-active {
+  color: var(--on-accent); background: var(--accent); border-color: var(--accent);
+}
+
+/* ---------- 4. HEADER ---------- */
+
+.site-header {
+  position: sticky; top: 0; z-index: 100;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  transition: background-color .35s ease, border-color .35s ease;
+}
+
+.header-inner {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; align-items: center; gap: 2rem;
+  padding: .75rem 1.5rem;
+}
+
+.logo { display: flex; align-items: center; gap: .6rem; font-weight: 800; font-size: 1.05rem; letter-spacing: -.02em; }
+.logo-mark {
+  display: grid; place-items: center;
+  width: 34px; height: 34px; border-radius: 9px;
+  background: var(--accent); color: var(--on-accent);
+  font-size: .8rem; font-weight: 900;
+  box-shadow: 0 2px 12px var(--accent-glow);
+}
+.logo-text em { font-style: normal; color: var(--accent); }
+
+.main-nav { display: flex; gap: .25rem; margin-right: auto; }
+.nav-link {
+  padding: .45rem .85rem; border-radius: 8px;
+  font-size: .875rem; font-weight: 500; color: var(--text-muted);
+  transition: all .2s ease;
+}
+.nav-link:hover { color: var(--text); background: var(--bg-hover); }
+.nav-link.is-active { color: var(--accent); font-weight: 600; }
+
+.header-actions { display: flex; align-items: center; gap: .6rem; }
+
+/* Theme toggle switch */
+.theme-toggle { padding: 4px; }
+.theme-toggle-track {
+  position: relative; display: flex; align-items: center; justify-content: space-between;
+  width: 56px; height: 28px; padding: 0 6px;
+  border-radius: 999px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
+  transition: background-color .35s ease, border-color .35s ease;
+}
+.theme-toggle-icon { color: var(--text-faint); z-index: 1; display: grid; place-items: center; }
+.theme-toggle-thumb {
+  position: absolute; top: 2px; left: 2px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 1px 6px var(--accent-glow);
+  transition: transform .3s cubic-bezier(.34, 1.56, .64, 1);
+}
+:root[data-theme="light"] .theme-toggle-thumb { transform: translateX(28px); }
+
+/* Mobile menu */
+.mobile-menu-btn { display: none; flex-direction: column; gap: 4px; padding: 8px; }
+.mobile-menu-btn span { width: 20px; height: 2px; background: var(--text); border-radius: 2px; transition: all .25s ease; }
+.mobile-nav { display: none; }
+
+/* ---------- 5. AD ZONES ---------- */
+
+.ad-banner {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: var(--ad-bg);
+  border: 1px dashed var(--ad-border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: background-color .35s ease, border-color .35s ease;
+}
+.ad-label {
+  position: absolute; top: 6px; left: 10px;
+  font-size: .6rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-faint);
+}
+.ad-placeholder {
+  color: var(--text-faint); font-size: .8rem; font-weight: 600; letter-spacing: .05em;
+}
+
+.ad-slot-wrap { max-width: 1280px; margin: 1.25rem auto 0; padding: 0 1.5rem; }
+.ad-banner--leaderboard { height: 100px; }
+.ad-banner--rectangle   { height: 260px; }
+.ad-banner--skyscraper  { height: 610px; }
+.ad-banner--inline      { height: 100px; margin: 1.75rem 0; }
+.ad-banner--infeed      { grid-column: 1 / -1; height: 110px; }
+.ad-banner--skyscraper.is-sticky { position: sticky; top: 76px; }
+
+/* Mobile anchor ad (hidden on desktop) */
+.ad-banner--anchor {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 90;
+  height: 60px; border-radius: 0; border-left: 0; border-right: 0; border-bottom: 0;
+}
+.ad-anchor-close {
+  position: absolute; top: 4px; right: 8px;
+  color: var(--text-faint); font-size: 1.1rem; line-height: 1; padding: 4px;
+}
+
+/* ---------- 6. PAGE LAYOUT ---------- */
+
+.page-shell {
+  max-width: 1280px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 320px; gap: 2rem;
+  padding: 1.75rem 1.5rem 4rem;
+  align-items: start;
+}
+
+.search-bar { position: relative; margin-bottom: 1.25rem; }
+.search-bar-icon {
+  position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+  color: var(--text-faint); pointer-events: none;
+  transition: color .2s ease;
+}
+.search-bar input {
+  width: 100%;
+  padding: .75rem 1.15rem .75rem 2.85rem;
+  border-radius: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: .95rem;
+}
+.search-bar input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.search-bar input:focus + .search-bar-icon,
+.search-bar:focus-within .search-bar-icon { color: var(--accent); }
+.search-bar input::placeholder { color: var(--text-faint); }
+
+.feed-empty { color: var(--text-muted); padding: 2rem 0; grid-column: 1 / -1; }
+
+.feed-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.feed-title { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; }
+.feed-filters { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+.feed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.feed-footer { margin-top: 2rem; }
+
+.sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+
+/* ---------- 7. TIER CARD ---------- */
+
+.tier-card {
+  display: flex;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: transform .18s ease, border-color .2s ease, background-color .35s ease;
+  animation: cardIn .35s ease backwards;
+}
+.tier-card:hover { transform: translateY(-3px); border-color: var(--border-strong); }
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Vote rail */
+.vote-rail {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .15rem;
+  padding: .75rem .5rem;
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--border);
+  min-width: 52px;
+  transition: background-color .35s ease;
+}
+.vote-btn {
+  display: grid; place-items: center;
+  width: 40px; height: 40px; border-radius: 11px;
+  transition: all .15s ease;
+}
+.vote-btn--up { color: var(--up); }
+.vote-btn--down { color: var(--danger); }
+.vote-btn--up svg { transform: rotate(-3deg); }
+.vote-btn--down svg { transform: rotate(3deg); }
+.vote-btn:hover { background: var(--bg-hover); transform: scale(1.12); }
+.vote-btn--up.is-voted { background: var(--up-soft); }
+.vote-btn--down.is-voted { background: var(--danger-soft); }
+.vote-btn.is-voted svg { animation: votePop .3s cubic-bezier(.34, 1.8, .64, 1); }
+
+@keyframes votePop {
+  0% { transform: scale(1); } 45% { transform: scale(1.35); } 100% { transform: scale(1); }
+}
+
+.vote-count { font-size: .85rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.vote-count.is-up { color: var(--accent); }
+.vote-count.is-down { color: var(--danger); }
+
+/* Card body */
+.tier-card-main { flex: 1; padding: .9rem 1.1rem 1rem; min-width: 0; cursor: pointer; }
+.tier-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: .35rem; }
+.tier-card-category {
+  font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: .15rem .55rem; border-radius: 999px;
+}
+.tier-card-time { font-size: .72rem; color: var(--text-faint); }
+
+.tier-card-title { font-size: 1rem; line-height: 1.35; margin-bottom: .7rem; }
+.tier-card-link {
+  font-weight: 700; text-align: left; letter-spacing: -.01em;
+  transition: color .15s ease;
+}
+.tier-card-link:hover { color: var(--accent); }
+
+/* Mini tier bar preview — clean bars only, no letters */
+.tier-preview { display: flex; flex-direction: column; gap: 5px; margin-bottom: .8rem; }
+.tier-preview-row { display: flex; align-items: center; }
+.tier-preview-bar {
+  height: 9px; border-radius: 4px;
+  transition: width .6s cubic-bezier(.25, 1, .35, 1);
+}
+
+.tier-card-footer { display: flex; justify-content: space-between; align-items: center; }
+.tier-card-author { font-size: .78rem; color: var(--text-muted); }
+.tier-card-author b { color: var(--text); font-weight: 600; }
+.tier-card-comments {
+  display: inline-flex; align-items: center; gap: .35rem;
+  font-size: .78rem; font-weight: 600; color: var(--text-muted);
+  padding: .3rem .6rem; border-radius: 8px;
+  transition: all .15s ease;
+}
+.tier-card-comments:hover { color: var(--accent); background: var(--accent-soft); }
+
+/* ---------- 8. SIDEBAR WIDGETS ---------- */
+
+.widget {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.1rem 1.2rem;
+  box-shadow: var(--shadow-card);
+  transition: background-color .35s ease, border-color .35s ease;
+}
+.widget-title { font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: .9rem; }
+
+.mini-leaderboard { list-style: none; display: flex; flex-direction: column; gap: .65rem; }
+.mini-leaderboard li { display: flex; align-items: center; gap: .7rem; font-size: .85rem; }
+.mini-leaderboard .rank { font-weight: 800; color: var(--text-faint); width: 1.1rem; font-variant-numeric: tabular-nums; }
+.mini-leaderboard .rank--gold { color: var(--accent); }
+.mini-leaderboard .points { margin-left: auto; font-weight: 700; color: var(--accent); font-size: .78rem; }
+
+.avatar {
+  display: grid; place-items: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent);
+  font-size: .72rem; font-weight: 800; flex-shrink: 0;
+}
+.avatar--you { background: var(--accent); color: var(--on-accent); }
+
+.tag-cloud { display: flex; flex-wrap: wrap; gap: .45rem; }
+.tag {
+  font-size: .78rem; font-weight: 600;
+  padding: .3rem .75rem; border-radius: 999px;
+  background: var(--bg-input); color: var(--text-muted);
+  border: 1px solid var(--border);
+  transition: all .15s ease;
+}
+.tag:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ---------- 9. DETAIL OVERLAY (tier list + comments) ---------- */
+
+.detail-overlay[hidden] { display: none; }
+
+.detail-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 4vh 1rem;
+  background: rgba(0, 0, 0, .6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  overflow-y: auto;
+  animation: overlayIn .25s ease;
+}
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+.detail-panel {
+  width: 100%; max-width: 780px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-pop);
+  animation: panelIn .3s cubic-bezier(.25, 1, .35, 1);
+}
+@keyframes panelIn { from { opacity: 0; transform: translateY(24px) scale(.98); } to { opacity: 1; transform: none; } }
+
+.detail-header {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
+  padding: 1.5rem 1.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.detail-title { font-size: 1.35rem; font-weight: 800; letter-spacing: -.02em; }
+.detail-meta { font-size: .8rem; color: var(--text-muted); margin-top: .25rem; }
+.detail-body { padding: 1.5rem 1.75rem 2rem; }
+
+/* Full tier rows — 1:1 benchmark-chart style:
+   name (left) | solid bar, length by tier | tier letter after the bar */
+.tier-rows { display: flex; flex-direction: column; gap: 22px; padding: .75rem 0; }
+.tier-row { display: flex; align-items: center; gap: 16px; }
+.tier-row-label {
+  width: 28%; max-width: 190px; flex-shrink: 0;
+  font-size: .92rem; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tier-row-track { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; }
+.tier-row-bar {
+  height: 36px; border-radius: 5px;
+  transition: width .5s cubic-bezier(.25, 1, .35, 1);
+}
+.tier-row-pct {
+  font-size: .95rem; font-weight: 800; color: var(--text);
+  font-variant-numeric: tabular-nums; flex-shrink: 0;
+}
+
+/* Up/down brush triangles beside every item */
+.item-votes { display: flex; align-items: center; gap: 6px; margin-left: 12px; flex-shrink: 0; }
+.item-vote {
+  display: grid; place-items: center;
+  width: 36px; height: 36px; border-radius: 10px;
+  transition: all .15s ease;
+}
+.item-vote--up { color: var(--up); }
+.item-vote--down { color: var(--danger); }
+.item-vote--up svg { transform: rotate(-3deg); }
+.item-vote--down svg { transform: rotate(3deg); }
+.item-vote:hover { background: var(--bg-hover); transform: scale(1.15); }
+.item-vote--up.is-on { background: var(--up-soft); }
+.item-vote--down.is-on { background: var(--danger-soft); }
+.item-vote.is-on svg { animation: votePop .3s cubic-bezier(.34, 1.8, .64, 1); }
+
+/* Create tier list panel */
+.create-panel {
+  width: 100%; max-width: 520px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-pop);
+  padding: 1.75rem;
+  display: flex; flex-direction: column; gap: 1rem;
+  animation: panelIn .3s cubic-bezier(.25, 1, .35, 1);
+}
+.create-panel h2 { font-size: 1.3rem; font-weight: 800; letter-spacing: -.02em; }
+.create-panel input,
+.create-panel textarea {
+  width: 100%;
+  padding: .7rem 1rem;
+  border-radius: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  resize: vertical;
+}
+.create-panel input:focus,
+.create-panel textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.create-panel ::placeholder { color: var(--text-faint); }
+.create-actions { display: flex; justify-content: flex-end; gap: .6rem; }
+
+/* ---------- 10. COMMENTS ---------- */
+
+.comments { margin-top: .5rem; }
+.comments-title { font-size: 1.05rem; font-weight: 800; margin-bottom: 1rem; }
+.comments-count { color: var(--text-faint); font-weight: 600; font-size: .9rem; }
+
+.comment-composer { display: flex; gap: .7rem; align-items: center; margin-bottom: 1.5rem; }
+.comment-input {
+  flex: 1;
+  padding: .6rem 1rem;
+  border-radius: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.comment-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.comment-input::placeholder { color: var(--text-faint); }
+
+.comment-thread { display: flex; flex-direction: column; gap: 1rem; }
+
+.comment { display: flex; gap: .7rem; }
+.comment-body { flex: 1; min-width: 0; }
+.comment-head { display: flex; align-items: baseline; gap: .5rem; margin-bottom: .15rem; }
+.comment-author { font-size: .82rem; font-weight: 700; }
+.comment-author.is-op { color: var(--accent); }
+.comment-time { font-size: .72rem; color: var(--text-faint); }
+.comment-text { font-size: .875rem; color: var(--text); overflow-wrap: break-word; }
+
+.comment-actions { display: flex; align-items: center; gap: .35rem; margin-top: .3rem; }
+.comment-vote {
+  display: inline-flex; align-items: center; gap: .25rem;
+  font-size: .74rem; font-weight: 700; color: var(--text-faint);
+  padding: .2rem .5rem; border-radius: 6px;
+  transition: all .15s ease;
+}
+.comment-vote:hover { background: var(--bg-hover); color: var(--text); }
+.comment-vote.is-voted { color: var(--accent); background: var(--accent-soft); }
+.comment-reply-btn {
+  font-size: .74rem; font-weight: 600; color: var(--text-faint);
+  padding: .2rem .5rem; border-radius: 6px;
+}
+.comment-reply-btn:hover { color: var(--accent); background: var(--accent-soft); }
+
+/* Nested replies: indent + thread guide line */
+.comment-children {
+  margin-top: 1rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--border);
+  display: flex; flex-direction: column; gap: 1rem;
+}
+
+.reply-composer { display: flex; gap: .5rem; margin-top: .6rem; }
+.reply-composer .comment-input { padding: .45rem .85rem; font-size: .85rem; }
+
+/* ---------- 10b. AUTH / USER / TOASTS ---------- */
+
+.user-chip { display: flex; align-items: center; gap: .5rem; }
+.user-chip .user-name { font-size: .85rem; font-weight: 700; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.auth-tabs { display: flex; gap: .5rem; }
+.auth-error { color: var(--danger); font-size: .83rem; font-weight: 600; }
+
+/* Clickable @usernames */
+.author-link { cursor: pointer; transition: color .15s ease; }
+.author-link:hover { color: var(--accent); text-decoration: underline; }
+
+/* Create poll — answer boxes */
+.create-answers-label { font-size: .82rem; font-weight: 700; color: var(--text); margin-top: .2rem; }
+.create-hint { font-weight: 500; color: var(--text-faint); }
+.create-answers { display: flex; flex-direction: column; gap: .55rem; }
+.create-answer-row { display: flex; align-items: center; gap: .5rem; }
+.create-answer-num {
+  flex-shrink: 0; width: 1.6rem; text-align: right;
+  font-size: .82rem; font-weight: 800; color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.create-answer-row .create-answer { flex: 1; }
+.create-answer-remove {
+  flex-shrink: 0; display: grid; place-items: center;
+  width: 30px; height: 30px; border-radius: 8px;
+  color: var(--text-faint);
+}
+.create-answer-remove:hover { color: var(--danger); background: var(--danger-soft); }
+.create-add { align-self: flex-start; }
+
+/* Profile modal */
+.profile-panel { position: relative; }
+.profile-close { position: absolute; top: 1rem; right: 1rem; padding: .35rem; }
+.profile-head { display: flex; align-items: center; gap: 1rem; }
+.profile-avatar { width: 56px; height: 56px; font-size: 1.4rem; }
+.profile-name { font-size: 1.3rem; font-weight: 800; letter-spacing: -.02em; }
+.profile-stats { font-size: .82rem; color: var(--text-muted); margin-top: .15rem; }
+.profile-stats b { color: var(--text); font-weight: 700; }
+.profile-follow--on { background: var(--bg-input); color: var(--text); }
+.profile-polls-title { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-top: .4rem; }
+.profile-polls { list-style: none; display: flex; flex-direction: column; gap: .5rem; max-height: 240px; overflow-y: auto; }
+.profile-polls li {
+  display: flex; justify-content: space-between; align-items: center; gap: .75rem;
+  padding: .55rem .75rem; border-radius: 10px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  cursor: pointer; transition: border-color .15s ease, background-color .15s ease;
+}
+.profile-polls li:hover { border-color: var(--accent); background: var(--bg-hover); }
+.profile-poll-title { font-size: .85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-poll-votes { flex-shrink: 0; font-size: .76rem; font-weight: 700; color: var(--accent); }
+.profile-polls-empty { color: var(--text-faint); font-size: .85rem; padding: .5rem 0; }
+
+.toast-stack {
+  position: fixed; bottom: 1rem; left: 1rem; z-index: 400;
+  display: flex; flex-direction: column; gap: .5rem;
+  max-width: 340px; pointer-events: none;
+}
+.toast {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: 12px;
+  padding: .65rem .95rem;
+  font-size: .82rem; font-weight: 600;
+  box-shadow: var(--shadow-card);
+  animation: toastIn .3s cubic-bezier(.25, 1, .35, 1);
+}
+@keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 760px) {
+  .toast-stack { bottom: 70px; }  /* clear the mobile anchor ad */
+  .header-actions .js-signup { display: none; }
+}
+
+/* ---------- 11. FOOTER ---------- */
+
+.site-footer { border-top: 1px solid var(--border); padding: 2.5rem 1.5rem 5rem; }
+.footer-inner { max-width: 1280px; margin: 0 auto; text-align: center; }
+.footer-brand { font-weight: 800; font-size: 1.1rem; margin-bottom: .75rem; }
+.footer-brand em { font-style: normal; color: var(--accent); }
+.footer-links { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: .75rem; }
+.footer-links a { font-size: .82rem; color: var(--text-muted); }
+.footer-links a:hover { color: var(--accent); }
+.footer-note { font-size: .75rem; color: var(--text-faint); }
+
+/* ---------- 12. RESPONSIVE ---------- */
+
+@media (max-width: 1024px) {
+  .page-shell { grid-template-columns: 1fr; }
+  .sidebar { order: 2; }
+  .ad-banner--skyscraper { display: none; }   /* skyscraper is desktop-only inventory */
+  .feed-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 760px) {
+  .main-nav, .header-actions .btn-primary, .header-actions .btn-ghost { display: none; }
+  .mobile-menu-btn { display: flex; }
+  .mobile-nav.is-open {
+    display: flex; flex-direction: column; gap: .25rem;
+    padding: .75rem 1.25rem 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .feed-grid { grid-template-columns: 1fr; }
+  .ad-banner--leaderboard { height: 70px; }
+  .ad-banner--anchor { display: flex; }        /* anchor ad is mobile-only inventory */
+  body { padding-bottom: 60px; }               /* clear the anchor ad */
+  .detail-header, .detail-body { padding-left: 1.1rem; padding-right: 1.1rem; }
+  .tier-row-label { width: 36%; font-size: .82rem; }
+  .tier-row-bar { height: 28px; }
+}
+
+/* Respect users who prefer no motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+</style>
+</head>
+<body>
+
+  <!-- ============ HEADER ============ -->
+  <header class="site-header" id="siteHeader">
+    <div class="header-inner">
+      <a href="#" class="logo" aria-label="Trust Me Bro home">
+        <span class="logo-mark">TM</span>
+        <span class="logo-text">Trust Me <em>Bro</em></span>
+      </a>
+
+      <nav class="main-nav" aria-label="Primary">
+        <a href="#" class="nav-link is-active" data-nav="trending">Trending</a>
+        <a href="#" class="nav-link" data-nav="new">New</a>
+        <a href="#" class="nav-link" data-nav="categories">Categories</a>
+        <a href="#" class="nav-link" data-nav="leaderboard">Leaderboard</a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="btn btn-ghost" id="searchBtn" aria-label="Search tier lists">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        </button>
+
+        <!-- Theme toggle -->
+        <button class="theme-toggle" id="themeToggle" role="switch" aria-checked="true" aria-label="Toggle color theme">
+          <span class="theme-toggle-track">
+            <span class="theme-toggle-icon theme-toggle-icon--moon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+            </span>
+            <span class="theme-toggle-icon theme-toggle-icon--sun" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><circle cx="12" cy="12" r="5"/><path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </span>
+            <span class="theme-toggle-thumb"></span>
+          </span>
+        </button>
+
+        <button class="btn btn-outline btn-sm js-login" data-auth="out">Log In</button>
+        <button class="btn btn-primary btn-sm js-signup" data-auth="out">Sign Up</button>
+
+        <div class="user-chip" data-auth="in" hidden>
+          <span class="avatar avatar--you" id="userAvatar" aria-hidden="true">?</span>
+          <span class="user-name" id="userName"></span>
+          <button class="btn btn-ghost btn-sm" id="logoutBtn" title="Log out">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          </button>
+        </div>
+
+        <button class="btn btn-primary btn-create">Create Tier List</button>
+      </div>
+
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <!-- Mobile nav drawer -->
+    <nav class="mobile-nav" id="mobileNav" aria-label="Mobile">
+      <a href="#" class="nav-link is-active" data-nav="trending">Trending</a>
+      <a href="#" class="nav-link" data-nav="new">New</a>
+      <a href="#" class="nav-link" data-nav="categories">Categories</a>
+      <a href="#" class="nav-link" data-nav="leaderboard">Leaderboard</a>
+      <button class="btn btn-outline btn-block js-login" data-auth="out">Log In / Sign Up</button>
+      <button class="btn btn-primary btn-block btn-create">Create Tier List</button>
+    </nav>
+  </header>
+
+  <!-- ============ LEADERBOARD AD (top of page, above the fold) ============ -->
+  <div class="ad-slot-wrap">
+    <div class="ad-banner ad-banner--leaderboard" data-ad-slot="top-leaderboard">
+      <span class="ad-label">Advertisement</span>
+      <div class="ad-placeholder">728 &times; 90</div>
+    </div>
+  </div>
+
+  <!-- ============ MAIN LAYOUT ============ -->
+  <div class="page-shell">
+
+    <main class="feed-column">
+      <div class="search-bar" id="searchBar">
+        <svg class="search-bar-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="searchInput" placeholder="Search 1,000+ polls — anime, food, stocks, World Cup…" />
+      </div>
+
+      <div class="feed-header">
+        <h1 class="feed-title" id="feedTitle">Trending Tier Lists</h1>
+        <div class="feed-filters" role="tablist" aria-label="Feed filter">
+          <button class="chip is-active" role="tab" aria-selected="true" data-filter="hot">🔥 Hot</button>
+          <button class="chip" role="tab" aria-selected="false" data-filter="top">Top Today</button>
+          <button class="chip" role="tab" aria-selected="false" data-filter="controversial">Controversial</button>
+          <button class="chip" role="tab" aria-selected="false" data-filter="new">Fresh</button>
+        </div>
+      </div>
+
+      <!-- Cards + in-feed ads are injected here by js/app.js -->
+      <section class="feed-grid" id="feedGrid" aria-live="polite"></section>
+
+      <div class="feed-footer">
+        <button class="btn btn-outline btn-block" id="loadMoreBtn">Load More Lists</button>
+      </div>
+    </main>
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="sidebar">
+      <!-- Sticky sidebar ad: highest-viewability slot -->
+      <div class="ad-banner ad-banner--rectangle" data-ad-slot="sidebar-top">
+        <span class="ad-label">Advertisement</span>
+        <div class="ad-placeholder">300 &times; 250</div>
+      </div>
+
+      <section class="widget">
+        <h2 class="widget-title">Top Voters This Week</h2>
+        <ol class="mini-leaderboard" id="miniLeaderboard"></ol>
+      </section>
+
+      <section class="widget">
+        <h2 class="widget-title">Hot Categories</h2>
+        <div class="tag-cloud">
+          <a href="#" class="tag">World Cup</a>
+          <a href="#" class="tag">Anime</a>
+          <a href="#" class="tag">Food</a>
+          <a href="#" class="tag">Fast Food</a>
+          <a href="#" class="tag">Drinks</a>
+          <a href="#" class="tag">Trading</a>
+          <a href="#" class="tag">Stocks</a>
+          <a href="#" class="tag">Games</a>
+          <a href="#" class="tag">Movies</a>
+          <a href="#" class="tag">Music</a>
+          <a href="#" class="tag">Sports</a>
+          <a href="#" class="tag">Tech</a>
+          <a href="#" class="tag">Memes</a>
+          <a href="#" class="tag">Fashion</a>
+        </div>
+      </section>
+
+      <div class="ad-banner ad-banner--skyscraper is-sticky" data-ad-slot="sidebar-sticky">
+        <span class="ad-label">Advertisement</span>
+        <div class="ad-placeholder">300 &times; 600</div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ============ TIER LIST DETAIL + COMMENTS (modal view) ============ -->
+  <div class="detail-overlay" id="detailOverlay" hidden>
+    <article class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <header class="detail-header">
+        <div class="detail-heading">
+          <h2 id="detailTitle" class="detail-title"><!-- injected --></h2>
+          <p class="detail-meta" id="detailMeta"><!-- injected --></p>
+        </div>
+        <button class="btn btn-ghost detail-close" id="detailClose" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+
+      <div class="detail-body">
+        <div class="tier-rows" id="detailTiers"><!-- injected tier rows --></div>
+
+        <!-- In-content ad: between tier list and comments (high engagement point) -->
+        <div class="ad-banner ad-banner--inline" data-ad-slot="detail-mid">
+          <span class="ad-label">Advertisement</span>
+          <div class="ad-placeholder">728 &times; 90</div>
+        </div>
+
+        <!-- ============ COMMENTS ============ -->
+        <section class="comments" aria-label="Comments">
+          <h3 class="comments-title">Comments <span class="comments-count" id="commentsCount"></span></h3>
+
+          <form class="comment-composer" id="commentComposer">
+            <div class="avatar avatar--you" id="composerAvatar" aria-hidden="true">?</div>
+            <input type="text" class="comment-input" id="commentInput" placeholder="Drop your (correct) opinion…" maxlength="500" />
+            <button type="submit" class="btn btn-primary btn-sm">Post</button>
+          </form>
+
+          <div class="comment-thread" id="commentThread"><!-- injected nested comments --></div>
+        </section>
+      </div>
+    </article>
+  </div>
+
+  <!-- ============ CREATE TIER LIST (modal) ============ -->
+  <div class="detail-overlay" id="createOverlay" hidden>
+    <form class="create-panel" id="createForm" role="dialog" aria-modal="true" aria-labelledby="createHeading">
+      <h2 id="createHeading">Create a Poll</h2>
+      <input type="text" id="createTitle" placeholder="Your question (e.g. Best WC 2026 Goal)" maxlength="90" required />
+      <input type="text" id="createCategory" placeholder="Category (e.g. World Cup)" maxlength="24" />
+      <div class="create-answers-label">
+        Write your answers <span class="create-hint">— everyone starts at 0%, voters decide the ranking</span>
+      </div>
+      <div class="create-answers" id="createAnswers"><!-- answer boxes injected --></div>
+      <button type="button" class="btn btn-outline btn-sm create-add" id="createAddAnswer">+ Add another answer</button>
+      <div class="create-actions">
+        <button type="button" class="btn btn-outline" id="createCancel">Cancel</button>
+        <button type="submit" class="btn btn-primary">Publish</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ============ AUTH (modal) ============ -->
+  <div class="detail-overlay" id="authOverlay" hidden>
+    <form class="create-panel" id="authForm" role="dialog" aria-modal="true" aria-labelledby="authHeading">
+      <h2 id="authHeading">Log In</h2>
+      <div class="auth-tabs" role="tablist" aria-label="Auth mode">
+        <button type="button" class="chip is-active" data-authtab="login">Log In</button>
+        <button type="button" class="chip" data-authtab="signup">Sign Up</button>
+      </div>
+      <input type="text" id="authUser" placeholder="Username" maxlength="20" autocomplete="username" required />
+      <input type="password" id="authPass" placeholder="Password" minlength="4" autocomplete="current-password" required />
+      <p class="auth-error" id="authError" hidden></p>
+      <div class="create-actions">
+        <button type="button" class="btn btn-outline" id="authCancel">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="authSubmit">Log In</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ============ PROFILE (modal) ============ -->
+  <div class="detail-overlay" id="profileOverlay" hidden>
+    <article class="create-panel profile-panel" role="dialog" aria-modal="true" aria-labelledby="profileName">
+      <button class="btn btn-ghost profile-close" id="profileClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <div class="profile-head">
+        <span class="avatar profile-avatar" id="profileAvatar" aria-hidden="true"></span>
+        <div class="profile-id">
+          <h2 class="profile-name" id="profileName"></h2>
+          <p class="profile-stats" id="profileStats"></p>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" id="profileFollow">Follow</button>
+      <div class="profile-polls-title" id="profilePollsTitle">Polls</div>
+      <ul class="profile-polls" id="profilePolls"></ul>
+    </article>
+  </div>
+
+  <!-- ============ MOBILE ANCHOR AD ============ -->
+  <div class="ad-banner ad-banner--anchor" data-ad-slot="mobile-anchor">
+    <span class="ad-label">Ad</span>
+    <div class="ad-placeholder">320 &times; 50</div>
+    <button class="ad-anchor-close" aria-label="Close ad" onclick="this.parentElement.remove()">&times;</button>
+  </div>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p class="footer-brand">Trust Me <em>Bro</em></p>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="#">About</a><a href="#">Terms</a><a href="#">Privacy</a><a href="#">Advertise</a><a href="#">Contact</a>
+      </nav>
+      <p class="footer-note">Opinions are ranked. Feelings are not our problem. © 2026</p>
+    </div>
+  </footer>
+
+  <template id="tierCardTemplate">
+    <article class="tier-card">
+      <div class="vote-rail">
+        <button class="vote-btn vote-btn--up" aria-label="Upvote">
+          <svg viewBox="0 0 24 24" width="23" height="23" fill="currentColor"><path d="M11.4 3.3 C11.9 2.8 12.8 2.9 13.3 3.7 C15.9 7.8 18.4 12.1 20.8 16.5 C21.4 17.7 20.8 18.9 19.5 19.1 C14.7 19.8 9.1 19.8 4.3 19.2 C3 19 2.5 17.8 3.1 16.6 C5.6 12.1 8.2 7.7 10.9 3.9 C11 3.7 11.2 3.4 11.4 3.3 Z"/></svg>
+        </button>
+        <span class="vote-count">0</span>
+        <button class="vote-btn vote-btn--down" aria-label="Downvote">
+          <svg viewBox="0 0 24 24" width="23" height="23" fill="currentColor"><path d="M11.4 3.3 C11.9 2.8 12.8 2.9 13.3 3.7 C15.9 7.8 18.4 12.1 20.8 16.5 C21.4 17.7 20.8 18.9 19.5 19.1 C14.7 19.8 9.1 19.8 4.3 19.2 C3 19 2.5 17.8 3.1 16.6 C5.6 12.1 8.2 7.7 10.9 3.9 C11 3.7 11.2 3.4 11.4 3.3 Z" transform="rotate(180 12 11.2)"/></svg>
+        </button>
+      </div>
+      <div class="tier-card-main">
+        <div class="tier-card-top">
+          <span class="tier-card-category"></span>
+          <span class="tier-card-time"></span>
+        </div>
+        <h3 class="tier-card-title"><button class="tier-card-link"></button></h3>
+        <div class="tier-preview" aria-hidden="true"></div>
+        <div class="tier-card-footer">
+          <span class="tier-card-author"></span>
+          <button class="tier-card-comments">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2-3a8 8 0 1 1 15-5z"/></svg>
+            <span class="comment-num"></span>
+          </button>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script>
+/* ==========================================================================
+   TRUST ME BRO — app.js
+   Modules: Theme, MockAPI (swap for real backend), Votes, Feed, Detail,
+   Comments, Search, Create, Nav, Sidebar, MobileNav
+   ========================================================================== */
+
+"use strict";
+
+/* Hand-drawn brush triangle (pointing up) — curved sides, uneven rounded corners */
+const BRUSH_TRI =
+  "M11.4 3.3 C11.9 2.8 12.8 2.9 13.3 3.7 C15.9 7.8 18.4 12.1 20.8 16.5 " +
+  "C21.4 17.7 20.8 18.9 19.5 19.1 C14.7 19.8 9.1 19.8 4.3 19.2 " +
+  "C3 19 2.5 17.8 3.1 16.6 C5.6 12.1 8.2 7.7 10.9 3.9 C11 3.7 11.2 3.4 11.4 3.3 Z";
+
+/* ---------- THEME ---------- */
+const Theme = (() => {
+  const STORAGE_KEY = "tmb-theme";
+  const root = document.documentElement;
+  const toggle = document.getElementById("themeToggle");
+
+  function apply(theme) {
+    root.setAttribute("data-theme", theme);
+    toggle.setAttribute("aria-checked", String(theme === "dark"));
+    localStorage.setItem(STORAGE_KEY, theme);
+  }
+
+  function init() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    const preferred =
+      saved ||
+      (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    apply(preferred);
+
+    toggle.addEventListener("click", () => {
+      apply(root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+    });
+  }
+
+  return { init };
+})();
+
+/* ---------- MOCK API ----------
+   Replace these functions with real fetch() calls when the backend lands.
+   `hoursAgo` powers the sort logic; a real API would return timestamps. */
+const MockAPI = (() => {
+  const TIERS = ["S", "A", "B", "C", "D"];
+
+  const page1 = [
+    {
+      id: 1, title: "World Cup 2026: Who's Actually Winning It All",
+      category: "World Cup", author: "footyoracle", time: "34m ago", hoursAgo: 0.5,
+      votes: 8912, comments: 1204,
+      tiers: {
+        S: ["France", "Spain"],
+        A: ["Argentina", "England"],
+        B: ["Brazil", "Portugal"],
+        C: ["Germany", "USA"],
+        D: ["Everyone else"],
+      },
+    },
+    {
+      id: 2, title: "Best Players of WC 2026 So Far",
+      category: "World Cup", author: "xgmerchant", time: "1h ago", hoursAgo: 1,
+      votes: 7345, comments: 893,
+      tiers: {
+        S: ["Lamine Yamal", "Mbappé"],
+        A: ["Bellingham", "Vinícius Jr"],
+        B: ["Musiala", "Valverde"],
+        C: ["Kane"],
+        D: ["The ref from the quarterfinal"],
+      },
+    },
+    {
+      id: 3, title: "Every WC 2026 Kit, Ranked by Drip",
+      category: "World Cup", author: "kitcollector", time: "3h ago", hoursAgo: 3,
+      votes: 5120, comments: 467,
+      tiers: {
+        S: ["Nigeria", "Japan"],
+        A: ["Mexico", "France"],
+        B: ["USA", "Argentina"],
+        C: ["England"],
+        D: ["Germany"],
+      },
+    },
+    {
+      id: 4, title: "Most Painful WC 2026 Eliminations",
+      category: "World Cup", author: "tearscollector", time: "6h ago", hoursAgo: 6,
+      votes: 4310, comments: 622,
+      tiers: {
+        S: ["Brazil on penalties"],
+        A: ["Italy in the group stage", "Morocco in the last 16"],
+        B: ["Netherlands"],
+        C: ["Croatia"],
+        D: ["Belgium (we all saw it coming)"],
+      },
+    },
+    {
+      id: 5, title: "Fast Food Fries, Ranked by Someone With Taste",
+      category: "Fast Food", author: "burgerlord", time: "2h ago", hoursAgo: 2,
+      votes: 4821, comments: 342,
+      tiers: {
+        S: ["McDonald's (fresh)", "Five Guys"],
+        A: ["Popeyes Cajun", "Checkers"],
+        B: ["Wendy's", "Chick-fil-A Waffle"],
+        C: ["Burger King", "KFC"],
+        D: ["McDonald's (cold)"],
+      },
+    },
+    {
+      id: 6, title: "Every Zelda Game — No Nostalgia Allowed",
+      category: "Games", author: "hyrulehater", time: "5h ago", hoursAgo: 5,
+      votes: 3907, comments: 518,
+      tiers: {
+        S: ["Breath of the Wild", "Tears of the Kingdom"],
+        A: ["Ocarina of Time", "Wind Waker"],
+        B: ["Majora's Mask", "Link's Awakening"],
+        C: ["Skyward Sword"],
+        D: ["Zelda II"],
+      },
+    },
+    {
+      id: 7, title: "Anime Openings That Go Way Too Hard",
+      category: "Anime", author: "sakugasan", time: "8h ago", hoursAgo: 8,
+      votes: 3312, comments: 267,
+      tiers: {
+        S: ["Attack on Titan OP1", "JJK OP1"],
+        A: ["Chainsaw Man OP", "FMAB OP4"],
+        B: ["Naruto OP16", "One Piece OP1"],
+        C: ["Bleach OP13"],
+        D: ["That one filler arc OP"],
+      },
+    },
+    {
+      id: 8, title: "Programming Languages by How Much They Hurt",
+      category: "Tech", author: "segfaultsally", time: "12h ago", hoursAgo: 12,
+      votes: 2988, comments: 731,
+      tiers: {
+        S: ["Rust (after 6 months)", "Python"],
+        A: ["TypeScript", "Go"],
+        B: ["Kotlin", "C#"],
+        C: ["Java", "C++"],
+        D: ["PHP 5", "COBOL"],
+      },
+    },
+    {
+      id: 9, title: "Sneaker Silhouettes of All Time (Objective)",
+      category: "Fashion", author: "griptape", time: "14h ago", hoursAgo: 14,
+      votes: 2410, comments: 189,
+      tiers: {
+        S: ["Jordan 1", "AF1"],
+        A: ["NB 550", "Dunk Low"],
+        B: ["Samba", "Gazelle"],
+        C: ["Yeezy Foam Runner"],
+        D: ["Skechers Shape-Ups"],
+      },
+    },
+    {
+      id: 10, title: "Movie Trilogies Where Part 3 Didn't Ruin It",
+      category: "Movies", author: "reelcritic", time: "19h ago", hoursAgo: 19,
+      votes: 2156, comments: 298,
+      tiers: {
+        S: ["Lord of the Rings", "Toy Story (1-3)"],
+        A: ["Back to the Future", "Dark Knight"],
+        B: ["Spider-Man (Raimi)"],
+        C: ["The Matrix"],
+        D: ["The Hangover"],
+      },
+    },
+    {
+      id: 11, title: "Cereal Mascots by Trustworthiness",
+      category: "Memes", author: "milkfirst", time: "1d ago", hoursAgo: 24,
+      votes: 1873, comments: 156,
+      tiers: {
+        S: ["Tony the Tiger"],
+        A: ["Snap, Crackle, Pop", "Toucan Sam"],
+        B: ["Cap'n Crunch"],
+        C: ["Trix Rabbit"],
+        D: ["The Honey Smacks Frog"],
+      },
+    },
+    {
+      id: 12, title: "Gym Exercises by Pain-to-Gain Ratio",
+      category: "Sports", author: "dumbbelldave", time: "1d ago", hoursAgo: 26,
+      votes: 1655, comments: 203,
+      tiers: {
+        S: ["Lat Pulldown", "Leg Press"],
+        A: ["Bench Press", "Rows"],
+        B: ["Deadlift", "Pull-ups"],
+        C: ["Squats"],
+        D: ["Bulgarian Split Squats"],
+      },
+    },
+  ];
+
+  /* 100 trendy topics (July 2026). Items are ordered best → worst;
+     toTiers() distributes them across the five ranks. */
+  const TRENDY_TOPICS = [
+    // ---- World Cup 2026 ----
+    { t: "Best WC 2026 Goals So Far", c: "World Cup", i: ["The 35-yard screamer", "Yamal's solo run", "The overhead kick", "The 96th-minute winner", "Deflected off a defender's back"] },
+    { t: "WC 2026 Stadiums Ranked", c: "World Cup", i: ["Estadio Azteca", "SoFi", "MetLife", "BC Place", "Estadio BBVA", "The one with the bad grass"] },
+    { t: "WC 2026 Goal Celebrations", c: "World Cup", i: ["Griddy at the corner flag", "The baby cradle", "Knee slide in the rain", "Staring dead into the camera", "Shirt off (instant yellow)"] },
+    { t: "Best Anthem Scenes at WC 2026", c: "World Cup", i: ["Italy fans (they still came)", "Brazil's drum section", "France", "Mexico at the Azteca", "USA doing their best"] },
+    { t: "WC 2026 Keepers Ranked", c: "World Cup", i: ["The penalty-save guy", "The sweeper keeper", "The 40-year-old legend", "The one who plays out from the back", "The one who should not"] },
+    { t: "Best XI of the Tournament So Far", c: "World Cup", i: ["Yamal", "Mbappé", "Bellingham", "Valverde", "Musiala", "That random fullback having a career month"] },
+    { t: "Biggest WC 2026 Flops", c: "World Cup", i: ["The €150m striker with 0 goals", "The hyped wonderkid", "The team that posted 'we're so back'", "VAR", "The official song"] },
+    { t: "WC Penalty Takers by Trustworthiness", c: "World Cup", i: ["The stone-cold veteran", "The keeper who came up to take one", "The stutter-step guy", "The captain (rushed it)", "Whoever went fifth"] },
+    { t: "World Cup Mascots of All Time", c: "World Cup", i: ["Footix '98", "Zabivaka", "The 2026 moose thing", "La'eeb", "Goleo (cursed)"] },
+    { t: "USMNT at Their Home World Cup", c: "World Cup", i: ["Pulisic", "The keeper", "The midfield shift", "The vibes", "The finishing"] },
+    { t: "WC Refs by Card Happiness", c: "World Cup", i: ["The one who lets play flow", "The calm conversation guy", "Average enjoyer", "Pocket-reacher", "Red card speedrunner"] },
+    { t: "Group Stage Games That Went Off", c: "World Cup", i: ["The 4-3", "The 95th-minute equalizer", "The upset nobody predicted", "The rivalry match", "0-0 that was somehow good"] },
+    // ---- Sports ----
+    { t: "F1 2026 Cars (New Regs) Ranked", c: "Sports", i: ["The one dominating", "The surprise podium car", "The midfield banger", "The team blaming the engine", "The one already on next year"] },
+    { t: "F1 Drivers Right Now", c: "Sports", i: ["The championship leader", "The rookie sensation", "The radio menace", "The veteran holding on", "The pay driver"] },
+    { t: "NBA Finals 2026 Moments", c: "Sports", i: ["The game-winner", "The 40-point closeout", "The block", "The bench reaction", "The podium interview"] },
+    { t: "Summer 2026 Transfer Rumors", c: "Sports", i: ["The one that's actually happening", "Here we go pending", "Agent leak", "Fan-made in Photoshop", "'My uncle works at the club'"] },
+    { t: "Pickup Basketball Player Types", c: "Sports", i: ["The silent hooper", "Passes first, wins games", "Mid-range assassin", "Calls every foul", "Brings his own rules"] },
+    { t: "Gym Machines by Aura", c: "Sports", i: ["Squat rack", "Cable station", "Pec deck", "Smith machine", "That hip thing everyone avoids"] },
+    { t: "Pickleball vs Everything", c: "Sports", i: ["Padel", "Pickleball", "Tennis", "Badminton", "Racquetball (RIP)"] },
+    { t: "Sports Docs to Binge", c: "Sports", i: ["Drive to Survive", "The WC 2026 behind-the-scenes", "Last Dance rewatch", "Full Swing", "The one about your team (painful)"] },
+    // ---- Games ----
+    { t: "GTA VI Features We're Most Hyped For", c: "Games", i: ["The map", "The heists", "Online day one", "The physics", "The loading screens (please be fast)"] },
+    { t: "Switch 2 Games Ranked", c: "Games", i: ["Mario Kart World", "The 3D Mario", "Metroid Prime 4", "The launch port you already owned", "Tech demo cardboard thing"] },
+    { t: "Mario Kart World Tracks", c: "Games", i: ["Rainbow Road", "The city sprawl", "The desert loop", "The retro remake", "The one with the wall you always hit"] },
+    { t: "Roblox Brainrot Games Ranked", c: "Games", i: ["Steal a Brainrot", "Grow a Garden", "The new copy of the copy", "Brainrot tower defense", "The one with 47 gamepasses"] },
+    { t: "Fortnite Seasons of All Time", c: "Games", i: ["Chapter 1 S1 (nostalgia)", "The Travis Scott one", "The Marvel one", "Whatever's live now", "The one everyone skipped"] },
+    { t: "Elden Ring Bosses by Trauma", c: "Games", i: ["Malenia", "The horse guy", "The double gank fight", "Margit (first wall)", "The reused one"] },
+    { t: "Games of 2026 So Far", c: "Games", i: ["The GOTY frontrunner", "The indie that ate 80 hours", "The remake done right", "The live-service comeback", "The $70 disappointment"] },
+    { t: "Minecraft Updates Ranked", c: "Games", i: ["The one that changed everything", "Caves & Cliffs", "The Nether update", "This year's mob vote winner", "The mob vote losers (justice)"] },
+    { t: "Handhelds in 2026", c: "Games", i: ["Steam Deck OLED", "Switch 2", "ROG Ally", "The phone controller clip", "Your dead 3DS (emotionally S)"] },
+    { t: "CoD Campaigns Ever", c: "Games", i: ["MW2 (2009)", "Black Ops", "MW (2019)", "The space one", "The one with no campaign"] },
+    { t: "Cozy Games for 3am", c: "Games", i: ["Stardew", "Animal Crossing", "The new cozy hit", "Minecraft peaceful mode", "Unpacking (emotional damage)"] },
+    { t: "Horror Games You Can't Play Alone", c: "Games", i: ["The co-op scream fest", "The asylum one", "The PS1-style indie", "The VR one (never)", "The jumpscare compilation game"] },
+    { t: "Speedrun Categories by Chaos", c: "Games", i: ["Any% glitchless", "100%", "Any% (game broken in half)", "Blindfolded", "The one with a pause-buffer meta"] },
+    { t: "Game Consoles Ever (2026 Edition)", c: "Games", i: ["PS2", "Switch 2", "PS5 Pro", "Xbox Series X", "Virtual Boy"] },
+    { t: "FC 26 Ratings Reveal Reactions", c: "Games", i: ["The striker who deserved it", "The 89 that should be 91", "My club's entire squad (robbed)", "The rating that started a war", "Goalkeepers (always wrong)"] },
+    // ---- Tech ----
+    { t: "AI Video Generators Ranked", c: "Tech", i: ["The one that broke the internet last month", "The open-source one", "The watermarked free tier", "The one that melts hands", "Slideshow with vibes"] },
+    { t: "Phones of 2026 So Far", c: "Tech", i: ["The foldable that finally makes sense", "iPhone", "The camera monster", "The battery king", "The one with 'AI button' nobody presses"] },
+    { t: "Folding Phones by Crease", c: "Tech", i: ["Basically invisible", "You forget it's there", "Visible but fine", "You feel it every scroll", "Structural weakness"] },
+    { t: "Earbuds Tier List", c: "Tech", i: ["AirPods Pro", "The audiophile pick", "The gym pair", "The $20 ones that slap", "The ones that fall out"] },
+    { t: "Smartwatches in 2026", c: "Tech", i: ["The one that reads your sleep scarily well", "Apple Watch", "The fitness brand one", "The hybrid analog", "The one you charge daily and hate"] },
+    { t: "Browsers by Vibes", c: "Tech", i: ["The fast new one", "Firefox (respect)", "Chrome (RAM tax)", "Safari", "The one that came with the laptop"] },
+    { t: "Social Apps Right Now", c: "Tech", i: ["The group chat", "TikTok", "The new one everyone's trying", "Instagram", "The one that's just ads now"] },
+    { t: "Laptops for Students", c: "Tech", i: ["MacBook Air", "The gaming laptop (be honest)", "The $400 workhorse", "The tablet with keyboard cope", "The school Chromebook"] },
+    { t: "VR/AR Headsets 2026", c: "Tech", i: ["The lightweight glasses", "Quest", "Vision Pro", "The PC-tethered beast", "The one gathering dust"] },
+    { t: "EVs in 2026", c: "Tech", i: ["The one with insane range", "The affordable one finally", "The truck", "The luxury spaceship", "The one with subscription seat heating"] },
+    { t: "Chargers by Betrayal Level", c: "Tech", i: ["The braided cable (loyal)", "65W brick", "The car charger", "The one that only works at an angle", "Hotel room USB port"] },
+    { t: "Wi-Fi Spots by Reliability", c: "Tech", i: ["Home ethernet", "The café that lets you sit 4 hours", "Library", "Airport wifi", "Hotel 'premium' wifi"] },
+    // ---- Music ----
+    { t: "Songs of Summer 2026", c: "Music", i: ["The WC anthem remix", "The one from TikTok", "The surprise drop", "The festival closer", "The one your mom knows"] },
+    { t: "Rappers Right Now", c: "Music", i: ["The one who just dropped", "The lyricist", "The hitmaker", "The one beefing again", "The one still teasing the album"] },
+    { t: "K-pop Groups 2026", c: "Music", i: ["The one selling out stadiums", "The comeback of the year", "The rookie group", "The subunit", "The disbanded one (still S in our hearts)"] },
+    { t: "Festival Lineups 2026", c: "Music", i: ["The one with the secret guest", "Coachella", "Glasto", "The local one that overperformed", "The one that got cancelled"] },
+    { t: "One-Hit Wonders of the 2020s", c: "Music", i: ["The 2021 one you still play", "The TikTok sped-up one", "The summer 2023 one", "The one-week wonder", "You already forgot it"] },
+    { t: "Album Covers of 2026", c: "Music", i: ["The minimalist one", "The film photo one", "The AI one (controversial)", "The childhood photo one", "Just text on white"] },
+    { t: "Diss Tracks of All Time", c: "Music", i: ["The 2024 one (you know)", "Ether", "Hit 'Em Up", "The response that came too late", "The apology track after"] },
+    { t: "Boy Bands Ever", c: "Music", i: ["The Beatles (cheating)", "*NSYNC", "BTS", "One Direction", "The one from the cereal ad"] },
+    { t: "TikTok Sounds Rn", c: "Music", i: ["The sped-up one", "The audio from that one video", "The 2016 throwback", "The AI voice one", "The one stuck in your head against your will"] },
+    { t: "Concert Crowd Types", c: "Music", i: ["The barricade veterans", "The scream-every-word section", "The couple slow dancing to a rage song", "Phone-up-all-night guy", "The pit that opens for no reason"] },
+    // ---- Movies & TV ----
+    { t: "Spider-Man: Brand New Day — Villain Wishlist", c: "Movies", i: ["The one from the leaks", "A street-level arc", "The symbiote (again, but right)", "The multiverse cameo", "Another dance scene (no)"] },
+    { t: "Summer 2026 Blockbusters", c: "Movies", i: ["The one that's actually good", "The sequel that justified itself", "The horror sleeper hit", "The reboot nobody asked for", "The one that moved to streaming"] },
+    { t: "A24 Movies by Emotional Damage", c: "Movies", i: ["The one you can't rewatch", "The weird one you defend", "The horror one", "The coming-of-age one", "The one that's just vibes"] },
+    { t: "Dune Movies (Waiting for Part 3)", c: "Movies", i: ["Part Two", "Part One", "The 1984 one (camp classic)", "The popcorn bucket", "Waiting until December (D tier experience)"] },
+    { t: "Star Wars Shows Ranked", c: "Movies", i: ["Andor", "The Mandalorian S1-2", "The one with the lightsaber episode", "The mid one", "The one we don't discuss"] },
+    { t: "Netflix Originals 2026", c: "Movies", i: ["The Korean one everyone binged", "The docuseries", "The rom-com that worked", "Season 3 of the thing", "Cancelled after one season (pattern)"] },
+    { t: "Horror Franchises by Consistency", c: "Movies", i: ["The Conjuring-verse", "Scream", "The new indie franchise", "Saw (chaotic)", "The one on part 11"] },
+    { t: "Rom-Coms Ever", c: "Movies", i: ["The 90s classic", "The 2000s comfort one", "The recent one that revived the genre", "The Netflix formula one", "The one where they end up with the wrong person"] },
+    { t: "Movie Theater Snack Strategy", c: "Movies", i: ["Smuggled snacks (S tier economics)", "Popcorn + ICEE", "Nachos (loud)", "The $12 candy", "Full dinner in the dark"] },
+    { t: "Awards Season 2026 Moments", c: "Movies", i: ["The speech that went viral", "The upset win", "The snub discourse", "The bit that ran too long", "The audience reaction cam"] },
+    { t: "Avatar Movies (Fire and Ash Era)", c: "Movies", i: ["The one you saw in IMAX", "Way of Water rewatch", "The first one", "Waiting 3 more years", "The blue cat memes (eternal)"] },
+    { t: "TV Finales by Landing", c: "Movies", i: ["Stuck the landing", "Good enough", "Rushed but fine", "The one we pretend ended a season early", "Ruined the whole show"] },
+    // ---- Anime ----
+    { t: "Anime of 2026 So Far", c: "Anime", i: ["The one with the insane animation budget", "The sequel season", "The sleeper hit", "The isekai (a good one!)", "The adaptation that hurt the manga readers"] },
+    { t: "JJK Season 3 Fights", c: "Anime", i: ["The one that broke Twitter", "The sorcerer showdown", "The flashback fight", "The one-sided beatdown", "The off-screened one (crime)"] },
+    { t: "One Piece Arcs Ranked", c: "Anime", i: ["Enies Lobby", "Marineford", "Wano payoff", "Water 7", "The filler island"] },
+    { t: "Solo Leveling Moments", c: "Anime", i: ["ARISE", "The dungeon reveal", "The stat-check fight", "Training arc", "The webtoon panel they nailed"] },
+    { t: "Shonen Protagonists by W-L Record", c: "Anime", i: ["The one who never loses", "The strategist", "The lovable idiot (wins anyway)", "The one carried by friends", "The one who loses round one every time"] },
+    { t: "Anime Betrayals Ranked", c: "Anime", i: ["The one you never saw coming", "The double agent", "The childhood friend", "The mentor (classic)", "The one spoiled by the opening"] },
+    { t: "Ghibli Movies by Comfort", c: "Anime", i: ["Totoro", "Kiki's", "Howl's", "Spirited Away", "Grave of the Fireflies (comfort: none)"] },
+    { t: "Isekai Premises by Laziness", c: "Anime", i: ["Actually original", "Truck-kun classic", "Reborn as a noble", "Reborn as an item", "Reborn as a vending machine (real)"] },
+    // ---- Memes / Internet ----
+    { t: "Brainrot Terms of 2026", c: "Memes", i: ["The new one from last week", "Aura (still alive)", "The one your teacher said", "Skibidi (retired but respected)", "The one brands started using (dead instantly)"] },
+    { t: "TikTok Trends Rn", c: "Memes", i: ["The dance that's everywhere", "The recipe one", "The POV format", "The AI filter one", "The one that's just people lying"] },
+    { t: "YouTubers 2026", c: "Memes", i: ["The one who built a city this time", "The video essayist", "The comeback arc", "The one posting once a year", "The apology video guy"] },
+    { t: "Streamers by Chaos", c: "Memes", i: ["The marathon streamer", "The variety king", "The one who plays one game forever", "The just-chatting empire", "The banned-again one"] },
+    { t: "Group Chat Member Types", c: "Memes", i: ["The planner (carries)", "The meme supplier", "The lurker who likes everything", "Leaves on read for 3 days", "The one who replies to week-old messages"] },
+    { t: "Emojis by Power Level", c: "Memes", i: ["💀", "🙏", "😭", "👍 (passive aggressive)", "The one only your dad uses"] },
+    { t: "Viral Animals Hall of Fame", c: "Memes", i: ["This year's zoo baby", "Moo Deng (legacy)", "The capybara era", "The screaming cat", "Whatever's viral by Friday"] },
+    { t: "AI Memes by Cursedness", c: "Memes", i: ["The obviously fake one everyone believed", "The historical figure vlogs", "The AI song that charted", "The uncanny hands era (vintage)", "Your uncle's AI profile pic"] },
+    // ---- Food ----
+    { t: "Energy Drinks by Heart Rate", c: "Fast Food", i: ["The 200mg problem", "The gamer one", "The gas station classic", "The 'natural' one", "Whatever the gym bro hands you"] },
+    { t: "Summer Snacks Ranked", c: "Fast Food", i: ["Watermelon (cold)", "The ice cream truck order", "Freezer pops", "Gas station slushie", "Warm cooler sandwich"] },
+    { t: "Ice Cream Flavors (No Cowards)", c: "Fast Food", i: ["Cookies and cream", "Pistachio (trust)", "Mango sorbet", "Vanilla (reliable)", "Rum raisin (who)"] },
+    { t: "Gas Station Snack Run", c: "Fast Food", i: ["The perfect chip pull", "Beef jerky (rich day)", "The 2-for-1 candy", "The roller grill gamble", "Expired protein bar"] },
+    { t: "Sodas Ranked by First Sip", c: "Fast Food", i: ["Ice-cold glass bottle Coke", "The fountain mix", "Cream soda", "The store brand (surprisingly ok)", "Flat soda from yesterday"] },
+    { t: "Pizza Chains by Trust", c: "Fast Food", i: ["The local spot (not a chain, still wins)", "The deep dish one", "The 30-min delivery one", "The school lunch one (nostalgia)", "Airport pizza"] },
+    { t: "Coffee Orders by Personality", c: "Fast Food", i: ["Espresso (no time)", "Cold brew (menace)", "The 9-word custom order", "Matcha (switched sides)", "Decaf (why)"] },
+    { t: "Matcha vs The World", c: "Fast Food", i: ["Iced matcha latte", "Hot matcha (purist)", "Matcha lemonade", "Coffee (the old king)", "The $9 one that's mostly milk"] },
+    // ---- Fashion ----
+    { t: "Sneaker Drops 2026", c: "Fashion", i: ["The collab that broke the app", "The retro re-release", "The running shoe that went lifestyle", "The one that sat on shelves", "The AI-designed one (no)"] },
+    { t: "Summer Fits by Effort", c: "Fashion", i: ["Linen everything", "Jersey + shorts (WC summer)", "The jorts revival", "Tank top rotation", "Same hoodie, 95 degrees"] },
+    { t: "Caps by Aura", c: "Fashion", i: ["The perfectly broken-in one", "The team fitted", "The vintage strapback", "The stiff new one", "The free bank one"] },
+    { t: "Sunglasses Ranked", c: "Fashion", i: ["The ones that survive every summer", "The rectangle ones", "Sport wraparounds (ironic then real)", "The $5 pair (loyal)", "The ones on your head right now (lost)"] },
+    // ---- Life ----
+    { t: "Summer 2026 Activities", c: "Memes", i: ["Watch party for the final", "Beach day", "The cookout", "Rooftop anything", "Doomscrolling in AC (honest)"] },
+    { t: "Vacation Destinations 2026", c: "Memes", i: ["The WC host city trip", "The cheap flight you found", "The beach town", "The national park", "Staycation (budget went to jerseys)"] },
+    { t: "Sleep Schedules by Delusion", c: "Memes", i: ["10pm-6am (who are you)", "12-8 (respectable)", "2am-10am (student)", "4am 'one more episode'", "Reverse jetlag (WC games in every timezone)"] },
+  ];
+
+  const AUTHOR_POOL = [
+    "footyoracle", "xgmerchant", "kitcollector", "auxgoblin", "bloxxed",
+    "cordcutter", "promptlord", "gatec12", "postcredits", "sakugasan",
+    "burgerlord", "segfaultsally", "griptape", "reelcritic", "milkfirst",
+    "dumbbelldave", "tearscollector", "hyrulehater", "casualenjoyer", "lurker_supreme",
+  ];
+
+  function timeLabel(h) {
+    if (h < 1) return Math.round(h * 60) + "m ago";
+    if (h < 24) return Math.round(h) + "h ago";
+    return Math.round(h / 24) + "d ago";
+  }
+
+  function toTiers(items) {
+    const tiers = {};
+    items.forEach((item, i) => {
+      const tier = TIERS[Math.min(4, Math.floor((i * 5) / items.length))];
+      (tiers[tier] = tiers[tier] || []).push(item);
+    });
+    return tiers;
+  }
+
+  const trendy = TRENDY_TOPICS.map((topic, i) => {
+    const hoursAgo = +(0.4 + i * 0.37).toFixed(1);
+    const votes = Math.max(180, 6400 - i * 41 - (i % 9) * 230);
+    return {
+      id: 100 + i,
+      title: topic.t,
+      category: topic.c,
+      author: AUTHOR_POOL[i % AUTHOR_POOL.length],
+      time: timeLabel(hoursAgo),
+      hoursAgo,
+      votes,
+      comments: Math.max(12, Math.round(votes / 9) - (i % 5) * 40),
+      tiers: toTiers(topic.i),
+    };
+  });
+
+  /* ---- Seeded RNG so every poll's numbers are random but stable per id ---- */
+  function hashStr(s) {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function seededRng(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  const BOT_NAMES = [
+    "tierlord", "voteenjoyer", "rankmaster", "pollcrawler", "statspilled",
+    "the_aggregator", "brackets4life", "hotTakeHarry", "voxpopuli", "chartdaddy",
+    "opinionhaver", "listgoblin", "fencesitter", "topvoter", "ballotbox",
+    "rngesus", "metascore", "midfielder7", "decider", "sranker",
+  ];
+
+  /* ---- Bulk poll generator: subjects × title styles ≈ 1000 polls ---- */
+  const ASPECTS = [
+    "Ranked", "Tier List", "— The Objective Ranking", "Power Rankings",
+    "(Community Vote)", "Settled Once and For All", "— No Bias Edition",
+    "Ranked by Aura", "— The Definitive List", "(Hot Takes Only)",
+  ];
+
+  const GEN = [
+    { c: "Anime", subjects: [
+      { s: "Naruto Fights", i: ["Naruto vs Pain", "Naruto vs Sasuke (final)", "Rock Lee vs Gaara", "Kakashi vs Obito", "Guy vs Madara", "Team 7 vs Kaguya", "The filler arc one"] },
+      { s: "Attack on Titan Moments", i: ["The basement reveal", "Levi vs Beast Titan", "The ocean scene", "Eren's declaration", "Sasha's last scene", "The rumbling begins", "Season 1 episode 1"] },
+      { s: "Demon Slayer Breathing Styles", i: ["Sun Breathing", "Water Breathing", "Thunder Breathing", "Flame Breathing", "Mist Breathing", "Stone Breathing", "Beast Breathing"] },
+      { s: "Dragon Ball Transformations", i: ["Ultra Instinct", "SSJ1 (the original)", "SSJ Blue", "Gohan Beast", "SSJ3 (the eyebrows)", "Great Ape", "SSJ4 (canon in our hearts)"] },
+      { s: "Anime Mentors", i: ["Gojo", "Kakashi", "Jiraiya", "All Might", "Rayleigh", "Master Roshi", "Izumi Curtis"] },
+      { s: "Anime Power Systems", i: ["Nen", "Cursed Energy", "Chakra", "Devil Fruits", "Haki", "Quirks", "Breathing Styles"] },
+      { s: "Anime Villains", i: ["Aizen", "Madara", "Meruem", "Griffith", "Dio", "Frieza", "Shigaraki"] },
+      { s: "Anime Best Girls", i: ["Makima", "Marin", "Zero Two", "Nezuko", "Yor", "Power", "Rem"] },
+    ]},
+    { c: "Food", subjects: [
+      { s: "Pizza Toppings", i: ["Pepperoni", "Extra cheese", "Mushrooms", "Sausage", "Fresh basil", "Pineapple (fight me)", "Anchovies"] },
+      { s: "Burger Builds", i: ["Smash burger", "Double cheeseburger", "Bacon BBQ stack", "The veggie one (actually good)", "Gas station burger", "The 2am homemade one"] },
+      { s: "Instant Ramen Brands", i: ["Shin Ramyun", "Indomie Mi Goreng", "Buldak (pain)", "Maruchan", "Cup Noodles", "The fancy $4 one"] },
+      { s: "Breakfast Foods", i: ["French toast", "Waffles", "Pancakes", "Full English", "Cereal (dinner too)", "Just coffee (liar)"] },
+      { s: "Chip Flavors", i: ["Flamin' Hot", "Salt & vinegar", "Sour cream & onion", "BBQ", "Plain (respect)", "Ketchup chips"] },
+      { s: "Candy Bars", i: ["Kit Kat", "Snickers", "Twix (left one)", "Reese's", "Milky Way", "The airport one"] },
+      { s: "Sushi Orders", i: ["Salmon nigiri", "Spicy tuna roll", "California roll (starter pack)", "Eel", "Omakase (rich day)", "Gas station sushi"] },
+      { s: "Late Night Snacks", i: ["Instant noodles", "Cold pizza", "Cereal at 3am", "Toast with everything", "The whole fridge tour", "Someone else's leftovers"] },
+    ]},
+    { c: "World Cup", subjects: [
+      { s: "WC 2026 Dark Horses", i: ["Morocco", "Japan", "Colombia", "Uruguay", "Turkey", "The host nation bump"] },
+      { s: "WC Final Scenarios", i: ["Penalties (chaos)", "90th minute winner", "3-3 thriller", "Comfortable 2-0", "Red card drama", "VAR deciding it (no)"] },
+      { s: "WC 2026 Jerseys", i: ["Japan away", "Mexico home", "Nigeria (always)", "France away", "USA home", "The template one"] },
+      { s: "WC Watch Party Setups", i: ["Stadium (dream)", "Sports bar", "Backyard big screen", "Living room with the crew", "Phone at work (risky)", "Radio in traffic"] },
+      { s: "WC Commentators", i: ["The one who loses it on goals", "The tactical genius", "The pun guy", "The monotone one", "The co-comm who hates fun"] },
+      { s: "WC Fan Bases", i: ["Argentina (unmatched)", "Mexico (travel anywhere)", "Brazil drums", "England (delusional, lovable)", "Japan (they clean up!)", "USA (learning the chants)"] },
+      { s: "WC Group Stage Storylines", i: ["The giant that almost lost", "The 9-point group winner", "The group of death survivor", "The team that peaked too early", "The draw specialists"] },
+      { s: "WC Legends", i: ["Messi", "Pelé", "Maradona", "Zidane", "Ronaldo (R9)", "Ronaldo (CR7)", "Mbappé (building the case)"] },
+    ]},
+    { c: "Trading", subjects: [
+      { s: "Trading Strategies", i: ["DCA (boring, works)", "Swing trading", "Scalping (stress)", "Buy and hold", "Revenge trading (D)", "Following Twitter calls (F)"] },
+      { s: "Chart Patterns", i: ["Cup and handle", "Head and shoulders", "Double bottom", "Bull flag", "The one you drew to cope", "Support (imaginary)"] },
+      { s: "Trading Apps", i: ["The clean pro one", "Robinhood", "The bank app (1998 UI)", "The crypto exchange", "Paper trading (undefeated)", "The one that crashes on CPI day"] },
+      { s: "Trader Types", i: ["The quiet profitable one", "The screenshot-only-wins guy", "The leverage cowboy", "The long-term-hold-now guy", "The backtester who never trades", "Up 3000% on a demo account"] },
+      { s: "Candlestick Patterns", i: ["Doji", "Hammer", "Engulfing", "Shooting star", "Three white soldiers", "The one that means nothing"] },
+      { s: "Trading Rules Everyone Breaks", i: ["Cut losses early", "Don't overtrade", "Journal every trade", "No trading on news", "Risk 1% max", "No charts at 3am"] },
+      { s: "Market Sessions", i: ["London open", "NY open", "The overlap", "Asia session (patience)", "Friday afternoon (why)", "Sunday futures open"] },
+      { s: "Crypto Coins by Vibes", i: ["BTC (the OG)", "ETH", "SOL", "The meme coin that printed", "The one your friend shilled", "The dead one still in your wallet"] },
+    ]},
+    { c: "Stocks", subjects: [
+      { s: "Blue Chips", i: ["Apple", "Microsoft", "The chip maker", "The dividend fortress", "The bank", "The one your dad won't sell"] },
+      { s: "Meme Stocks Hall of Fame", i: ["The 2021 legend", "The theater one", "The comeback attempt", "The new one this month", "The one that went to zero"] },
+      { s: "Earnings Season Moments", i: ["The beat-and-raise", "The guidance cut", "The after-hours 20% move", "The CEO word salad", "The in-line report that dropped anyway"] },
+      { s: "Investor Types", i: ["The index fund enjoyer (wins)", "The stock picker", "The options degenerate", "The gold bug", "Cash-on-the-sidelines-since-2019 guy"] },
+      { s: "Dividend Stocks by Comfort", i: ["The 60-year streak one", "The utility", "The REIT", "The oil major", "The 12% yield trap (run)"] },
+      { s: "Sectors Right Now", i: ["AI / semis", "Energy", "Healthcare", "Financials", "Consumer staples (boring, fine)", "Commercial real estate (pain)"] },
+      { s: "Finance YouTubers", i: ["The actually-educational one", "The spreadsheet guy", "The URGENT-SELL-EVERYTHING thumbnail", "The private jet renter", "Found value investing last week"] },
+      { s: "Portfolio Allocations", i: ["60/40 (grandpa, works)", "100% index", "The 30-position diversified mess", "90% one stock (conviction)", "5% cash 95% vibes"] },
+    ]},
+    { c: "Drinks", subjects: [
+      { s: "Sodas", i: ["Coke (glass bottle)", "Dr Pepper", "Sprite", "Root beer", "Fanta", "The store brand cola"] },
+      { s: "Coffee Orders", i: ["Flat white", "Cold brew", "Espresso", "Vanilla latte", "The 6-pump caramel thing", "Instant coffee (survivor)"] },
+      { s: "Bubble Tea Orders", i: ["Brown sugar milk tea", "Classic milk tea 50%", "Taro", "Fruit tea + popping boba", "Matcha latte", "The cheese foam one (trust)"] },
+      { s: "Energy Drinks", i: ["The gamer powder", "The 300mg can", "Red Bull (classic)", "Monster", "The healthy sparkling one", "Gas station mystery brand"] },
+      { s: "Smoothie Ingredients", i: ["Mango", "Banana (base of civilization)", "Strawberry", "Peanut butter", "Kale (why)", "Protein powder clumps"] },
+      { s: "Hydration Options", i: ["Ice cold water", "Electrolyte packet", "Coconut water", "Sparkling water (spicy water)", "The gallon jug", "8th coffee (dehydration)"] },
+      { s: "Teas", i: ["Earl Grey", "Green tea", "Chamomile (sleepy time)", "Chai", "Mint", "The one bag left in the office"] },
+      { s: "Iced vs Hot", i: ["Iced coffee (year-round)", "Hot tea", "Iced matcha", "Hot chocolate", "Lukewarm anything (crime)"] },
+    ]},
+    { c: "Games", subjects: [
+      { s: "Roblox Game Genres", i: ["Obby", "Tycoon", "Simulator", "Horror", "Brainrot collector", "The one with 99% off gamepass"] },
+      { s: "Gaming Setups", i: ["The RGB battlestation", "Console + couch (peak comfort)", "The laptop on 20% battery", "Phone under the blanket", "The library PC"] },
+      { s: "Multiplayer Rage Moments", i: ["The lag death", "The teammate who left", "The 99% overtime loss", "Controller disconnect mid-fight", "The smurf lobby"] },
+      { s: "Game Soundtracks", i: ["The title screen theme", "The final boss theme", "The exploration music", "The one from the trailer", "The song stuck in your head for years"] },
+      { s: "NPC Types", i: ["The shopkeeper with lore", "The quest giver who follows you", "The one who repeats one line", "The escort mission NPC (D)", "The 10x price merchant"] },
+      { s: "Gamer Excuses", i: ["Lag", "My controller drifted", "Sun in my eyes", "I wasn't trying", "New keyboard", "The cat"] },
+      { s: "Tutorial Levels", i: ["The one that respects you", "The unskippable 40 minutes", "Press W to walk", "The secretly-best level", "The one you needed and skipped"] },
+      { s: "Boss Fight Types", i: ["The final phase theme drop", "The one you beat at 1HP", "The puzzle boss", "The camera (real boss)", "The gank squad"] },
+    ]},
+    { c: "Movies", subjects: [
+      { s: "Plot Twists", i: ["The one you never saw coming", "The one you guessed at minute 10", "The double twist", "The dream ending (lazy)", "The sequel-bait twist"] },
+      { s: "Movie Villains", i: ["The one with a point", "The chaos agent", "The corporate suit", "The twist villain", "The henchman who carried"] },
+      { s: "Franchise Reboots", i: ["The one that worked", "The gritty one", "The nostalgia cash-in", "The one nobody watched", "The one that killed the franchise"] },
+      { s: "Cinema Experiences", i: ["Opening night crowd", "Empty theater (private screening)", "IMAX", "The talker behind you (F)", "Phone flashlight guy (jail)"] },
+      { s: "Movie Dads", i: ["The one who came back with the milk", "The action dad", "The disappointed sigh dad", "The grill master", "The ask-your-mother dad"] },
+      { s: "Post-Credit Scenes", i: ["The one that changed everything", "The joke one", "The setup for a movie that never came", "The logo (nothing)", "Waiting 10 minutes for nothing"] },
+      { s: "Book-to-Movie Adaptations", i: ["Better than the book", "The faithful one", "The inspired-by one", "Skipped the best chapter", "The one the author disowned"] },
+      { s: "Movie Snack Combos", i: ["Popcorn + M&Ms mixed", "Nachos", "The smuggled feast", "Hot dog (brave)", "$9 water"] },
+    ]},
+    { c: "Music", subjects: [
+      { s: "Concert Moments", i: ["The acoustic surprise", "The crowd singing verse 1", "The confetti drop", "The 10-minute outro", "The opener nobody knew (now famous)"] },
+      { s: "Playlist Types", i: ["The gym one", "The 2am feels one", "The road trip master", "The liked-songs chaos", "The one your friend ruined"] },
+      { s: "Genres by Aura", i: ["Phonk", "Jazz (unbeatable)", "Lo-fi", "Drill", "Country (rising)", "Elevator music"] },
+      { s: "Album Rollouts", i: ["The surprise drop", "The 2-year tease", "The single not on the album", "The deluxe with 3 new songs", "The delay announcement"] },
+      { s: "Headphone Users", i: ["The audiophile", "The one-earbud guy", "The speaker-in-public menace (F)", "Noise cancelling enjoyer", "Wired headphones (loyal)"] },
+      { s: "Song Skip Behavior", i: ["Never skip (masterpiece)", "Skip the intro", "Skip to the drop", "6th listen today", "Skipped but never removed"] },
+      { s: "Karaoke Songs", i: ["Bohemian Rhapsody (ambitious)", "The safe crowd-pleaser", "The duet", "The rap verse everyone fails", "The 1am ballad"] },
+      { s: "Band Breakup Reasons", i: ["Creative differences", "The solo career", "The money split", "The tweet", "Nobody knows (still hurts)"] },
+    ]},
+    { c: "Tech", subjects: [
+      { s: "Keyboard Types", i: ["Custom mechanical (thock)", "The laptop keyboard", "Membrane (honest work)", "The RGB gamer one", "The office one with the loud spacebar"] },
+      { s: "Programming Fails", i: ["Works on my machine", "The Friday deploy", "The missing semicolon (2 hours)", "Prod database oops", "The TODO from 2019"] },
+      { s: "Phone Habits", i: ["1% battery warrior", "The 47 open tabs", "Screenshots never revisited", "The 3am scroll", "Inbox zero (psychopath or hero)"] },
+      { s: "AI Assistants", i: ["The one that codes", "The one in your phone", "The customer service bot (pain)", "The smart speaker that mishears", "The 2016 chatbot (vintage)"] },
+      { s: "Cable Drawer Contents", i: ["The one cable that works", "USB-A to mystery", "The dead power bank", "Adapter for nothing you own", "The knot"] },
+      { s: "Software Updates", i: ["The one that fixed everything", "The one that moved all the buttons", "Security patch (respect)", "The 4GB day-one patch", "The one that bricked it"] },
+      { s: "Desk Setups", i: ["The dual monitor arms", "Laptop + coffee minimal", "The cable management showcase", "The chaos that works", "The bed (D tier posture)"] },
+      { s: "Password Strategies", i: ["Password manager (correct)", "One password everywhere (no)", "The notebook", "Post-it on the monitor", "Forgot-password every time"] },
+    ]},
+    { c: "Sports", subjects: [
+      { s: "Basketball Moves", i: ["The stepback", "The eurostep", "The no-look dime", "The chase-down block", "The heat check from the logo"] },
+      { s: "Positions by Stress", i: ["Goalkeeper (alone)", "Striker (feast or famine)", "CDM (unthanked)", "Fullback (running forever)", "The ref (unpaid therapy)"] },
+      { s: "Home Workout Equipment", i: ["Adjustable dumbbells", "The doorway pull-up bar", "Resistance bands", "The treadmill clothes rack", "The ab roller (used twice)"] },
+      { s: "Sports Movies", i: ["The underdog classic", "The based-on-true-story one", "The one that makes you cry", "The comedy one", "The sequel that shouldn't exist"] },
+      { s: "Fantasy League Members", i: ["The spreadsheet commissioner", "The auto-draft champion (rage)", "The trade spammer", "The one who forgot week 3", "Last place (pays up, respect)"] },
+      { s: "Stadium Foods", i: ["The famous local item", "Stadium nachos", "The $14 hot dog", "The pretzel", "Whatever's closest at halftime"] },
+      { s: "Runner Types", i: ["The 5am club", "The treadmill Netflix runner", "The race-day-only runner", "The starting-Monday runner", "Chased-by-something pace"] },
+      { s: "Referee Calls", i: ["The perfect no-call", "The makeup call", "The 5-minute VAR check", "The phantom foul", "The one that decided the season"] },
+    ]},
+    { c: "Memes", subjects: [
+      { s: "Reaction Images", i: ["The side-eye", "The math lady", "The blinking guy", "The crying cat", "The one from a show you never watched"] },
+      { s: "Discord Channels", i: ["#general (chaos)", "#memes", "#serious-talk (dead)", "#bot-spam", "The channel with one message from 2022"] },
+      { s: "Reply Guys", i: ["The source? guy", "The actually guy", "The ratio hunter", "The one who explains the joke", "The bot that agrees"] },
+      { s: "School Presentation Moments", i: ["The video with sound that won't play", "Can everyone see my screen?", "The group member who did nothing", "The um counter", "Going first (rip)"] },
+      { s: "WiFi Names", i: ["The pun one", "FBI Surveillance Van", "The default router string", "The passive-aggressive neighbor one", "connecting..."] },
+      { s: "Group Project Roles", i: ["The one who does everything", "The idea guy (no execution)", "The disappearing act", "The slides minimalist", "Added the day of"] },
+      { s: "Autocorrect Fails", i: ["The one sent to your boss", "Duck", "The name it refuses to learn", "The word it makes worse", "Turning it off (freedom)"] },
+      { s: "Notification Sounds", i: ["The default ringtone panic", "The email swoosh", "The Discord ping (trauma)", "Vibrate only (peace)", "Sound ON in public (F)"] },
+    ]},
+    { c: "Fashion", subjects: [
+      { s: "Hoodie Rotation", i: ["The one hoodie (goated)", "The vintage find", "The $90 blank one", "The free company one", "The stolen one (not yours)"] },
+      { s: "Accessories by Aura", i: ["The chain", "The vintage watch", "The tote bag", "The 47 wristbands", "Sunglasses indoors (bold)"] },
+      { s: "Thrift Store Finds", i: ["The $4 designer piece", "The perfect worn-in tee", "The jacket with a story", "The tailor-someday piece", "The mystery smell one"] },
+      { s: "Laundry Day Fits", i: ["Still somehow fire", "Gym shorts + formal shirt", "The swim trunks emergency", "All black (planned?)", "The outfit that forced laundry"] },
+      { s: "Socks", i: ["The fresh white crew", "Wool hiking socks (elite)", "The fun pattern ones", "The single survivor", "The perfectly-placed hole one"] },
+      { s: "Jackets", i: ["The leather one", "The puffer", "Denim", "The windbreaker (dad era, back)", "The October-only one"] },
+      { s: "Fit Check Locations", i: ["The elevator mirror", "The car window", "The gym mirror", "The bathroom at the function", "The front camera (betrayal)"] },
+      { s: "Shoe Lacing Styles", i: ["Loose no-tie", "Straight bar lace", "Double knot (secure)", "The tuck", "Whatever the store did"] },
+    ]},
+  ];
+
+  const generated = [];
+  {
+    const TARGET = 1000 - page1.length - trendy.length;
+    let count = 0;
+    outer:
+    for (let round = 0; round < ASPECTS.length; round++) {
+      for (const cat of GEN) {
+        for (const sub of cat.subjects) {
+          if (count >= TARGET) break outer;
+          const rng = seededRng(hashStr(sub.s) + round * 7919);
+          const aspect = ASPECTS[(round + hashStr(sub.s)) % ASPECTS.length];
+          const items = [...sub.i];
+          for (let k = items.length - 1; k > 0; k--) {
+            const j = Math.floor(rng() * (k + 1));
+            [items[k], items[j]] = [items[j], items[k]];
+          }
+          const take = items.slice(0, Math.min(items.length, 5 + Math.floor(rng() * 2)));
+          const votes = 40 + Math.floor(Math.pow(rng(), 1.6) * 8800);
+          const hoursAgo = +(0.3 + rng() * 700).toFixed(1);
+          generated.push({
+            id: 1000 + count,
+            title: `${sub.s} ${aspect}`,
+            category: cat.c,
+            author: AUTHOR_POOL[(hashStr(sub.s) + round) % AUTHOR_POOL.length],
+            time: timeLabel(hoursAgo),
+            hoursAgo,
+            votes,
+            comments: Math.max(3, Math.round(votes / (6 + rng() * 10))),
+            tiers: toTiers(take),
+          });
+          count++;
+        }
+      }
+    }
+  }
+
+  const ALL = [...page1, ...trendy, ...generated];
+  const byId = new Map(ALL.map((l) => [String(l.id), l]));
+
+  /* ---- Per-item vote counts. Seeded lists get randomized (but stable)
+     distributions; fresh user lists start at a true 0 everywhere. ---- */
+  function ensureItemVotes(list) {
+    if (list.itemVotes) return;
+    const rng = seededRng(hashStr(String(list.id)) + 17);
+    const base = { S: 95, A: 68, B: 46, C: 28, D: 15 };
+    const weights = [];
+    TIERS.forEach((tier) =>
+      (list.tiers[tier] || []).forEach((item) =>
+        weights.push({ item, w: base[tier] * (0.55 + rng() * 0.9) })
+      )
+    );
+    const totalW = weights.reduce((s, e) => s + e.w, 0) || 1;
+    const iv = {};
+    weights.forEach((e) => (iv[e.item] = Math.max(1, Math.round((e.w / totalW) * Math.max(60, list.votes)))));
+    list.itemVotes = iv;
+  }
+
+  /* ---- Randomized comments, unique-ish per poll ---- */
+  const COMMENT_TEXTS = [
+    "This is the most correct list I've ever seen",
+    "Whoever made this needs to log off",
+    "Top pick is right and I'm tired of pretending it's not",
+    "Swap the top two and this is perfect",
+    "The disrespect in the bottom spot is criminal",
+    "I was ready to argue but... yeah this is right",
+    "My whole friend group is fighting over this now",
+    "Saving this to end arguments forever",
+    "The mid placement hurts because it's true",
+    "Objectively wrong but I respect the confidence",
+    "Finally someone said it",
+    "This list has more range than my playlist",
+    "Bottom pick deserves so much better",
+    "I've never agreed and disagreed so hard at the same time",
+    "OP woke up and chose violence",
+    "Sent this to the group chat, 3 people left",
+    "This is why the internet was invented",
+    "Correct take, terrible ordering",
+    "The gap between #1 and #2 should be bigger tbh",
+    "Not the placement I expected but I can't argue",
+    "Who hurt you",
+    "Adding this to court evidence",
+    "The comments are about to be a warzone",
+    "I trust this more than my own opinions",
+    "Rare W list",
+    "Voting up purely for bravery",
+    "This poll is doing numbers for a reason",
+    "I changed my vote three times, no regrets",
+    "Someone finally ranked these properly",
+    "Bookmarking this for the next debate",
+    "Mid list, elite comment section",
+    "The people have spoken and they're wrong",
+    "real",
+    "Take my upvote and my respect",
+    "I'm gonna need a source on that #1",
+    "History will vindicate the bottom pick",
+  ];
+  const REPLY_TEXTS = [
+    "This is the only sane comment here",
+    "Found the OP's alt",
+    "Say it louder",
+    "You're so close to getting it",
+    "Nah you're right actually",
+    "Agree to disagree (you're wrong)",
+    "The duality of this site",
+    "W reply",
+    "This thread delivered",
+    "Couldn't have said it worse myself",
+    "Screenshotting this",
+    "Least controversial take here",
+    "ok this made me laugh",
+    "Both of you are wrong somehow",
+    "Peak comment section behavior",
+  ];
+
+  const commentCache = new Map();
+
+  function genComments(list) {
+    const rng = seededRng(hashStr(String(list.id)) + 99);
+    const used = new Set();
+    const pickText = (pool) => {
+      let t;
+      do { t = pool[Math.floor(rng() * pool.length)]; }
+      while (used.has(t) && used.size < pool.length);
+      used.add(t);
+      return t;
+    };
+    const pickAuthor = () => AUTHOR_POOL[Math.floor(rng() * AUTHOR_POOL.length)];
+    const n = 2 + Math.floor(rng() * 6);
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const c = {
+        id: `g${list.id}-${i}`,
+        author: pickAuthor(),
+        op: rng() < 0.12,
+        time: timeLabel(0.2 + rng() * 30),
+        text: pickText(COMMENT_TEXTS),
+        votes: Math.floor(rng() * 420) - 30,
+        replies: [],
+      };
+      const nr = rng() < 0.45 ? 1 + Math.floor(rng() * 2) : 0;
+      for (let r = 0; r < nr; r++) {
+        c.replies.push({
+          id: `g${list.id}-${i}-${r}`,
+          author: pickAuthor(),
+          op: rng() < 0.1,
+          time: timeLabel(0.1 + rng() * 10),
+          text: pickText(REPLY_TEXTS),
+          votes: Math.floor(rng() * 140) - 10,
+          replies: [],
+        });
+      }
+      out.push(c);
+    }
+    return out;
+  }
+
+  function commentsFor(listId) {
+    const key = String(listId);
+    if (!commentCache.has(key)) {
+      const list = byId.get(key);
+      commentCache.set(key, list && !list.isUser ? genComments(list) : []);
+    }
+    return commentCache.get(key);
+  }
+
+  const leaderboard = [
+    { name: "footyoracle", points: "18.2k" },
+    { name: "sakugasan", points: "12.4k" },
+    { name: "burgerlord", points: "9.8k" },
+    { name: "segfaultsally", points: "8.1k" },
+    { name: "reelcritic", points: "6.7k" },
+  ];
+
+  return {
+    TIERS,
+    BOT_NAMES,
+    all: () => ALL,
+    getLists: async () => ALL,
+    getComments: async (listId) => commentsFor(listId),
+    addComment: (listId, comment, prepend = false) => {
+      const arr = commentsFor(listId);
+      prepend ? arr.unshift(comment) : arr.push(comment);
+    },
+    registerList: (list) => {
+      ALL.unshift(list);
+      byId.set(String(list.id), list);
+      commentCache.set(String(list.id), []);
+    },
+    ensureItemVotes,
+    makeBotComment: () => ({
+      id: "botc-" + Math.random().toString(36).slice(2, 9),
+      author: BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)],
+      op: false,
+      time: "just now",
+      text: COMMENT_TEXTS[Math.floor(Math.random() * COMMENT_TEXTS.length)],
+      votes: Math.floor(Math.random() * 30),
+      replies: [],
+    }),
+    makeBotPoll: () => {
+      const cat = GEN[Math.floor(Math.random() * GEN.length)];
+      const sub = cat.subjects[Math.floor(Math.random() * cat.subjects.length)];
+      const aspect = ASPECTS[Math.floor(Math.random() * ASPECTS.length)];
+      const items = [...sub.i].sort(() => Math.random() - 0.5).slice(0, Math.min(sub.i.length, 5 + Math.floor(Math.random() * 2)));
+      const list = {
+        id: "bot-" + Date.now(),
+        title: `${sub.s} ${aspect}`,
+        category: cat.c,
+        author: BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)],
+        time: "just now",
+        hoursAgo: 0,
+        votes: 2 + Math.floor(Math.random() * 15),
+        comments: 0,
+        tiers: toTiers(items),
+      };
+      ALL.unshift(list);
+      byId.set(String(list.id), list);
+      return list;
+    },
+    getLeaderboard: async () => leaderboard,
+    // POST stubs — wire to backend later
+    submitVote: async (listId, direction) => ({ ok: true, listId, direction }),
+    submitComment: async (listId, text, parentId = null) =>
+      ({ ok: true, id: "c" + Math.random().toString(36).slice(2, 8), listId, text, parentId }),
+  };
+})();
+
+/* ---------- VOTES (shared by cards, items, comments) ---------- */
+const Votes = (() => {
+  // userVotes[id] = 1 | -1 | undefined — mirrors what the backend would track per-user
+  const userVotes = {};
+
+  function format(n) {
+    const abs = Math.abs(n);
+    if (abs >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+    return String(n);
+  }
+
+  /** Toggle/switch a vote. Returns the new displayed total and the user's vote state. */
+  function cast(id, baseVotes, direction) {
+    const prev = userVotes[id] || 0;
+    const next = prev === direction ? 0 : direction; // clicking again removes the vote
+    userVotes[id] = next;
+    return { total: baseVotes + next, state: next };
+  }
+
+  function get(id) {
+    return userVotes[id] || 0;
+  }
+
+  return { cast, format, get };
+})();
+
+/* ---------- FEED ---------- */
+const Feed = (() => {
+  const grid = document.getElementById("feedGrid");
+  const template = document.getElementById("tierCardTemplate");
+  const titleEl = document.getElementById("feedTitle");
+  const loadMoreBtn = document.getElementById("loadMoreBtn");
+  const AD_EVERY = 4; // insert an in-feed ad after every 4 cards
+  const BAR_WIDTHS = { S: 100, A: 84, B: 66, C: 48, D: 30 };
+
+  let all = [];
+  const PAGE_SIZE = 24;
+  const state = { sort: "hot", category: null, query: "", limit: PAGE_SIZE };
+
+  function buildAdCard(index) {
+    const ad = document.createElement("div");
+    ad.className = "ad-banner ad-banner--infeed";
+    ad.dataset.adSlot = "infeed-" + index;
+    ad.innerHTML =
+      '<span class="ad-label">Advertisement</span><div class="ad-placeholder">Responsive In-Feed Unit</div>';
+    return ad;
+  }
+
+  function buildPreview(tiers) {
+    const frag = document.createDocumentFragment();
+    MockAPI.TIERS.forEach((tier) => {
+      if (!(tiers[tier] || []).length) return;
+      const row = document.createElement("div");
+      row.className = "tier-preview-row";
+      row.innerHTML =
+        `<span class="tier-preview-bar" style="width:${BAR_WIDTHS[tier]}%;` +
+        `background:var(--tier-${tier.toLowerCase()})"></span>`;
+      frag.appendChild(row);
+    });
+    return frag;
+  }
+
+  function buildCard(list, index) {
+    const card = template.content.cloneNode(true).firstElementChild;
+    card.style.animationDelay = `${(index % 8) * 40}ms`;
+    card.dataset.listId = list.id;
+
+    card.querySelector(".tier-card-category").textContent = list.category;
+    card.querySelector(".tier-card-time").textContent = list.time;
+    card.querySelector(".tier-card-link").textContent = list.title;
+    const authorEl = card.querySelector(".tier-card-author");
+    authorEl.innerHTML = "by <b></b>";
+    const authorLink = authorEl.querySelector("b");
+    authorLink.textContent = "@" + list.author;
+    Profile.attach(authorLink, list.author);
+    card.querySelector(".comment-num").textContent = Votes.format(list.comments);
+    card.querySelector(".tier-preview").appendChild(buildPreview(list.tiers));
+
+    // Voting
+    const countEl = card.querySelector(".vote-count");
+    const upBtn = card.querySelector(".vote-btn--up");
+    const downBtn = card.querySelector(".vote-btn--down");
+    countEl.textContent = Votes.format(list.votes);
+
+    function onVote(direction) {
+      const { total, state: voteState } = Votes.cast("list-" + list.id, list.votes, direction);
+      countEl.textContent = Votes.format(total);
+      countEl.classList.toggle("is-up", voteState === 1);
+      countEl.classList.toggle("is-down", voteState === -1);
+      upBtn.classList.toggle("is-voted", voteState === 1);
+      downBtn.classList.toggle("is-voted", voteState === -1);
+      MockAPI.submitVote(list.id, voteState); // fire-and-forget; backend later
+    }
+    upBtn.addEventListener("click", () => onVote(1));
+    downBtn.addEventListener("click", () => onVote(-1));
+
+    // Clicking anywhere on the card body opens the detail view (vote rail is separate)
+    card.querySelector(".tier-card-main").addEventListener("click", () => Detail.open(list));
+
+    return card;
+  }
+
+  function currentTitle() {
+    if (state.query) return `Search: "${state.query}"`;
+    if (state.category) return `${state.category} Tier Lists`;
+    switch (state.sort) {
+      case "fresh": return "Fresh Tier Lists";
+      case "top": return "Top Tier Lists Today";
+      case "controversial": return "Controversial Tier Lists";
+      default: return "Trending Tier Lists";
+    }
+  }
+
+  function applyState() {
+    let out = [...all];
+    if (state.category) out = out.filter((l) => l.category === state.category);
+    if (state.query) {
+      const q = state.query.toLowerCase();
+      out = out.filter(
+        (l) => l.title.toLowerCase().includes(q) || l.category.toLowerCase().includes(q)
+      );
+    }
+    switch (state.sort) {
+      case "fresh":
+        out.sort((a, b) => a.hoursAgo - b.hoursAgo);
+        break;
+      case "top":
+        out = out.filter((l) => l.hoursAgo <= 24).sort((a, b) => b.votes - a.votes);
+        break;
+      case "controversial":
+        out.sort((a, b) => b.comments - a.comments);
+        break;
+      default: // hot — votes decayed by age
+        out.sort((a, b) => b.votes / (b.hoursAgo + 2) - a.votes / (a.hoursAgo + 2));
+    }
+    return out;
+  }
+
+  function render() {
+    const lists = applyState();
+    titleEl.textContent = currentTitle();
+    grid.innerHTML = "";
+    if (!lists.length) {
+      const empty = document.createElement("p");
+      empty.className = "feed-empty";
+      empty.textContent = "No tier lists here (yet). Make the first one, bro.";
+      grid.appendChild(empty);
+      return;
+    }
+    const visible = lists.slice(0, state.limit);
+    visible.forEach((list, i) => {
+      grid.appendChild(buildCard(list, i));
+      // Strategic in-feed ad placement — after every AD_EVERY cards
+      if ((i + 1) % AD_EVERY === 0) grid.appendChild(buildAdCard(i));
+    });
+    if (state.limit >= lists.length) {
+      loadMoreBtn.textContent = "That's all of them, bro 🤝";
+      loadMoreBtn.disabled = true;
+      loadMoreBtn.style.opacity = ".55";
+    } else {
+      loadMoreBtn.textContent = `Load More Lists (${Votes.format(lists.length - visible.length)} more)`;
+      loadMoreBtn.disabled = false;
+      loadMoreBtn.style.opacity = "";
+    }
+  }
+
+  function syncChips() {
+    const chipFor = { hot: "hot", top: "top", controversial: "controversial", fresh: "new" };
+    document.querySelectorAll(".feed-filters .chip").forEach((c) => {
+      const active = c.dataset.filter === chipFor[state.sort] && !state.query && !state.category;
+      c.classList.toggle("is-active", active);
+      c.setAttribute("aria-selected", String(active));
+    });
+  }
+
+  function setSort(sort) {
+    state.sort = sort;
+    state.query = "";
+    state.limit = PAGE_SIZE;
+    syncChips();
+    render();
+  }
+
+  function setCategory(category) {
+    state.category = category;
+    state.query = "";
+    state.limit = PAGE_SIZE;
+    syncChips();
+    render();
+  }
+
+  function setQuery(query) {
+    state.query = query.trim();
+    state.limit = PAGE_SIZE;
+    syncChips();
+    render();
+  }
+
+  function reset() {
+    state.sort = "hot";
+    state.category = null;
+    state.query = "";
+    state.limit = PAGE_SIZE;
+    syncChips();
+    render();
+  }
+
+  function addList(list) {
+    MockAPI.registerList(list);
+    reset();
+  }
+
+  function loadMore() {
+    state.limit += PAGE_SIZE;
+    render();
+  }
+
+  /* Live-update a card's numbers in place (bots + comments) without re-rendering the grid */
+  function updateCard(list) {
+    const card = grid.querySelector(`[data-list-id="${list.id}"]`);
+    if (!card) return;
+    card.querySelector(".vote-count").textContent =
+      Votes.format(list.votes + Votes.get("list-" + list.id));
+    card.querySelector(".comment-num").textContent = Votes.format(list.comments);
+  }
+
+  async function init() {
+    all = await MockAPI.getLists();
+    render();
+
+    const sortFor = { hot: "hot", top: "top", controversial: "controversial", new: "fresh" };
+    document.querySelectorAll(".feed-filters .chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        state.category = null;
+        setSort(sortFor[chip.dataset.filter] || "hot");
+      });
+    });
+
+    loadMoreBtn.addEventListener("click", loadMore);
+  }
+
+  return { init, setSort, setCategory, setQuery, reset, addList, updateCard, refresh: render };
+})();
+
+/* ---------- DETAIL VIEW (full tier list + comments) ---------- */
+const Detail = (() => {
+  const overlay = document.getElementById("detailOverlay");
+  const titleEl = document.getElementById("detailTitle");
+  const metaEl = document.getElementById("detailMeta");
+  const tiersEl = document.getElementById("detailTiers");
+  let currentList = null;
+
+  /* Real vote-share model: share = item votes / total votes on the list.
+     Fresh lists sit at a true 0% everywhere until someone actually votes —
+     your first up-vote on an item takes it straight to 100%. */
+  function sharesFor(list) {
+    MockAPI.ensureItemVotes(list);
+    const entries = Object.keys(list.itemVotes).map((item) => ({
+      item,
+      votes: Math.max(0, list.itemVotes[item]),
+    }));
+    const total = entries.reduce((s, e) => s + e.votes, 0);
+    entries.forEach((e) => (e.share = total ? Math.round((e.votes / total) * 1000) / 10 : 0));
+    entries.sort((a, b) => b.votes - a.votes);
+    return entries;
+  }
+
+  function barColor(index, votes) {
+    return index < 2 && votes > 0 ? "var(--tier-s)" : "var(--tier-b)";
+  }
+
+  /* Update bar widths + percentages in place (after a vote or a bot pass) */
+  function applyShares() {
+    if (!currentList) return;
+    const entries = sharesFor(currentList);
+    const maxShare = entries[0]?.share || 0;
+    entries.forEach((e, i) => {
+      const row = tiersEl.querySelector(`.tier-row[data-item="${CSS.escape(e.item)}"]`);
+      if (!row) return;
+      const bar = row.querySelector(".tier-row-bar");
+      bar.style.width = (maxShare ? (e.share / maxShare) * 100 : 0) + "%";
+      bar.style.background = barColor(i, e.votes);
+      row.querySelector(".tier-row-pct").textContent = e.share.toFixed(1) + "%";
+    });
+  }
+
+  function renderTiers(list) {
+    tiersEl.innerHTML = "";
+    const entries = sharesFor(list);
+    const maxShare = entries[0]?.share || 0;
+    entries.forEach(({ item, votes, share }, index) => {
+      const width = maxShare ? (share / maxShare) * 100 : 0;
+      const row = document.createElement("div");
+      row.className = "tier-row";
+      row.dataset.item = item;
+      row.innerHTML =
+        `<div class="tier-row-label"></div>` +
+        `<div class="tier-row-track">` +
+        `<div class="tier-row-bar" style="width:${width}%;background:${barColor(index, votes)}"></div>` +
+        `<span class="tier-row-pct">${share.toFixed(1)}%</span>` +
+        `</div>` +
+        `<div class="item-votes">` +
+        `<button class="item-vote item-vote--up" aria-label="Upvote">` +
+        `<svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor"><path d="${BRUSH_TRI}"/></svg></button>` +
+        `<button class="item-vote item-vote--down" aria-label="Downvote">` +
+        `<svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor"><path d="${BRUSH_TRI}" transform="rotate(180 12 11.2)"/></svg></button>` +
+        `</div>`;
+
+      // textContent for the label — item names can be user input
+      const label = row.querySelector(".tier-row-label");
+      label.textContent = item;
+      label.title = item;
+
+      const upBtn = row.querySelector(".item-vote--up");
+      const downBtn = row.querySelector(".item-vote--down");
+      const voteKey = `item-${list.id}-${item}`;
+      const saved = Votes.get(voteKey);
+      upBtn.classList.toggle("is-on", saved === 1);
+      downBtn.classList.toggle("is-on", saved === -1);
+
+      function onItemVote(direction) {
+        const prev = Votes.get(voteKey);
+        const { state } = Votes.cast(voteKey, 0, direction);
+        list.itemVotes[item] = Math.max(0, list.itemVotes[item] + (state - prev));
+        upBtn.classList.toggle("is-on", state === 1);
+        downBtn.classList.toggle("is-on", state === -1);
+        applyShares();
+        MockAPI.submitVote(list.id, state); // fire-and-forget; backend later
+      }
+      upBtn.addEventListener("click", () => onItemVote(1));
+      downBtn.addEventListener("click", () => onItemVote(-1));
+
+      tiersEl.appendChild(row);
+    });
+  }
+
+  /* Meta line with a clickable @author in the middle */
+  function setMeta(list) {
+    metaEl.innerHTML = "";
+    metaEl.append(document.createTextNode(`${list.category} · by `));
+    const a = document.createElement("span");
+    a.textContent = "@" + list.author;
+    Profile.attach(a, list.author);
+    metaEl.append(a, document.createTextNode(` · ${list.time} · ${Votes.format(list.votes)} votes`));
+  }
+
+  async function open(list) {
+    currentList = list;
+    titleEl.textContent = list.title;
+    setMeta(list);
+    renderTiers(list);
+    await Comments.load(list.id);
+    overlay.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  /* Called by Bots when they vote on the currently open list */
+  function refresh(listId) {
+    if (overlay.hidden || !currentList || String(currentList.id) !== String(listId)) return;
+    applyShares();
+    setMeta(currentList);
+  }
+
+  function close() {
+    overlay.hidden = true;
+    document.body.style.overflow = "";
+    currentList = null;
+  }
+
+  function init() {
+    document.getElementById("detailClose").addEventListener("click", close);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !overlay.hidden) close();
+    });
+  }
+
+  return { init, open, refresh, getCurrentId: () => currentList?.id, getCurrent: () => currentList };
+})();
+
+/* ---------- COMMENTS (nested thread) ---------- */
+const Comments = (() => {
+  const thread = document.getElementById("commentThread");
+  const countEl = document.getElementById("commentsCount");
+  const composer = document.getElementById("commentComposer");
+  const input = document.getElementById("commentInput");
+
+  function countAll(list) {
+    return list.reduce((n, c) => n + 1 + countAll(c.replies || []), 0);
+  }
+
+  function buildComment(c, depth = 0) {
+    const el = document.createElement("div");
+    el.className = "comment";
+    el.dataset.commentId = c.id;
+
+    const initial = c.author[0].toUpperCase();
+    el.innerHTML = `
+      <div class="avatar" aria-hidden="true">${initial}</div>
+      <div class="comment-body">
+        <div class="comment-head">
+          <span class="comment-author ${c.op ? "is-op" : ""}">@${c.author}${c.op ? " · OP" : ""}</span>
+          <span class="comment-time">${c.time}</span>
+        </div>
+        <p class="comment-text"></p>
+        <div class="comment-actions">
+          <button class="comment-vote">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="${BRUSH_TRI}"/></svg>
+            <span class="comment-vote-count">${Votes.format(c.votes)}</span>
+          </button>
+          ${depth < 3 ? '<button class="comment-reply-btn">Reply</button>' : ""}
+        </div>
+      </div>`;
+
+    // textContent, not innerHTML — comment text is user input
+    el.querySelector(".comment-text").textContent = c.text;
+
+    // Clickable author → profile
+    Profile.attach(el.querySelector(".comment-author"), c.author);
+
+    // Comment voting
+    const voteBtn = el.querySelector(".comment-vote");
+    const voteCount = el.querySelector(".comment-vote-count");
+    voteBtn.addEventListener("click", () => {
+      const { total, state } = Votes.cast("comment-" + c.id, c.votes, 1);
+      voteCount.textContent = Votes.format(total);
+      voteBtn.classList.toggle("is-voted", state === 1);
+    });
+
+    // Inline reply composer
+    const replyBtn = el.querySelector(".comment-reply-btn");
+    if (replyBtn) {
+      replyBtn.addEventListener("click", () => {
+        const body = el.querySelector(".comment-body");
+        const existing = body.querySelector(".reply-composer");
+        if (existing) { existing.remove(); return; }
+
+        const form = document.createElement("form");
+        form.className = "reply-composer";
+        form.innerHTML = `
+          <input type="text" class="comment-input" placeholder="Reply to @${c.author}…" maxlength="500" />
+          <button type="submit" class="btn btn-primary btn-sm">Reply</button>`;
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          if (!Auth.getUser()) { Auth.open("login"); return; }
+          const text = form.querySelector("input").value.trim();
+          if (!text) return;
+          addReply(el, text, depth + 1, c.id);
+          form.remove();
+        });
+        body.appendChild(form);
+        form.querySelector("input").focus();
+      });
+    }
+
+    // Nested replies
+    if (c.replies?.length) {
+      const children = document.createElement("div");
+      children.className = "comment-children";
+      c.replies.forEach((r) => children.appendChild(buildComment(r, depth + 1)));
+      el.querySelector(".comment-body").appendChild(children);
+    }
+
+    return el;
+  }
+
+  function makeLocalComment(text) {
+    return {
+      id: "local-" + Date.now(),
+      author: Auth.getUser() || "you",
+      op: false, time: "just now", text, votes: 1, replies: [],
+    };
+  }
+
+  function bumpListCount() {
+    const cur = Detail.getCurrent();
+    if (cur) { cur.comments++; Feed.updateCard(cur); }
+  }
+
+  function addReply(parentEl, text, depth, parentId) {
+    const body = parentEl.querySelector(":scope > .comment-body");
+    let children = body.querySelector(":scope > .comment-children");
+    if (!children) {
+      children = document.createElement("div");
+      children.className = "comment-children";
+      body.appendChild(children);
+    }
+    children.appendChild(buildComment(makeLocalComment(text), depth));
+    bumpCount(1);
+    bumpListCount();
+    MockAPI.submitComment(Detail.getCurrentId(), text, parentId);
+  }
+
+  let total = 0;
+  function bumpCount(delta) {
+    total += delta;
+    countEl.textContent = `(${total})`;
+  }
+
+  async function load(listId) {
+    const comments = await MockAPI.getComments(listId);
+    thread.innerHTML = "";
+    comments.forEach((c) => thread.appendChild(buildComment(c)));
+    total = countAll(comments);
+    countEl.textContent = `(${total})`;
+  }
+
+  /* Bots drop comments into the open thread live */
+  function appendLive(listId, comment) {
+    if (String(Detail.getCurrentId()) !== String(listId)) return;
+    thread.appendChild(buildComment(comment));
+    bumpCount(1);
+  }
+
+  function init() {
+    composer.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!Auth.getUser()) { Auth.open("login"); return; }
+      const text = input.value.trim();
+      if (!text) return;
+      const comment = makeLocalComment(text);
+      thread.prepend(buildComment(comment));
+      MockAPI.addComment(Detail.getCurrentId(), comment, true);
+      bumpCount(1);
+      bumpListCount();
+      input.value = "";
+      MockAPI.submitComment(Detail.getCurrentId(), text);
+    });
+  }
+
+  return { init, load, appendLive };
+})();
+
+/* ---------- SEARCH (always-visible bar; header icon jumps to it) ---------- */
+const Search = (() => {
+  function init() {
+    const input = document.getElementById("searchInput");
+    document.getElementById("searchBtn").addEventListener("click", () => {
+      input.scrollIntoView({ behavior: "smooth", block: "center" });
+      input.focus({ preventScroll: true });
+    });
+    input.addEventListener("input", () => Feed.setQuery(input.value));
+  }
+  return { init };
+})();
+
+/* ---------- CREATE POLL ---------- */
+const Create = (() => {
+  const overlay = document.getElementById("createOverlay");
+  const form = document.getElementById("createForm");
+  const titleInput = document.getElementById("createTitle");
+  const categoryInput = document.getElementById("createCategory");
+  const answersWrap = document.getElementById("createAnswers");
+  const addBtn = document.getElementById("createAddAnswer");
+  const MAX_ANSWERS = 12;
+
+  function renumber() {
+    answersWrap.querySelectorAll(".create-answer-row").forEach((row, i) => {
+      row.querySelector(".create-answer-num").textContent = (i + 1) + ".";
+      row.querySelector(".create-answer").placeholder = "Answer " + (i + 1);
+    });
+    // Remove buttons only useful when there are more than 2 boxes
+    const rows = answersWrap.querySelectorAll(".create-answer-row");
+    rows.forEach((row) => {
+      row.querySelector(".create-answer-remove").style.visibility =
+        rows.length > 2 ? "visible" : "hidden";
+    });
+  }
+
+  function makeRow() {
+    const row = document.createElement("div");
+    row.className = "create-answer-row";
+    row.innerHTML =
+      `<span class="create-answer-num"></span>` +
+      `<input type="text" class="create-answer" maxlength="80" />` +
+      `<button type="button" class="create-answer-remove" aria-label="Remove answer">` +
+      `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;
+
+    const input = row.querySelector(".create-answer");
+    // Typing in the last box spawns a fresh one (like a live form)
+    input.addEventListener("input", () => {
+      const boxes = [...answersWrap.querySelectorAll(".create-answer")];
+      if (input === boxes[boxes.length - 1] && input.value.trim() && boxes.length < MAX_ANSWERS) {
+        addRow(false);
+      }
+    });
+    row.querySelector(".create-answer-remove").addEventListener("click", () => {
+      if (answersWrap.querySelectorAll(".create-answer-row").length <= 2) return;
+      row.remove();
+      renumber();
+    });
+    return row;
+  }
+
+  function addRow(focus) {
+    if (answersWrap.querySelectorAll(".create-answer-row").length >= MAX_ANSWERS) return;
+    const row = makeRow();
+    answersWrap.appendChild(row);
+    renumber();
+    if (focus) row.querySelector(".create-answer").focus();
+  }
+
+  function resetAnswers() {
+    answersWrap.innerHTML = "";
+    addRow(false);
+    addRow(false); // always start with two empty boxes
+  }
+
+  function open() {
+    if (!Auth.getUser()) { Auth.open("signup", open); return; }
+    form.reset();
+    resetAnswers();
+    overlay.hidden = false;
+    document.body.style.overflow = "hidden";
+    titleInput.focus();
+  }
+
+  function close() {
+    overlay.hidden = true;
+    document.body.style.overflow = "";
+    form.reset();
+  }
+
+  function init() {
+    document.querySelectorAll(".btn-create").forEach((btn) =>
+      btn.addEventListener("click", open)
+    );
+    addBtn.addEventListener("click", () => addRow(true));
+    document.getElementById("createCancel").addEventListener("click", close);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !overlay.hidden) close();
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const answers = [...new Set(
+        [...answersWrap.querySelectorAll(".create-answer")]
+          .map((i) => i.value.trim())
+          .filter(Boolean)
+      )];
+      if (!titleInput.value.trim()) { Toast.show("Give your poll a question first"); return; }
+      if (answers.length < 2) { Toast.show("Add at least 2 answers"); return; }
+
+      // Order carries no ranking — the tier spread only feeds the card preview bars
+      const tiers = {};
+      const itemVotes = {};
+      answers.forEach((item, i) => {
+        const tier = MockAPI.TIERS[Math.min(4, Math.floor((i * 5) / answers.length))];
+        (tiers[tier] = tiers[tier] || []).push(item);
+        itemVotes[item] = 0; // every answer starts at a true zero
+      });
+
+      const list = {
+        id: "local-" + Math.random().toString(36).slice(2, 8),
+        title: titleInput.value.trim(),
+        category: categoryInput.value.trim() || "Random",
+        author: Auth.getUser() || "you", time: "just now", hoursAgo: 0,
+        votes: 0, comments: 0, tiers, itemVotes, isUser: true,
+      };
+      close();
+      Feed.addList(list);
+      Detail.open(list);
+      Bots.watch(list);
+      Toast.show("Published! Your poll is live 🎉");
+    });
+  }
+
+  return { init };
+})();
+
+/* ---------- NAV (desktop + mobile links) ---------- */
+const Nav = (() => {
+  function init() {
+    document.querySelectorAll("[data-nav]").forEach((link) => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const action = link.dataset.nav;
+        document.querySelectorAll("[data-nav]").forEach((l) =>
+          l.classList.toggle("is-active", l.dataset.nav === action)
+        );
+        MobileNav.closeMenu();
+
+        if (action === "trending") Feed.reset();
+        if (action === "new") { Feed.setCategory(null); Feed.setSort("fresh"); }
+        if (action === "categories")
+          document.querySelector(".tag-cloud").scrollIntoView({ behavior: "smooth", block: "center" });
+        if (action === "leaderboard")
+          document.getElementById("miniLeaderboard").scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+
+    // Sidebar category tags filter the feed
+    document.querySelectorAll(".tag").forEach((tag) => {
+      tag.addEventListener("click", (e) => {
+        e.preventDefault();
+        Feed.setCategory(tag.textContent.trim());
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    });
+
+    // Logo goes home
+    document.querySelector(".logo").addEventListener("click", (e) => {
+      e.preventDefault();
+      Feed.reset();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+  return { init };
+})();
+
+/* ---------- SIDEBAR WIDGETS ---------- */
+const Sidebar = (() => {
+  async function init() {
+    const ol = document.getElementById("miniLeaderboard");
+    const board = await MockAPI.getLeaderboard();
+    ol.innerHTML = board
+      .map(
+        (u, i) => `
+        <li>
+          <span class="rank ${i === 0 ? "rank--gold" : ""}">${i + 1}</span>
+          <span class="avatar" aria-hidden="true">${u.name[0].toUpperCase()}</span>
+          <span class="lb-name">@${u.name}</span>
+          <span class="points">${u.points}</span>
+        </li>`
+      )
+      .join("");
+    // Names open profiles
+    ol.querySelectorAll(".lb-name").forEach((el) =>
+      Profile.attach(el, el.textContent.replace(/^@/, ""))
+    );
+  }
+  return { init };
+})();
+
+/* ---------- MOBILE NAV ---------- */
+const MobileNav = (() => {
+  let btn, nav;
+  function closeMenu() {
+    if (!nav) return;
+    nav.classList.remove("is-open");
+    btn.setAttribute("aria-expanded", "false");
+  }
+  function init() {
+    btn = document.getElementById("mobileMenuBtn");
+    nav = document.getElementById("mobileNav");
+    btn.addEventListener("click", () => {
+      const open = nav.classList.toggle("is-open");
+      btn.setAttribute("aria-expanded", String(open));
+    });
+  }
+  return { init, closeMenu };
+})();
+
+/* ---------- TOASTS ---------- */
+const Toast = (() => {
+  let stack;
+  function init() {
+    stack = document.createElement("div");
+    stack.className = "toast-stack";
+    document.body.appendChild(stack);
+  }
+  function show(msg) {
+    if (!stack) return;
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.textContent = msg;
+    stack.appendChild(el);
+    while (stack.children.length > 4) stack.firstChild.remove();
+    setTimeout(() => el.remove(), 5000);
+  }
+  return { init, show };
+})();
+
+/* ---------- AUTH (localStorage mock — swap for real backend) ---------- */
+const Auth = (() => {
+  const USERS_KEY = "tmb-users";
+  const SESSION_KEY = "tmb-user";
+  let mode = "login";
+  let pending = null; // action to run after a successful login
+  let overlay, form, heading, userInput, passInput, errorEl, submitBtn;
+
+  function users() {
+    try { return JSON.parse(localStorage.getItem(USERS_KEY)) || {}; }
+    catch { return {}; }
+  }
+  function getUser() {
+    return localStorage.getItem(SESSION_KEY);
+  }
+
+  function setMode(m) {
+    mode = m;
+    heading.textContent = m === "login" ? "Log In" : "Sign Up";
+    submitBtn.textContent = m === "login" ? "Log In" : "Create Account";
+    document.querySelectorAll("[data-authtab]").forEach((t) =>
+      t.classList.toggle("is-active", t.dataset.authtab === m)
+    );
+    errorEl.hidden = true;
+  }
+
+  function open(m = "login", onDone = null) {
+    pending = onDone;
+    setMode(m);
+    form.reset();
+    overlay.hidden = false;
+    document.body.style.overflow = "hidden";
+    userInput.focus();
+  }
+
+  function close() {
+    overlay.hidden = true;
+    document.body.style.overflow = "";
+    pending = null;
+  }
+
+  function fail(msg) {
+    errorEl.textContent = msg;
+    errorEl.hidden = false;
+  }
+
+  function render() {
+    const u = getUser();
+    document.querySelectorAll("[data-auth='out']").forEach((el) => (el.hidden = !!u));
+    document.querySelectorAll("[data-auth='in']").forEach((el) => (el.hidden = !u));
+    const nameEl = document.getElementById("userName");
+    const avatarEl = document.getElementById("userAvatar");
+    const composerAvatar = document.getElementById("composerAvatar");
+    if (u) {
+      nameEl.textContent = "@" + u;
+      avatarEl.textContent = u[0].toUpperCase();
+      composerAvatar.textContent = u[0].toUpperCase();
+    } else {
+      composerAvatar.textContent = "?";
+    }
+  }
+
+  function finish(name) {
+    localStorage.setItem(SESSION_KEY, name);
+    render();
+    const after = pending;
+    overlay.hidden = true;
+    document.body.style.overflow = "";
+    pending = null;
+    Toast.show(`Welcome, @${name} 🤝`);
+    if (after) after();
+  }
+
+  function logout() {
+    localStorage.removeItem(SESSION_KEY);
+    render();
+    Toast.show("Logged out");
+  }
+
+  function init() {
+    overlay = document.getElementById("authOverlay");
+    form = document.getElementById("authForm");
+    heading = document.getElementById("authHeading");
+    userInput = document.getElementById("authUser");
+    passInput = document.getElementById("authPass");
+    errorEl = document.getElementById("authError");
+    submitBtn = document.getElementById("authSubmit");
+
+    document.querySelectorAll(".js-login").forEach((b) => b.addEventListener("click", () => open("login")));
+    document.querySelectorAll(".js-signup").forEach((b) => b.addEventListener("click", () => open("signup")));
+    document.getElementById("logoutBtn").addEventListener("click", logout);
+    document.querySelectorAll("[data-authtab]").forEach((t) =>
+      t.addEventListener("click", () => setMode(t.dataset.authtab))
+    );
+    document.getElementById("authCancel").addEventListener("click", close);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !overlay.hidden) close();
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = userInput.value.trim();
+      const pass = passInput.value;
+      if (!/^[a-z0-9_]{3,20}$/i.test(name)) return fail("Username: 3–20 letters, numbers or _");
+      if (pass.length < 4) return fail("Password needs at least 4 characters");
+      const db = users();
+      if (mode === "signup") {
+        if (db[name]) return fail("That username is taken, bro");
+        db[name] = { pass, joined: Date.now() };
+        localStorage.setItem(USERS_KEY, JSON.stringify(db));
+        finish(name);
+      } else {
+        if (!db[name] || db[name].pass !== pass) return fail("Wrong username or password");
+        finish(name);
+      }
+    });
+
+    render();
+  }
+
+  return { init, open, getUser, logout };
+})();
+
+/* ---------- PROFILE (view any user + follow) ---------- */
+const Profile = (() => {
+  const FOLLOW_KEY = "tmb-follows";
+  let overlay, avatarEl, nameEl, statsEl, followBtn, pollsEl, pollsTitle;
+  let currentName = null;
+
+  function hash(s) {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function follows() {
+    try { return JSON.parse(localStorage.getItem(FOLLOW_KEY)) || []; }
+    catch { return []; }
+  }
+  function isFollowing(name) { return follows().includes(name); }
+  function setFollow(name, on) {
+    const f = follows();
+    const i = f.indexOf(name);
+    if (on && i < 0) f.push(name);
+    if (!on && i >= 0) f.splice(i, 1);
+    localStorage.setItem(FOLLOW_KEY, JSON.stringify(f));
+  }
+  function pollsBy(name) {
+    return MockAPI.all().filter((l) => l.author === name);
+  }
+
+  /* Make any @username element open that user's profile on click */
+  function attach(el, name) {
+    el.classList.add("author-link");
+    el.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); open(name); });
+  }
+
+  function renderFollowBtn() {
+    const on = isFollowing(currentName);
+    followBtn.textContent = on ? "Following ✓" : "+ Follow";
+    followBtn.classList.toggle("profile-follow--on", on);
+  }
+
+  function render() {
+    const name = currentName;
+    const mine = Auth.getUser() === name;
+    avatarEl.textContent = name[0].toUpperCase();
+    nameEl.textContent = "@" + name;
+
+    const list = pollsBy(name);
+    const totalVotes = list.reduce((s, l) => s + l.votes, 0);
+    const followers = (hash(name) % 48000) + (isFollowing(name) ? 1 : 0);
+    statsEl.innerHTML =
+      `<b>${list.length}</b> poll${list.length === 1 ? "" : "s"} · ` +
+      `<b>${Votes.format(followers)}</b> followers · ` +
+      `<b>${Votes.format(totalVotes)}</b> votes earned`;
+
+    followBtn.hidden = mine;
+    if (!mine) renderFollowBtn();
+
+    pollsEl.innerHTML = "";
+    pollsTitle.textContent = mine ? "Your polls" : "Polls";
+    const shown = list.slice(0, 30);
+    if (!shown.length) {
+      const empty = document.createElement("li");
+      empty.className = "profile-polls-empty";
+      empty.textContent = "No polls yet.";
+      pollsEl.appendChild(empty);
+    } else {
+      shown.forEach((l) => {
+        const li = document.createElement("li");
+        const t = document.createElement("span");
+        t.className = "profile-poll-title";
+        t.textContent = l.title;
+        const v = document.createElement("span");
+        v.className = "profile-poll-votes";
+        v.textContent = Votes.format(l.votes) + " votes";
+        li.append(t, v);
+        li.addEventListener("click", () => { close(); Detail.open(l); });
+        pollsEl.appendChild(li);
+      });
+    }
+  }
+
+  function open(name) {
+    currentName = name;
+    render();
+    overlay.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+  function close() {
+    overlay.hidden = true;
+    currentName = null;
+    // keep scroll locked if another modal is still open underneath
+    const stillOpen = [...document.querySelectorAll(".detail-overlay")].some((o) => !o.hidden);
+    document.body.style.overflow = stillOpen ? "hidden" : "";
+  }
+
+  function init() {
+    overlay = document.getElementById("profileOverlay");
+    avatarEl = document.getElementById("profileAvatar");
+    nameEl = document.getElementById("profileName");
+    statsEl = document.getElementById("profileStats");
+    followBtn = document.getElementById("profileFollow");
+    pollsEl = document.getElementById("profilePolls");
+    pollsTitle = document.getElementById("profilePollsTitle");
+
+    document.getElementById("profileClose").addEventListener("click", close);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !overlay.hidden) close();
+    });
+    followBtn.addEventListener("click", () => {
+      if (!Auth.getUser()) { Auth.open("login", () => open(currentName)); return; }
+      const on = !isFollowing(currentName);
+      setFollow(currentName, on);
+      render();
+      Toast.show(on ? `Following @${currentName}` : `Unfollowed @${currentName}`);
+    });
+  }
+
+  return { init, open, attach, isFollowing };
+})();
+
+/* ---------- BOTS (fake community while there's no backend) ---------- */
+const Bots = (() => {
+  const watched = []; // freshly published user polls the bots swarm
+  const FIRST_TICK = 25_000;          // first interaction shortly after load
+  const TICK_MIN = 60_000;            // then every 1–3 minutes
+  const TICK_SPAN = 120_000;
+  const POLL_EVERY = 600_000;         // bots publish a new poll every 10 min
+  const USER_POLL_DELAY = 120_000;    // leave new user polls alone for 2 min
+
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+  function bumpItems(list, n) {
+    MockAPI.ensureItemVotes(list);
+    const ranked = Object.keys(list.itemVotes)
+      .sort((a, b) => list.itemVotes[b] - list.itemVotes[a]);
+    if (!ranked.length) return;
+    for (let i = 0; i < n; i++) {
+      // bots pile onto the leaders more often, but everything gets some love
+      const idx = Math.floor(Math.pow(Math.random(), 1.7) * ranked.length);
+      list.itemVotes[ranked[idx]]++;
+    }
+  }
+
+  function voteOn(list) {
+    list.votes += 1 + Math.floor(Math.random() * 18);
+    bumpItems(list, 1 + Math.floor(Math.random() * 4));
+    Feed.updateCard(list);
+    Detail.refresh(list.id);
+  }
+
+  function commentOn(list) {
+    const c = MockAPI.makeBotComment();
+    MockAPI.addComment(list.id, c);
+    list.comments++;
+    Feed.updateCard(list);
+    Comments.appendLive(list.id, c);
+  }
+
+  function tick() {
+    const lists = MockAPI.all();
+    if (!lists.length) return;
+
+    const hits = 1 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < hits; i++) voteOn(pick(lists));
+    if (Math.random() < 0.6) commentOn(pick(lists));
+
+    // keep whatever the user is looking at feeling alive
+    const cur = Detail.getCurrent();
+    if (cur && Math.random() < 0.5) voteOn(cur);
+
+    // swarm fresh user polls (after a grace period so 0% → 100% is visible)
+    const now = Date.now();
+    watched.forEach((w) => {
+      if (now - w.created < USER_POLL_DELAY || w.hits >= 25) return;
+      w.hits++;
+      voteOn(w.list);
+      if (Math.random() < 0.35) commentOn(w.list);
+    });
+  }
+
+  function schedule(delay) {
+    setTimeout(() => {
+      tick();
+      schedule(TICK_MIN + Math.random() * TICK_SPAN);
+    }, delay);
+  }
+
+  function pollTick() {
+    const list = MockAPI.makeBotPoll();
+    Feed.refresh();
+    Toast.show(`@${list.author} just posted “${list.title}”`);
+  }
+
+  function watch(list) {
+    watched.push({ list, created: Date.now(), hits: 0 });
+  }
+
+  function init() {
+    schedule(FIRST_TICK);
+    setInterval(pollTick, POLL_EVERY);
+  }
+
+  return { init, watch };
+})();
+
+/* ---------- BOOT ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  Theme.init();
+  Toast.init();
+  Auth.init();
+  Profile.init();
+  Feed.init();
+  Detail.init();
+  Comments.init();
+  Search.init();
+  Create.init();
+  Nav.init();
+  Sidebar.init();
+  MobileNav.init();
+  Bots.init();
+});
+
+</script>
+</body>
+</html>
