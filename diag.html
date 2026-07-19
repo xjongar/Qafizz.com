@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Qafizz — diagnostics</title>
+<style>
+  body { background:#111; color:#eee; font:16px/1.5 ui-monospace,Consolas,monospace; margin:0; padding:20px; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  p.sub { color:#888; margin:0 0 20px; font-size:14px; }
+  .row { display:flex; gap:10px; padding:10px 12px; border-bottom:1px solid #262626; align-items:baseline; }
+  .k { flex:0 0 42%; color:#9aa; }
+  .v { flex:1; word-break:break-all; }
+  .ok   { color:#4ade80; font-weight:700; }
+  .bad  { color:#f87171; font-weight:700; }
+  .warn { color:#fbbf24; font-weight:700; }
+  #verdict { margin:20px 0; padding:14px; border-radius:8px; background:#1c1c1c; border-left:4px solid #555; font-size:17px; }
+</style>
+</head>
+<body>
+<h1>Qafizz diagnostics</h1>
+<p class="sub">Screenshot this whole page and send it. Nothing here changes any data.</p>
+<div id="verdict">Running…</div>
+<div id="out"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+<script>
+(function () {
+  var out = document.getElementById("out");
+  var problems = [];
+
+  function add(k, v, cls) {
+    var row = document.createElement("div");
+    row.className = "row";
+    var kk = document.createElement("div"); kk.className = "k"; kk.textContent = k;
+    var vv = document.createElement("div"); vv.className = "v " + (cls || ""); vv.textContent = String(v);
+    row.appendChild(kk); row.appendChild(vv); out.appendChild(row);
+  }
+  function check(k, cond, good, bad) {
+    add(k, cond ? good : bad, cond ? "ok" : "bad");
+    if (!cond) problems.push(k);
+  }
+
+  // 1. Is the CDN reaching this browser?
+  check("supabase-js loaded", !!(window.supabase && window.supabase.createClient),
+        "YES", "NO — CDN blocked (adblocker/extension?)");
+
+  // 2. What has the site stored locally?
+  var keys = [];
+  try { keys = Object.keys(localStorage); } catch (e) { keys = ["<blocked>"]; }
+  add("localStorage keys", keys.length ? keys.join(", ") : "(empty)");
+  add("signed-in name", (function(){ try { return localStorage.getItem("tmb-user") || "(none)"; } catch(e){ return "<blocked>"; } })());
+  add("supabase session", keys.filter(function(k){ return k.indexOf("sb-") === 0; }).length ? "present" : "(none)");
+
+  // 3. Can this browser actually fetch the site's own scripts?
+  ["js/app.js", "js/topics.js", "js/backend.js", "js/auth.js"].forEach(function (f) {
+    fetch(f + "?cb=" + Math.random())
+      .then(function (r) { check("fetch " + f, r.ok, "HTTP " + r.status, "HTTP " + r.status); })
+      .catch(function (e) { check("fetch " + f, false, "", "BLOCKED: " + e.message); });
+  });
+
+  // 4. Does the database answer from THIS browser, on THIS network?
+  if (window.supabase && window.supabase.createClient) {
+    var c = window.supabase.createClient(
+      "https://penlvacldoriiegbusjz.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlbmx2YWNsZG9yaWllZ2J1c2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0MTI5MzgsImV4cCI6MjA5OTk4ODkzOH0.J2vs3qzRvoY_Ak0NqNqtMMfXyz9qBLNzJiCHmr3kxes"
+    );
+    c.from("profiles").select("username").limit(3).then(function (res) {
+      check("database read", !res.error, "OK — " + (res.data || []).length + " profiles", "FAILED: " + (res.error && res.error.message));
+    });
+    c.auth.getSession().then(function (res) {
+      var s = res && res.data && res.data.session;
+      add("active session", s ? "YES — " + s.user.email : "no (signed out)", s ? "ok" : "warn");
+    }).catch(function (e) { check("active session", false, "", "THREW: " + e.message); });
+  }
+
+  // 5. Does the real feed render in THIS browser? Load it hidden and count cards.
+  var f = document.createElement("iframe");
+  f.style.cssText = "position:absolute;left:-9999px;width:1200px;height:900px;";
+  f.src = "index.html?cb=" + Math.random();
+  f.onload = function () {
+    var n = -1;
+    try { n = f.contentDocument.querySelectorAll(".tier-card").length; } catch (e) {}
+    check("polls rendered on index.html", n > 0, n + " cards", n === 0 ? "0 cards — feed is empty" : "unreadable");
+    setTimeout(function () {
+      var v = document.getElementById("verdict");
+      if (!problems.length) {
+        v.innerHTML = "<span class='ok'>Everything checks out in this browser.</span> " +
+          "If the site still looks broken, it is almost certainly cached JS — " +
+          "open <b>qafizz.com/?reset=1</b>, then hard-refresh with Ctrl+Shift+R.";
+      } else {
+        v.innerHTML = "<span class='bad'>Problems found:</span> " + problems.join(" &middot; ");
+      }
+    }, 2500);
+  };
+  document.body.appendChild(f);
+})();
+</script>
+</body>
+</html>
