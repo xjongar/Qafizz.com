@@ -68,12 +68,23 @@
   }
 
   async function load() {
-    const [lists, votes, comments, users] = await Promise.all([
-      Backend.fetchLists(200),
-      Backend.allVotes(500),
-      Backend.allComments(200),
-      Backend.allProfiles(200),
-    ]);
+    let lists, votes, comments, users;
+    /* A session the server has stopped accepting makes these reject outright.
+       Unguarded, the dashboard just stayed blank with no hint why — say what
+       broke and how to clear it instead. */
+    try {
+      [lists, votes, comments, users] = await Promise.all([
+        Backend.fetchLists(200),
+        Backend.allVotes(500),
+        Backend.allComments(200),
+        Backend.allProfiles(200),
+      ]);
+    } catch (err) {
+      whoEl.textContent =
+        "Couldn't load the data: " + (err && err.message ? err.message : err) +
+        " — try qafizz.com/?reset=1, then sign in again.";
+      return;
+    }
 
     stats([
       { value: users.length, label: "accounts" },
