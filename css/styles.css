@@ -805,9 +805,21 @@ input { font: inherit; }
     padding-left: max(.85rem, env(safe-area-inset-left));
     padding-right: max(.85rem, env(safe-area-inset-right));
   }
-  .logo { flex: 1 1 auto; font-size: .95rem; min-width: 0; }
+  .logo { flex: 0 0 auto; font-size: .95rem; min-width: 0; }
   .logo-mark { width: 30px; height: 30px; border-radius: 8px; }
-  .header-actions { flex: 0 0 auto; gap: .3rem; }
+
+  /* Wraps, and is allowed to shrink. Without flex-wrap here the Create button
+     below could not take a row of its own no matter what basis it asked for —
+     it just forced this container past the width of the screen and took the
+     whole header with it. */
+  .header-actions {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: .3rem;
+    min-width: 0;
+  }
 
   /* The magnifier opened a search bar that now sits permanently at the top of
      the feed. It was spending a 44px slot in the tightest row on the page to
@@ -837,16 +849,18 @@ input { font: inherit; }
     font-size: .95rem;
   }
 
-  /* Create is the primary action, so it gets a full-width row of its own
-     instead of being squeezed out of the header the way it used to be. Slimmer
-     than the 44px controls around it: it is a wide target already, and the row
-     it occupies is pure overhead above the feed. */
+  /* Sits inline beside the theme toggle and Sign up when there is room, and
+     drops to a line of its own when there is not. It used to demand a full-width
+     basis unconditionally, which — inside a container that could not wrap — is
+     what pushed the button off the right edge of the phone. */
   .header-actions .btn-create {
-    order: 4; flex: 1 0 100%;
-    margin-top: .1rem;
+    flex: 0 1 auto;
     min-height: 40px;
-    font-size: .9rem;
+    font-size: .85rem;
+    padding-left: .8rem; padding-right: .8rem;
+    white-space: nowrap;
   }
+  .header-actions .btn-auth { flex: 0 1 auto; white-space: nowrap; }
 
   /* Touch targets. 40px reads as generous with a mouse and cramped with a
      thumb, so everything interactive gets brought up to 44. */
@@ -947,6 +961,25 @@ input { font: inherit; }
      scrolls horizontally, which reads as broken. */
   html, body { overflow-x: hidden; }
   img, video, iframe, pre, table { max-width: 100%; }
+
+  /* The rule above only HIDES an overflow; these prevent one. A grid or flex
+     item defaults to min-width: auto, meaning it refuses to shrink below its
+     content and grows past the viewport instead — which is why card meta like
+     the timestamp and comment count were being cut off at the screen edge
+     rather than fitting. Every container on the path from the page to that
+     text has to be allowed to shrink. */
+  .page-shell, .feed-column, .feed-grid, .sidebar,
+  .tier-card, .tier-card-main, .tier-card-top, .tier-card-footer { min-width: 0; }
+  .feed-grid > * { min-width: 0; max-width: 100%; }
+  .tier-card-category, .tier-card-time {
+    min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* Until a slot id is configured slots.js collapses the banner to display:none,
+     but the wrapper kept its margin and padding — leaving a band of empty black
+     between the header and the feed that looked like a rendering fault. */
+  .ad-slot-wrap:has(.ad-banner.is-empty) { display: none; }
 }
 
 /* ---------- NARROW PHONES ----------
