@@ -68,6 +68,8 @@ async function capture() {
       return topics[Math.floor(Math.random() * topics.length)].t;
     });
 
+    if (!chosen) console.log('window.TRENDY_TOPICS was empty — using the visible feed only');
+
     if (chosen) {
       console.log(`Searching for "${chosen}"`);
       // Type it in for real — the filter runs off the input event (app.js:1497).
@@ -137,6 +139,17 @@ async function post(caption) {
     accessToken: process.env.X_ACCESS_TOKEN,
     accessSecret: process.env.X_ACCESS_SECRET,
   });
+
+  /* Verify the credentials on their own first. A 401 here means the four keys
+     are wrong or mismatched; a 401 only on the upload below means the keys are
+     fine but the app lacks access to the v1.1 media endpoint. */
+  try {
+    const me = await x.v2.me();
+    console.log(`Authenticated as @${me.data.username}`);
+  } catch (e) {
+    throw new Error(`Credential check failed (${e.code || '?'}): ${e.message}. ` +
+      'The four secrets are wrong or from different regenerations.');
+  }
 
   const mediaId = await x.v1.uploadMedia(SHOT);
   const { data } = await x.v2.tweet({ text: caption, media: { media_ids: [mediaId] } });
