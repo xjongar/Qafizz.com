@@ -62,9 +62,15 @@
 
   // 4. Does the database answer from THIS browser, on THIS network?
   if (window.supabase && window.supabase.createClient) {
+    /* Its own storage key, so this page does not queue behind the real client's
+       Web Lock. Sharing one made the diagnostics part of the fault they were
+       meant to observe: this page, plus the index.html it loads in an iframe
+       below, contended for the same lock as the site itself and the checks just
+       hung — reporting nothing, which read as "everything is fine". */
     var c = window.supabase.createClient(
       "https://penlvacldoriiegbusjz.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlbmx2YWNsZG9yaWllZ2J1c2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0MTI5MzgsImV4cCI6MjA5OTk4ODkzOH0.J2vs3qzRvoY_Ak0NqNqtMMfXyz9qBLNzJiCHmr3kxes"
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlbmx2YWNsZG9yaWllZ2J1c2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0MTI5MzgsImV4cCI6MjA5OTk4ODkzOH0.J2vs3qzRvoY_Ak0NqNqtMMfXyz9qBLNzJiCHmr3kxes",
+      { auth: { storageKey: "sb-qafizz-diag", persistSession: false, autoRefreshToken: false } }
     );
     c.from("profiles").select("username").limit(3).then(function (res) {
       check("database read", !res.error, "OK — " + (res.data || []).length + " profiles", "FAILED: " + (res.error && res.error.message));

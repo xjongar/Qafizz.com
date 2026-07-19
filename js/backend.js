@@ -32,13 +32,45 @@ window.Backend = (() => {
     return Boolean(client);
   }
 
+  /* supabase-js serialises every token operation behind a Web Lock named for the
+     storage key, and each data read asks for the access token first — so the
+     lock gates reads as well as auth. The lock is shared by every client on the
+     origin: a second tab, or a page that also builds its own client, contends
+     for the same one. A holder that never releases wedges everything after it
+     with no error, no rejection and no timeout, which is indistinguishable from
+     a dead network and produces a completely silent failure.
+
+     Wait a bounded time, then go without it. A token refresh racing another tab
+     is recoverable; a page that hangs forever is not. Aborting before the lock
+     is granted means the callback never runs, so fn() is never invoked twice. */
+  async function boundedLock(name, _acquireTimeout, fn) {
+    const locks = typeof navigator !== "undefined" && navigator.locks;
+    if (!locks || !locks.request) return fn();
+
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 3000);
+    try {
+      return await locks.request(name, { signal: ctrl.signal }, () => fn());
+    } catch (err) {
+      if (err && err.name === "AbortError") {
+        console.warn("[backend] auth lock '" + name + "' did not release in 3s — proceeding without it");
+        return fn();
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   function init() {
     if (!configured) return false;
     if (!window.supabase || !window.supabase.createClient) {
       console.warn("[backend] supabase-js failed to load — staying local-only");
       return false;
     }
-    client = window.supabase.createClient(CONFIG.url, CONFIG.anonKey);
+    client = window.supabase.createClient(CONFIG.url, CONFIG.anonKey, {
+      auth: { lock: boundedLock },
+    });
 
     client.auth.onAuthStateChange(async (_event, session) => {
       profile = session ? await fetchProfile(session.user.id) : null;
