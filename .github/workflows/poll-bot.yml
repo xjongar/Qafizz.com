@@ -1,15 +1,15 @@
 name: Poll Bot
 
-# 16 posts/day, every 15 min from 9:00pm to 12:45am Eastern.
+# 16 posts/day, once an hour on the hour, 10:00am -> 1:00am Eastern.
 # That is 480/month against the X free tier's 500 cap — almost no headroom, so
 # a 31-day month (496) or a few manual posts will run you into the ceiling.
 #
 # GitHub cron is ALWAYS UTC and does not follow daylight saving, so this block
-# is correct for EDT (summer, UTC-4) and will fire an hour late in EST (winter).
-# For EST change the hour range to 2-5. For Pacific: 4-7 (PDT) / 5-8 (PST).
+# is correct for EDT (summer, UTC-4) and will run an hour early in EST (winter);
+# for EST shift both ranges up by one: '0 1-6,15-23 * * *'.
 on:
   schedule:
-    - cron: '0,15,30,45 1-4 * * *'   # 01:00-04:45 UTC = 9:00pm-12:45am EDT
+    - cron: '0 0-5,14-23 * * *'   # 14:00-05:00 UTC = 10:00am-1:00am EDT
   workflow_dispatch:              # manual "Run workflow" button
     inputs:
       dry_run:
