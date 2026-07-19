@@ -1239,6 +1239,56 @@ const Comments = (() => {
     return list.reduce((n, c) => n + 1 + countAll(c.replies || []), 0);
   }
 
+  /* Seeded threads carry ids like "c2-1"; real ones are uuids from the database.
+     Only a uuid can be a parent_id, so replying to filler posts at top level. */
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  function relTime(iso) {
+    const h = (Date.now() - new Date(iso).getTime()) / 36e5;
+    if (h < 1) return "just now";
+    if (h < 24) return `${Math.floor(h)}h ago`;
+    const d = Math.floor(h / 24);
+    return d === 1 ? "1d ago" : `${d}d ago`;
+  }
+
+  /* The database returns a flat list with parent_id; buildComment wants a tree. */
+  function toTree(rows) {
+    const byId = new Map();
+    rows.forEach((r) =>
+      byId.set(r.id, {
+        id: r.id,
+        author: r.author,
+        op: false,
+        time: relTime(r.createdAt),
+        text: r.body,
+        votes: 1,
+        replies: [],
+      })
+    );
+    const roots = [];
+    rows.forEach((r) => {
+      const node = byId.get(r.id);
+      const parent = r.parentId ? byId.get(r.parentId) : null;
+      if (parent) parent.replies.push(node);
+      else roots.push(node);
+    });
+    return roots;
+  }
+
+  /* Write the comment through to the server. If that fails the optimistic node
+     is pulled back out — a comment that looks posted but silently disappears on
+     refresh is exactly the bug this replaces. */
+  async function persist(listId, text, parentId, node) {
+    if (!window.Backend || !Backend.ready()) return;
+    const parent = UUID_RE.test(String(parentId || "")) ? parentId : null;
+    const res = await Backend.postComment(listId, text, parent);
+    if (res && res.error) {
+      node.remove();
+      bumpCount(-1);
+      window.alert("Couldn't post that comment: " + res.error);
+    }
+  }
+
   function buildComment(c, depth = 0) {
     const el = document.createElement("div");
     el.className = "comment";
@@ -1321,7 +1371,7 @@ const Comments = (() => {
     };
   }
 
-  function addReply(parentEl, text, depth, parentId) {
+  async function addReply(parentEl, text, depth, parentId) {
     const body = parentEl.querySelector(":scope > .comment-body");
     let children = body.querySelector(":scope > .comment-children");
     if (!children) {
@@ -1329,9 +1379,10 @@ const Comments = (() => {
       children.className = "comment-children";
       body.appendChild(children);
     }
-    children.appendChild(buildComment(makeLocalComment(text), depth));
+    const node = buildComment(makeLocalComment(text), depth);
+    children.appendChild(node);
     bumpCount(1);
-    MockAPI.submitComment(Detail.getCurrentId(), text, parentId);
+    await persist(Detail.getCurrentId(), text, parentId, node);
   }
 
   let total = 0;
@@ -1340,8 +1391,15 @@ const Comments = (() => {
     countEl.textContent = `(${total})`;
   }
 
+  /* Real comments first, seeded filler underneath — what people actually wrote
+     outranks the generated thread that makes a quiet list look inhabited. */
   async function load(listId) {
-    const comments = await MockAPI.getComments(listId);
+    const seeded = await MockAPI.getComments(listId);
+    const live =
+      window.Backend && Backend.ready()
+        ? toTree(await Backend.fetchComments(listId))
+        : [];
+    const comments = live.concat(seeded);
     thread.innerHTML = "";
     comments.forEach((c) => thread.appendChild(buildComment(c)));
     total = countAll(comments);
@@ -1353,11 +1411,12 @@ const Comments = (() => {
       e.preventDefault();
       const text = input.value.trim();
       if (!text) return;
-      Auth.require("Sign up to post a comment.", () => {
-        thread.prepend(buildComment(makeLocalComment(text)));
+      Auth.require("Sign up to post a comment.", async () => {
+        const node = buildComment(makeLocalComment(text));
+        thread.prepend(node);
         bumpCount(1);
         input.value = "";
-        MockAPI.submitComment(Detail.getCurrentId(), text);
+        await persist(Detail.getCurrentId(), text, null, node);
       });
     });
 

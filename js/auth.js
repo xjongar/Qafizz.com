@@ -62,10 +62,24 @@ window.Auth = (() => {
     fn(current);
   }
 
+  /* Survives sign-out on purpose: it's what tells the modal to open on sign-in
+     rather than sign-up next time, so logging out doesn't strand a returning
+     user on a form that rejects the email they already registered. */
+  const SEEN_KEY = "tmb-returning";
+
+  function isReturning() {
+    try {
+      return localStorage.getItem(SEEN_KEY) === "1";
+    } catch (err) {
+      return false;
+    }
+  }
+
   function save(name) {
     current = name;
     try {
       localStorage.setItem(KEY, name);
+      localStorage.setItem(SEEN_KEY, "1");
     } catch (err) {
       /* Session-only if storage is unavailable — still signed in for this tab. */
     }
@@ -249,10 +263,11 @@ window.Auth = (() => {
     reasonEl.textContent = reason || "You need an account to join in.";
     showError("");
     form.reset();
-    setMode("signup"); // always start on sign-up; the toggle is one click away
+    /* First-timers get sign-up; anyone who has held an account on this device
+       gets sign-in. The toggle is one click away either way. */
+    setMode(isReturning() && backendLive() ? "signin" : "signup");
     overlay.hidden = false;
     document.body.style.overflow = "hidden";
-    nameInput.focus();
   }
 
   function close() {
