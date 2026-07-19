@@ -17,7 +17,11 @@ const SEL = {
   card: '.tier-card-main',      // feed card; click handler opens Detail (app.js:896)
   overlay: '#detailOverlay',    // wrapper, carries the [hidden] attribute
   panel: '.detail-panel',       // the actual card we screenshot (index.html:160)
+  loadMore: '#loadMoreBtn',     // appends another PAGE_SIZE cards per click
 };
+
+// 7 clicks * 12 per page + the initial 12 = a pool of ~96 polls to draw from.
+const EXPAND_CLICKS = 7;
 
 /* The panel contains an ad slot and the whole comments thread below the tier
    rows. Both are dead weight in a screenshot, so they come out before capture. */
@@ -53,6 +57,16 @@ async function capture() {
     console.log(`Loading ${SITE}`);
     await page.goto(SITE, { waitUntil: 'networkidle2', timeout: 60000 });
     await page.waitForSelector(SEL.card, { timeout: 30000 });
+
+    /* The feed only renders PAGE_SIZE (12) cards up front, so a naive random
+       pick draws from the same dozen every night. Expand the feed first to get
+       a pool worth sampling from. Each click appends another 12 (app.js:1019). */
+    for (let i = 0; i < EXPAND_CLICKS; i++) {
+      const more = await page.$(`${SEL.loadMore}:not([disabled])`);
+      if (!more) break;                    // button gone or exhausted
+      await more.click();
+      await new Promise((r) => setTimeout(r, 700));
+    }
 
     /* Polls have no URLs of their own — the feed is client-rendered and a card
        opens via a JS click handler, so picking one means clicking one. */
