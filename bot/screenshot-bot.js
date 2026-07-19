@@ -162,8 +162,20 @@ async function post(caption) {
     const me = await x.v2.me();
     console.log(`Authenticated as @${me.data.username}`);
   } catch (e) {
-    throw new Error(`Credential check failed (${e.code || '?'}): ${e.message}. ` +
-      'The four secrets are wrong or from different regenerations.');
+    // X's own error body says far more than the status line does.
+    console.log('--- X error detail ---');
+    console.log(JSON.stringify(e.data || e.errors || {}, null, 2));
+
+    // v1.1 uses a different auth path; if it succeeds the keys are actually fine.
+    try {
+      const u = await x.v1.verifyCredentials();
+      console.log(`v1.1 auth DID work — @${u.screen_name}. The keys are valid.`);
+    } catch (e2) {
+      console.log(`v1.1 auth also failed: ${e2.message}`);
+    }
+    console.log('----------------------');
+
+    throw new Error(`Credential check failed (${e.code || '?'}): ${e.message}`);
   }
 
   const mediaId = await x.v1.uploadMedia(SHOT);
