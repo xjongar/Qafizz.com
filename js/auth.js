@@ -251,9 +251,13 @@ window.Auth = (() => {
 
   /* ---- modal ---- */
 
+  /* Mirrored to the console on purpose. Putting auth failures only in the modal
+     made the console look clean while signup was failing every time, so the one
+     place anybody thinks to check reported nothing at all. */
   function showError(msg) {
     errorEl.textContent = msg || "";
     errorEl.hidden = !msg;
+    if (msg) console.warn("[auth] " + msg);
   }
 
   /* The modal does double duty: "signup" asks for a handle, "signin" just takes
@@ -323,10 +327,24 @@ window.Auth = (() => {
       return;
     }
 
+    /* Traced end to end. A submit that produced no visible change and no log at
+       all left nothing to tell "the call is hanging" apart from "the handler
+       never ran" — the two failures look identical from outside and need
+       opposite fixes. */
+    console.info("[auth] " + mode + " submitting as @" + (username || email));
     submitBtn.disabled = true;
-    const res = mode === "signin"
-      ? await signInRequest({ email, password })
-      : await signUpRequest({ username, email, password });
+    let res;
+    try {
+      res = mode === "signin"
+        ? await signInRequest({ email, password })
+        : await signUpRequest({ username, email, password });
+    } catch (err) {
+      console.error("[auth] " + mode + " threw:", err);
+      submitBtn.disabled = false;
+      showError("Something broke on our end: " + (err && err.message ? err.message : err));
+      return;
+    }
+    console.info("[auth] " + mode + " result:", res);
     submitBtn.disabled = false;
     if (!res.ok) {
       showError(res.error);
@@ -341,8 +359,15 @@ window.Auth = (() => {
   }
 
   function init() {
+    /* Printed unconditionally so a silent console can be told apart from stale
+       cached JS. No banner on load means the browser is still serving an old
+       auth.js and nothing below this line is running at all. */
+    console.info("[auth] build 2026-07-19c — username pre-check, traced submit");
     overlay = document.getElementById("authOverlay");
-    if (!overlay) return;
+    if (!overlay) {
+      console.error("[auth] #authOverlay missing — sign-up cannot open");
+      return;
+    }
     form = document.getElementById("authForm");
     nameInput = document.getElementById("authUsername");
     emailInput = document.getElementById("authEmail");
