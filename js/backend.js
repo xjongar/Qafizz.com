@@ -234,12 +234,59 @@ window.Backend = (() => {
     return { error: error ? error.message : null };
   }
 
+  /* ---------- ADMIN READS ----------
+     Everything below is already publicly readable — the feed needs vote counts,
+     so these queries expose nothing new. They exist to back the dashboard. */
+
+  async function allVotes(limit = 500) {
+    if (!ready()) return [];
+    const { data, error } = await client
+      .from("votes")
+      .select("target_key, direction, created_at, profiles(username)")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error) {
+      console.warn("[backend] vote list failed:", error.message);
+      return [];
+    }
+    return data.map((r) => ({ ...r, username: r.profiles ? r.profiles.username : null }));
+  }
+
+  async function allComments(limit = 200) {
+    if (!ready()) return [];
+    const { data, error } = await client
+      .from("comments")
+      .select("id, list_id, body, created_at, profiles(username)")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error) {
+      console.warn("[backend] comment list failed:", error.message);
+      return [];
+    }
+    return data.map((r) => ({ ...r, username: r.profiles ? r.profiles.username : null }));
+  }
+
+  async function allProfiles(limit = 200) {
+    if (!ready()) return [];
+    const { data, error } = await client
+      .from("profiles")
+      .select("id, username, created_at")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error) {
+      console.warn("[backend] profile list failed:", error.message);
+      return [];
+    }
+    return data;
+  }
+
   /* Connect immediately: auth.js and app.js both check Backend.ready() during
      their own init, which runs after this script has been evaluated. */
   init();
 
   return {
     init, ready, configured, onAuthChange,
+    allVotes, allComments, allProfiles,
     signUp, signIn, signOut, currentUser,
     tallies, myVotes, vote,
     fetchLists, createList,

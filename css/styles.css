@@ -607,6 +607,51 @@ input { font: inherit; }
 }
 .auth-switch-btn:hover { color: var(--accent-strong); }
 
+/* ---------- ADMIN DASHBOARD ---------- */
+.admin { max-width: 68rem; }
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: .75rem;
+  margin-bottom: 2rem;
+}
+.admin-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex; flex-direction: column; gap: .2rem;
+}
+.admin-stat-num { font-size: 1.7rem; font-weight: 800; color: var(--accent); letter-spacing: -.02em; }
+.admin-stat-label { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
+/* Tables can outgrow the page on mobile — scroll the table, not the document. */
+.admin-table-wrap { overflow-x: auto; margin-bottom: 1rem; }
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .87rem;
+}
+.admin-table th {
+  text-align: left;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-faint);
+  padding: .5rem .7rem;
+  border-bottom: 1px solid var(--border-strong);
+  white-space: nowrap;
+}
+.admin-table td {
+  padding: .6rem .7rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  vertical-align: top;
+}
+.admin-table tbody tr:hover td { background: var(--bg-hover); }
+.admin-table b { color: var(--text); }
+.admin-dim { color: var(--text-faint); font-size: .8em; }
+.admin-empty { color: var(--text-faint); padding: 1.5rem .7rem; font-style: italic; }
+
 /* ---------- 9b. SIGN UP ---------- */
 
 /* Borrows .create-panel for the shell — only the username field is bespoke. */

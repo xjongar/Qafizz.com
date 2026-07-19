@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Trust Me Bro</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script>
+    try {
+      var t = localStorage.getItem("tmb-theme");
+      if (t) document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  </script>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="logo" aria-label="Trust Me Bro home">
+        <span class="logo-mark">TM</span>
+        <span class="logo-text">Trust Me <em>Bro</em></span>
+      </a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="/" class="nav-link">Back to site</a>
+      </nav>
+      <div class="header-actions">
+        <button class="btn btn-outline" id="refreshBtn">Refresh</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="legal admin">
+    <h1 class="legal-title">Admin</h1>
+    <p class="legal-updated" id="adminWho">Checking your account…</p>
+
+    <div id="adminGate" class="legal-callout" hidden>
+      <p><strong>Signed-out or not an admin.</strong> Sign in on the
+      <a href="/">main site</a> as an admin account, then come back.</p>
+    </div>
+
+    <div id="adminBody" hidden>
+      <div class="admin-stats" id="adminStats"></div>
+
+      <h2>Tier lists people created</h2>
+      <div class="admin-table-wrap"><table class="admin-table" id="listsTable"></table></div>
+
+      <h2>Votes</h2>
+      <p class="create-hint">Real votes only. The seeded topics' counts are generated
+        in the browser and never touch the database, so they don't appear here.</p>
+      <div class="admin-table-wrap"><table class="admin-table" id="votesTable"></table></div>
+
+      <h2>Comments</h2>
+      <p class="create-hint">Comments shown on tier lists are still generated
+        client-side. Only real posted comments land in the database.</p>
+      <div class="admin-table-wrap"><table class="admin-table" id="commentsTable"></table></div>
+
+      <h2>Accounts</h2>
+      <div class="admin-table-wrap"><table class="admin-table" id="usersTable"></table></div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p class="footer-brand">Trust Me <em>Bro</em></p>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="/about.html">About</a><a href="/terms.html">Terms</a><a href="/privacy.html">Privacy</a><a href="/advertise.html">Advertise</a><a href="/contact.html">Contact</a>
+      </nav>
+      <p class="footer-note">Opinions are ranked. Feelings are not our problem. © 2026</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+  <script src="js/backend.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
