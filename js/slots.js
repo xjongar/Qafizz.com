@@ -1,5 +1,8 @@
 /* ==========================================================================
-   TRUST ME BRO — ads.js
+   TRUST ME BRO — slots.js
+   Named for the slots it fills, not for ads: content blockers drop any script
+   whose URL matches /ads.js by filename alone, which took the whole file out
+   before a line of it ran.
    Fills the .ad-banner slots. Inert until PUBLISHER_ID is set: every slot keeps
    its reserved height and placeholder, nothing external loads, and the site
    still works over file://. Set PUBLISHER_ID + SLOT_IDS once AdSense approves

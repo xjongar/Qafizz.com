@@ -7,7 +7,7 @@
   <meta name="description" content="Browse thousands of community tier lists. Vote, argue, repeat." />
   <link rel="stylesheet" href="css/styles.css" />
   <!-- AdSense site verification / Auto ads. Static so Google's reviewer sees it
-       in the served HTML; ads.js skips its own injection when this is present. -->
+       in the served HTML; slots.js skips its own injection when this is present. -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6047624815480207"
      crossorigin="anonymous" id="adsbygoogle-sdk"></script>
 </head>
@@ -327,8 +327,8 @@
 
   <!-- Seed corpus must load before app.js reads window.TRENDY_TOPICS -->
   <script src="js/topics.js"></script>
-  <!-- ads.js before app.js: app.js hands it each in-feed slot as it builds one -->
-  <script src="js/ads.js"></script>
+  <!-- slots.js before app.js: app.js hands it each in-feed slot as it builds one -->
+  <script src="js/slots.js"></script>
   <!-- auth.js before app.js: the feed asks who's signed in as it wires up -->
   <!-- Supabase client, then our wrapper. Both load before auth/app so the
        backend is available at init; if the CDN fails the site falls back to
