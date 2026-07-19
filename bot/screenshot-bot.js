@@ -17,6 +17,7 @@ const SEL = {
   card: '.tier-card-main',      // feed card; click handler opens Detail (app.js:896)
   overlay: '#detailOverlay',    // wrapper, carries the [hidden] attribute
   panel: '.detail-panel',       // the actual card we screenshot (index.html:160)
+  search: '#searchInput',       // filters the feed on every input event
 };
 
 /* The panel contains an ad slot and the whole comments thread below the tier
@@ -64,18 +65,25 @@ async function capture() {
     const chosen = await page.evaluate(() => {
       const topics = window.TRENDY_TOPICS || [];
       if (!topics.length) return null;
-      const t = topics[Math.floor(Math.random() * topics.length)];
-      try {
-        Feed.setQuery(t.t);
-        return t.t;
-      } catch (e) {
-        return null;
-      }
+      return topics[Math.floor(Math.random() * topics.length)].t;
     });
 
     if (chosen) {
       console.log(`Searching for "${chosen}"`);
-      await new Promise((r) => setTimeout(r, 800));
+      // Type it in for real — the filter runs off the input event (app.js:1497).
+      await page.click(SEL.search);
+      await page.type(SEL.search, chosen, { delay: 10 });
+      await new Promise((r) => setTimeout(r, 900));
+
+      const hits = await page.$$eval(SEL.card, (els) => els.length);
+      if (!hits) {
+        // Search found nothing — clear it and fall back to the default feed.
+        console.log(`No match for "${chosen}", falling back to the feed`);
+        await page.evaluate((s) => { document.querySelector(s).value = ''; }, SEL.search);
+        await page.type(SEL.search, ' ', { delay: 10 });
+        await page.keyboard.press('Backspace');
+        await new Promise((r) => setTimeout(r, 900));
+      }
     }
 
     /* Polls have no URLs of their own — the feed is client-rendered and a card
