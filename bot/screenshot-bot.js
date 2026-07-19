@@ -133,11 +133,26 @@ async function post(caption) {
   const missing = need.filter((k) => !process.env[k]);
   if (missing.length) throw new Error(`Missing secrets: ${missing.join(', ')}`);
 
+  /* Trim: a trailing newline picked up when pasting into the secrets box breaks
+     the OAuth signature and is invisible in the GitHub UI. Lengths are logged
+     (never values) because a wrong length is the clearest signal of a truncated
+     paste or a value from the wrong field. Expected: 25 / 50 / 50 / 45. */
+  const creds = {};
+  for (const k of need) creds[k] = (process.env[k] || '').trim();
+
+  console.log('Credential lengths — ' + need
+    .map((k) => `${k.replace('X_', '')}:${creds[k].length}`)
+    .join('  ') + '   (expected KEY:25  SECRET:50  TOKEN:50  ACCESS_SECRET:45)');
+
+  if (!creds.X_ACCESS_TOKEN.includes('-')) {
+    console.log('WARNING: access token has no "-" — it should look like 1906...-CWTN...');
+  }
+
   const x = new TwitterApi({
-    appKey: process.env.X_API_KEY,
-    appSecret: process.env.X_API_SECRET,
-    accessToken: process.env.X_ACCESS_TOKEN,
-    accessSecret: process.env.X_ACCESS_SECRET,
+    appKey: creds.X_API_KEY,
+    appSecret: creds.X_API_SECRET,
+    accessToken: creds.X_ACCESS_TOKEN,
+    accessSecret: creds.X_ACCESS_SECRET,
   });
 
   /* Verify the credentials on their own first. A 401 here means the four keys
