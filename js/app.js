@@ -25,11 +25,12 @@ const Theme = (() => {
   }
 
   function init() {
+    /* Dark is the brand, so it is the default for everyone regardless of what
+       the OS asks for. This used to follow prefers-color-scheme, which meant
+       anyone on a light desktop landed on the light theme having never chosen
+       it. A saved choice still wins — the toggle is what decides, not the OS. */
     const saved = localStorage.getItem(STORAGE_KEY);
-    const preferred =
-      saved ||
-      (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
-    apply(preferred);
+    apply(saved === "light" || saved === "dark" ? saved : "dark");
 
     toggle.addEventListener("click", () => {
       apply(root.getAttribute("data-theme") === "dark" ? "light" : "dark");

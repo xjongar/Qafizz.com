@@ -362,7 +362,7 @@ window.Auth = (() => {
     /* Printed unconditionally so a silent console can be told apart from stale
        cached JS. No banner on load means the browser is still serving an old
        auth.js and nothing below this line is running at all. */
-    console.info("[auth] build 2026-07-19f — 25 more Animals topics");
+    console.info("[auth] build 2026-07-19g — dark is the default theme");
     overlay = document.getElementById("authOverlay");
     if (!overlay) {
       console.error("[auth] #authOverlay missing — sign-up cannot open");
