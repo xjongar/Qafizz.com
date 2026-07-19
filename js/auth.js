@@ -91,6 +91,14 @@ window.Auth = (() => {
     try {
       localStorage.removeItem(KEY);
     } catch (err) {}
+    /* Vote state is stored per-browser rather than per-account, so it has to be
+       dropped here as well. Left behind, the next account to sign in on this
+       machine shows the previous one's votes as its own. Votes is a top-level
+       const in app.js, so it lives in the global lexical scope and is reached
+       by name, not off window — same as MockAPI above. */
+    try {
+      if (typeof Votes !== "undefined" && Votes.clearLocal) Votes.clearLocal();
+    } catch (err) {}
     // Drop the server session too, or a reload would silently sign you back in.
     if (window.Backend && Backend.ready()) Backend.signOut();
     emit();

@@ -775,7 +775,20 @@ const Votes = (() => {
     return { total: baseVotes + next, state: next };
   }
 
-  return { cast, format, stateOf, scoreOf, sync, onSync };
+  /* Forget what this device remembers about who voted on what. The blob is
+     keyed per-browser, not per-account, so signing out has to drop it: without
+     this the next person to sign in on the same machine inherits the previous
+     account's highlighted arrows and cannot clear them from the UI. The shared
+     tallies in serverScores are everyone's, not one account's, so they stay. */
+  function clearLocal() {
+    Object.keys(userVotes).forEach((k) => delete userVotes[k]);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {}
+    flush(Object.keys(serverScores)); // repaint anything currently on screen
+  }
+
+  return { cast, format, stateOf, scoreOf, sync, onSync, clearLocal };
 })();
 
 /* ---------- FEED ---------- */
