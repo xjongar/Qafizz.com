@@ -95,10 +95,54 @@ window.Backend = (() => {
       console.warn("[backend] profile lookup failed:", error.message);
       return null;
     }
+    if (data) return data;
+    /* Authenticated with no profile row. The handle_new_user trigger normally
+       creates it, so this means the account predates the trigger or the trigger
+       failed. Left alone it is unrecoverable from the UI: every write checks
+       `profile` and refuses, while the header still shows a name. Build the
+       missing row instead of stranding the account. */
+    return healMissingProfile(userId);
+  }
+
+  async function healMissingProfile(userId) {
+    console.warn("[backend] no profile row for", userId, "— creating one");
+    const { data: u } = await client.auth.getUser();
+    const meta = (u && u.user && u.user.user_metadata) || {};
+    const email = (u && u.user && u.user.email) || "";
+    const username =
+      meta.username || (email ? email.split("@")[0] : "user") + "_" + userId.slice(0, 4);
+    const { data, error } = await client
+      .from("profiles")
+      .insert({ id: userId, username })
+      .select("id, username")
+      .single();
+    if (error) {
+      console.error("[backend] could not create the missing profile:", error.message);
+      return null;
+    }
     return data;
   }
 
   /* ---------- AUTH ---------- */
+
+  /* Is this username already on a profile row? Asked before signing up, because
+     the alternative is finding out via a 23505 from the trigger — which aborts
+     the whole signup transaction and leaves no account behind. Reads are public,
+     so this needs no session. Fails open: a lookup that errors must not block a
+     signup that would otherwise succeed. */
+  async function usernameTaken(name) {
+    if (!ready()) return false;
+    const { data, error } = await client
+      .from("profiles")
+      .select("username")
+      .eq("username", String(name).toLowerCase())
+      .maybeSingle();
+    if (error) {
+      console.warn("[backend] username check failed:", error.message);
+      return false;
+    }
+    return Boolean(data);
+  }
 
   /** Sign up with email + password. The profile row is created by a DB trigger. */
   async function signUp(email, password, username) {
@@ -113,8 +157,17 @@ window.Backend = (() => {
 
   async function signIn(email, password) {
     if (!ready()) return { error: "Backend not configured" };
-    const { error } = await client.auth.signInWithPassword({ email, password });
-    return { error: error ? error.message : null };
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    if (error) return { error: error.message };
+    /* Resolve the profile here rather than waiting on onAuthStateChange. That
+       callback lands a tick later, so a caller that checks currentUser() right
+       after signing in used to see null — signed in, but every write refused
+       until the listener happened to fire. */
+    if (data && data.user) {
+      profile = await fetchProfile(data.user.id);
+      listeners.forEach((fn) => fn(profile));
+    }
+    return { error: null };
   }
 
   async function signOut() {
@@ -340,7 +393,7 @@ window.Backend = (() => {
   }
 
   return {
-    init, ready, configured, onAuthChange,
+    init, ready, configured, onAuthChange, usernameTaken,
     allVotes, allComments, allProfiles,
     signUp, signIn, signOut, currentUser,
     tallies, myVotes, vote,

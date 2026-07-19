@@ -167,6 +167,13 @@ window.Auth = (() => {
        Supabase Auth, which hashes them server-side — nothing sensitive is
        kept here. The profiles row is created by a database trigger. */
     if (backendLive()) {
+      /* Ask before claiming. A name that is already on a profile row makes the
+         signup trigger raise 23505, which rolls the whole transaction back —
+         the response is a bare 500 and no account exists afterwards. Checking
+         first turns that into a sentence the person can act on. */
+      if (await Backend.usernameTaken(username)) {
+        return { ok: false, error: "@" + username + " is taken. Try another." };
+      }
       const { error } = await Backend.signUp(email, password, username);
       if (error) return { ok: false, error: friendlyAuthError(error) };
       // With email confirmation on, there's no session yet — say so plainly.
@@ -204,6 +211,10 @@ window.Auth = (() => {
     if (m.includes("invalid login")) return "Wrong email or password.";
     if (m.includes("email not confirmed")) return "Confirm your email first — check your inbox.";
     if (m.includes("duplicate key") && m.includes("username"))
+      return "That username is taken. Try another.";
+    /* What a username collision looks like from the other side of the trigger:
+       Supabase reports the failed transaction, not the constraint behind it. */
+    if (m.includes("database error saving new user") || m.includes("23505"))
       return "That username is taken. Try another.";
     if (m.includes("rate limit") || m.includes("too many"))
       return "Too many attempts. Wait a minute and try again.";
@@ -371,6 +382,22 @@ window.Auth = (() => {
         if (p && p.username !== current) save(p.username);
         else if (!p && backendLive() && current) signOut();
       });
+    }
+
+    /* The listener above only fires if the restore actually completes. When it
+       hangs — a wedged Web Lock, a token the server never answers on — nothing
+       fires, and the header goes on showing a name the server has no session
+       for. Every vote, comment and publish is then refused with "Sign in to
+       vote" while the UI insists you are signed in, which is unexplainable from
+       the outside. Treat a restore that never lands as signed out: reading is
+       public, so the only thing lost is a claim that was never true. */
+    if (backendLive() && current) {
+      setTimeout(() => {
+        if (current && !Backend.currentUser()) {
+          console.warn("[auth] no server session behind @" + current + " — signing out locally");
+          signOut();
+        }
+      }, 5000);
     }
 
     const btn = document.getElementById("authBtn");

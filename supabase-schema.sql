@@ -159,18 +159,38 @@ $$;
 -- Create the profile row automatically when someone signs up. The username
 -- comes from sign-up metadata, falling back to a slug of the email.
 -- ---------------------------------------------------------------------------
+-- The conflict guard here covers `id`, but the unique constraint that actually
+-- bites is on `username`. A taken name therefore raised 23505 inside the
+-- trigger, which aborted the surrounding transaction: signup returned a 500 and
+-- no account was created at all. The client pre-checks availability now, but a
+-- race between two people claiming a name must not be able to destroy a signup,
+-- so fall back to the next free variant rather than throwing.
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql security definer set search_path = public as $$
+declare
+  base      text;
+  candidate text;
+  n         int := 0;
 begin
+  base := coalesce(
+    nullif(new.raw_user_meta_data ->> 'username', ''),
+    split_part(new.email, '@', 1)
+  );
+  candidate := base;
+
+  while exists (select 1 from public.profiles where username = candidate) loop
+    n := n + 1;
+    candidate := base || '_' || n::text;
+    -- Pathological contention: stop counting and use the user id instead.
+    if n > 50 then
+      candidate := base || '_' || substr(new.id::text, 1, 6);
+      exit;
+    end if;
+  end loop;
+
   insert into public.profiles (id, username)
-  values (
-    new.id,
-    coalesce(
-      nullif(new.raw_user_meta_data ->> 'username', ''),
-      split_part(new.email, '@', 1) || '_' || substr(new.id::text, 1, 4)
-    )
-  )
+  values (new.id, candidate)
   on conflict (id) do nothing;
   return new;
 end;
