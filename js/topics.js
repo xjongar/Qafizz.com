@@ -1,6 +1,6 @@
 /* ==========================================================================
    TRUST ME BRO - topics.js
-   Seed corpus: 391 tier-list topics across 16 categories.
+   Seed corpus: 416 tier-list topics across 16 categories.
    Shape: { t: title, c: category, i: [items, best -> worst] }
    app.js turns each into a post - toTiers() spreads `i` across S-D, and the
    author/votes/comments/timestamp are derived deterministically from the id.
@@ -109,6 +109,31 @@ window.TRENDY_TOPICS = [
   { t: "Snakes", c: "Animals", i: ["Ball Python", "Corn Snake", "King Cobra", "Rattlesnake", "Anaconda"] },
   { t: "Baby Animals", c: "Animals", i: ["Puppy", "Kitten", "Duckling", "Piglet", "Tadpole"] },
   { t: "Desert Animals", c: "Animals", i: ["Camel", "Meerkat", "Fennec Fox", "Roadrunner", "Scorpion"] },
+  { t: "Deep Sea Creatures", c: "Animals", i: ["Giant Squid", "Anglerfish", "Vampire Squid", "Goblin Shark", "Blobfish"] },
+  { t: "Whales and Dolphins", c: "Animals", i: ["Orca", "Humpback Whale", "Blue Whale", "Narwhal", "Beluga"] },
+  { t: "Penguin Species", c: "Animals", i: ["Emperor Penguin", "King Penguin", "Rockhopper", "Gentoo", "Little Blue Penguin"] },
+  { t: "Owls", c: "Animals", i: ["Snowy Owl", "Great Horned Owl", "Barn Owl", "Burrowing Owl", "Screech Owl"] },
+  { t: "Wild Canines", c: "Animals", i: ["Grey Wolf", "Red Fox", "Arctic Fox", "Coyote", "Jackal"] },
+  { t: "Amphibians", c: "Animals", i: ["Axolotl", "Poison Dart Frog", "Tree Frog", "Salamander", "Common Toad"] },
+  { t: "Spiders", c: "Animals", i: ["Jumping Spider", "Orb Weaver", "Tarantula", "Wolf Spider", "Black Widow"] },
+  { t: "Rodents", c: "Animals", i: ["Capybara", "Chinchilla", "Squirrel", "Beaver", "Rat"] },
+  { t: "Marsupials", c: "Animals", i: ["Quokka", "Kangaroo", "Koala", "Tasmanian Devil", "Opossum"] },
+  { t: "Fastest Animals", c: "Animals", i: ["Peregrine Falcon", "Cheetah", "Sailfish", "Pronghorn", "Ostrich"] },
+  { t: "Deadliest Animals", c: "Animals", i: ["Mosquito", "Box Jellyfish", "Saltwater Crocodile", "Hippo", "Cape Buffalo"] },
+  { t: "Smartest Animals", c: "Animals", i: ["Octopus", "Dolphin", "Chimpanzee", "Crow", "Pig"] },
+  { t: "Cutest Animals", c: "Animals", i: ["Quokka", "Red Panda", "Otter", "Hedgehog", "Axolotl"] },
+  { t: "Ugliest Animals", c: "Animals", i: ["Blobfish", "Naked Mole Rat", "Aye-Aye", "Proboscis Monkey", "Star-Nosed Mole"] },
+  { t: "Endangered Animals", c: "Animals", i: ["Amur Leopard", "Mountain Gorilla", "Javan Rhino", "Vaquita", "Sumatran Orangutan"] },
+  { t: "Apex Predators", c: "Animals", i: ["Orca", "Great White Shark", "Polar Bear", "Lion", "Saltwater Crocodile"] },
+  { t: "Big Herbivores", c: "Animals", i: ["Elephant", "Giraffe", "Rhino", "Bison", "Hippo"] },
+  { t: "Migrating Animals", c: "Animals", i: ["Arctic Tern", "Monarch Butterfly", "Humpback Whale", "Wildebeest", "Caribou"] },
+  { t: "Best Camouflage", c: "Animals", i: ["Octopus", "Chameleon", "Leaf-Tailed Gecko", "Stick Insect", "Snow Leopard"] },
+  { t: "Working Dogs", c: "Animals", i: ["Border Collie", "Belgian Malinois", "German Shepherd", "Newfoundland", "Siberian Husky"] },
+  { t: "Exotic Pets", c: "Animals", i: ["Axolotl", "Bearded Dragon", "Sugar Glider", "Hedgehog", "Tarantula"] },
+  { t: "Aquarium Fish", c: "Animals", i: ["Betta", "Clownfish", "Angelfish", "Guppy", "Pleco"] },
+  { t: "Animals That Mate for Life", c: "Animals", i: ["Albatross", "Swan", "Grey Wolf", "Penguin", "Beaver"] },
+  { t: "Longest Living Animals", c: "Animals", i: ["Greenland Shark", "Bowhead Whale", "Galapagos Tortoise", "Koi", "Elephant"] },
+  { t: "Loudest Animals", c: "Animals", i: ["Blue Whale", "Howler Monkey", "Cicada", "Lion", "Bulldog Bat"] },
   { t: "Game Consoles", c: "Games", i: ["PlayStation 2", "Nintendo Switch", "Xbox 360", "PlayStation 5", "Wii U"] },
   { t: "Nintendo Franchises", c: "Games", i: ["Zelda", "Mario", "Metroid", "Pokemon", "Animal Crossing"] },
   { t: "Racing Games", c: "Games", i: ["Mario Kart 8", "Forza Horizon 5", "Gran Turismo 7", "Need for Speed", "Burnout Paradise"] },
