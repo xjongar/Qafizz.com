@@ -461,6 +461,11 @@ input { font: inherit; }
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   overflow-y: auto;
+  /* Stated outright rather than left to the animation's resting value: this
+     layer covers the whole viewport and swallows every click, so if the
+     animation is ever skipped or interrupted it must still be visible. An
+     invisible blocker looks exactly like a frozen page. */
+  opacity: 1;
   animation: overlayIn .25s ease;
 }
 @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
@@ -772,21 +777,120 @@ input { font: inherit; }
   .feed-grid { grid-template-columns: 1fr 1fr; }
 }
 
+/* ---------- MOBILE ----------
+   The desktop site, sized for fingers — not a stripped-down variant. The real
+   nav stays on screen instead of collapsing into a hamburger, cards keep their
+   shape, and the sidebar moves below the feed rather than disappearing. What
+   changes is scale: every control clears the ~44px that a fingertip actually
+   covers, and text inputs sit at 16px because anything smaller makes iOS zoom
+   the whole page on focus. */
 @media (max-width: 760px) {
-  .main-nav, .header-actions .btn-primary, .header-actions .btn-ghost { display: none; }
-  .mobile-menu-btn { display: flex; }
-  .mobile-nav.is-open {
-    display: flex; flex-direction: column; gap: .25rem;
-    padding: .75rem 1.25rem 1.25rem;
-    border-top: 1px solid var(--border);
+  /* The hamburger and its drawer duplicated a nav that now simply stays put. */
+  .mobile-menu-btn, .mobile-nav { display: none !important; }
+
+  .header-inner {
+    flex-wrap: wrap;
+    gap: .5rem;
+    padding: .6rem 1rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
   }
-  .feed-grid { grid-template-columns: 1fr; }
+  .logo { flex: 1 1 auto; font-size: 1rem; }
+  .header-actions { flex: 0 0 auto; gap: .25rem; }
+
+  /* Nav takes its own full-width row and scrolls sideways rather than wrapping
+     into a ragged block. Negative margins let it bleed to the screen edges, so
+     the last item doesn't look clipped mid-word. */
+  .main-nav {
+    display: flex;
+    order: 3;
+    flex: 1 0 100%;
+    gap: .15rem;
+    margin: 0 -1rem;
+    padding: 0 1rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .main-nav::-webkit-scrollbar { display: none; }
+  .main-nav .nav-link {
+    flex: 0 0 auto;
+    display: flex; align-items: center;
+    min-height: 44px;
+    padding: 0 .9rem;
+    font-size: .95rem;
+  }
+
+  /* Create is the primary action, so it gets a full-width row of its own
+     instead of being squeezed out of the header the way it used to be. */
+  .header-actions .btn-create {
+    order: 4; flex: 1 0 100%;
+    margin-top: .1rem;
+    min-height: 44px;
+  }
+
+  /* Touch targets. 40px reads as generous with a mouse and cramped with a
+     thumb, so everything interactive gets brought up to 44. */
+  .btn, .btn-ghost, .chip, .theme-toggle { min-height: 44px; }
+  .btn-ghost { min-width: 44px; }
+  .vote-btn { width: 46px; height: 46px; }
+  .comment-vote, .comment-reply-btn { min-height: 40px; padding: 0 .6rem; }
+
+  /* 16px minimum, or iOS zooms the page the moment the caret lands. */
+  input, textarea, select, .comment-input { font-size: 16px; }
+
+  .page-shell {
+    padding: 1rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    gap: 1.25rem;
+  }
+  .feed-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .feed-filters { gap: .4rem; }
+  .feed-filters .chip { padding: .5rem .95rem; font-size: .85rem; }
+
   .ad-banner--leaderboard { height: 70px; }
   .ad-banner--anchor { display: flex; }        /* anchor ad is mobile-only inventory */
-  body { padding-bottom: 60px; }               /* clear the anchor ad */
+  /* Clear the anchor ad *and* the home indicator on gesture-nav phones. */
+  body { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
+
+  /* Overlays go effectively full-screen. dvh rather than vh so the panel isn't
+     left under the address bar when mobile browsers collapse it. */
+  .detail-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+  .detail-panel, .auth-panel, .create-panel {
+    max-width: none;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    border-radius: 0;
+    border-left: none; border-right: none;
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+  }
   .detail-header, .detail-body { padding-left: 1.1rem; padding-right: 1.1rem; }
+  .detail-close, .create-close, .auth-close { min-width: 44px; min-height: 44px; }
+
   .tier-row-label { width: 36%; font-size: .82rem; }
-  .tier-row-bar { height: 28px; }
+  .tier-row-bar { height: 32px; }
+
+  /* Comment composer: the input and its button stop fighting for one line. */
+  .comment-composer { flex-wrap: wrap; gap: .5rem; }
+  .comment-composer .comment-input { flex: 1 1 100%; min-height: 44px; }
+  .comment-composer .btn { min-height: 44px; }
+  .comment-children { padding-left: .75rem; }
+
+  /* Nothing may push the page sideways — one wide element and the whole site
+     scrolls horizontally, which reads as broken. */
+  html, body { overflow-x: hidden; }
+  img, video, iframe, pre, table { max-width: 100%; }
+}
+
+/* Narrow phones: the logo wordmark is the first thing worth sacrificing. */
+@media (max-width: 380px) {
+  .logo-text { display: none; }
+  .btn { padding-left: .8rem; padding-right: .8rem; }
 }
 
 /* Respect users who prefer no motion */
