@@ -1213,12 +1213,22 @@ const Detail = (() => {
     /* Pull the real per-item tallies, then redraw with everyone's votes folded
        in. Painting twice beats holding the panel closed on a network round trip. */
     const keys = MockAPI.TIERS.flatMap((t) => (list.tiers[t] || []).map((i) => itemKey(list, i)));
-    Votes.sync(keys).then(() => {
-      if (currentList === list) renderTiers(list.tiers);
-    });
-    await Comments.load(list.id);
+    Votes.sync(keys)
+      .then(() => {
+        if (currentList === list) renderTiers(list.tiers);
+      })
+      .catch((err) => console.warn("[detail] tally sync failed:", err));
+
+    /* Show the panel before fetching anything. Comments used to be awaited
+       here, back when they came from memory and could not fail; once they came
+       from the database, a slow or rejected request meant the click opened
+       nothing at all. Nothing over the network gets to gate the UI. */
     overlay.hidden = false;
     document.body.style.overflow = "hidden";
+
+    Comments.load(list.id).catch((err) =>
+      console.warn("[detail] comments unavailable:", err)
+    );
   }
 
   function close() {
@@ -1405,10 +1415,16 @@ const Comments = (() => {
      outranks the generated thread that makes a quiet list look inhabited. */
   async function load(listId) {
     const seeded = await MockAPI.getComments(listId);
-    const live =
-      window.Backend && Backend.ready()
-        ? toTree(await Backend.fetchComments(listId))
-        : [];
+    let live = [];
+    /* Seeded comments come from memory and always work. Real ones are a bonus
+       on top — a failed fetch must not take the thread down with it. */
+    if (window.Backend && Backend.ready()) {
+      try {
+        live = toTree(await Backend.fetchComments(listId));
+      } catch (err) {
+        console.warn("[comments] fetch failed, showing seeded only:", err);
+      }
+    }
     const comments = live.concat(seeded);
     thread.innerHTML = "";
     comments.forEach((c) => thread.appendChild(buildComment(c)));
