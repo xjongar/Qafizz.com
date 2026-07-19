@@ -1,1 +1,3 @@
 *.bak
+bot/poll-screenshot.png
+node_modules/
