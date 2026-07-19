@@ -1425,25 +1425,52 @@ const Comments = (() => {
     countEl.textContent = `(${total})`;
   }
 
-  /* Real comments first, seeded filler underneath — what people actually wrote
-     outranks the generated thread that makes a quiet list look inhabited. */
-  async function load(listId) {
-    const seeded = await MockAPI.getComments(listId);
-    let live = [];
-    /* Seeded comments come from memory and always work. Real ones are a bonus
-       on top — a failed fetch must not take the thread down with it. */
-    if (window.Backend && Backend.ready()) {
-      try {
-        live = toTree(await Backend.fetchComments(listId));
-      } catch (err) {
-        console.warn("[comments] fetch failed, showing seeded only:", err);
-      }
-    }
-    const comments = live.concat(seeded);
+  function paint(comments) {
     thread.innerHTML = "";
     comments.forEach((c) => thread.appendChild(buildComment(c)));
     total = countAll(comments);
     countEl.textContent = `(${total})`;
+  }
+
+  /* A hung request is not a failed one: it never rejects, so try/catch never
+     fires and an `await` on it waits forever. Give the network a deadline of
+     its own so it can only ever be late, never terminal. */
+  function withTimeout(promise, ms, label) {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(label + " timed out after " + ms + "ms")), ms)
+      ),
+    ]);
+  }
+
+  /* Which list the thread currently belongs to. A slow response that lands
+     after the reader has opened something else must not paint into it. */
+  let token = 0;
+
+  /* Seeded filler paints FIRST and synchronously — it comes from memory and
+     cannot fail, so nothing over the network is allowed to gate it. Real
+     comments are folded in on top when they arrive.
+
+     This used to await the fetch before painting anything. A rejected fetch
+     was handled, but a wedged one (the supabase-js auth lock deadlock) never
+     settled, so the render below never ran and EVERY list — seeded ones
+     included — showed an empty thread with no error anywhere. */
+  async function load(listId) {
+    const mine = ++token;
+    const seeded = await MockAPI.getComments(listId);
+    paint(seeded);
+
+    if (!(window.Backend && Backend.ready())) return;
+
+    try {
+      const rows = await withTimeout(Backend.fetchComments(listId), 6000, "comment fetch");
+      if (mine !== token) return;            // reader moved to another list
+      if (!rows || !rows.length) return;     // nothing real to add
+      paint(toTree(rows).concat(seeded));
+    } catch (err) {
+      console.warn("[comments] live fetch unavailable, showing seeded only:", err);
+    }
   }
 
   function init() {
