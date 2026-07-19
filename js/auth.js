@@ -359,8 +359,10 @@ window.Auth = (() => {
     passHint = document.getElementById("authPassHint");
     if (switchBtn) {
       switchBtn.addEventListener("click", () => setMode(mode === "signin" ? "signup" : "signin"));
-      // Signing in requires the server; without it, only local sign-up exists.
-      if (!backendLive()) switchBtn.closest(".auth-switch").hidden = true;
+      /* The toggle stays visible even when the backend is down. Hiding it used
+         to leave anyone with an existing account stranded on a sign-up form
+         that rejects their email, with no way back — sign-in then reports the
+         real problem instead of the route simply vanishing. */
     }
 
     /* Supabase restores sessions asynchronously, so adopt whoever comes back. */

@@ -281,8 +281,27 @@ window.Backend = (() => {
   }
 
   /* Connect immediately: auth.js and app.js both check Backend.ready() during
-     their own init, which runs after this script has been evaluated. */
-  init();
+     their own init, which runs after this script has been evaluated.
+
+     Guarded because a corrupt or expired session in localStorage can make
+     supabase-js throw right here. Unguarded, that throw escapes the IIFE,
+     window.Backend never gets assigned, and the whole site silently drops to
+     local-only — no sign-in, no saved comments, no published lists, and no
+     visible reason why. Failing to local-only is survivable; failing invisibly
+     is not, so say so in the console. */
+  try {
+    init();
+  } catch (err) {
+    console.error("[backend] init failed — clearing the stored session:", err);
+    try {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith("sb-"))
+        .forEach((k) => localStorage.removeItem(k));
+      init(); // second chance with the bad token gone
+    } catch (retryErr) {
+      console.error("[backend] still down after clearing session:", retryErr);
+    }
+  }
 
   return {
     init, ready, configured, onAuthChange,

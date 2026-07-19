@@ -312,6 +312,19 @@
     </article>
   </template>
 
+  <!-- Escape hatch: /?reset=1 wipes everything this site stored in the browser
+       — session, votes, signed-in name — and reloads clean. Runs before any
+       other script so a bad stored session can't break the page first. It is
+       the fix to reach for when the site misbehaves on one machine but works
+       everywhere else, and it needs no devtools. -->
+  <script>
+    (function () {
+      if (!/[?&]reset=1(&|$)/.test(location.search)) return;
+      try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+      location.replace(location.pathname);
+    })();
+  </script>
+
   <!-- Seed corpus must load before app.js reads window.TRENDY_TOPICS -->
   <script src="js/topics.js"></script>
   <!-- ads.js before app.js: app.js hands it each in-feed slot as it builds one -->
