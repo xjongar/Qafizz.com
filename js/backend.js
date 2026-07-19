@@ -45,19 +45,44 @@ window.Backend = (() => {
       listeners.forEach((fn) => fn(profile));
     });
 
-    // Restore an existing session on load.
-    client.auth.getSession().then(async ({ data }) => {
-      if (data && data.session) {
-        profile = await fetchProfile(data.session.user.id);
-        listeners.forEach((fn) => fn(profile));
-      }
-    });
+    // Restore an existing session on load. A rejection here means the stored
+    // token is unusable, so bin it rather than sending it with every request.
+    client.auth
+      .getSession()
+      .then(async ({ data }) => {
+        if (data && data.session) {
+          profile = await fetchProfile(data.session.user.id);
+          listeners.forEach((fn) => fn(profile));
+        }
+      })
+      .catch((err) => {
+        console.warn("[backend] session restore failed:", err);
+        dropDeadSession(err && err.message ? err : { message: "refresh failed" });
+      });
     return true;
   }
 
   function onAuthChange(fn) {
     listeners.add(fn);
     return () => listeners.delete(fn);
+  }
+
+  /* A stored token that the server no longer accepts poisons every request that
+     follows, because it is sent in place of the anon key. Nothing recovers on
+     its own — the token is only cleared on an explicit sign-out that the user
+     cannot reach while the page is broken. So when a call fails on the token,
+     throw it away and carry on signed out: reading is public anyway. */
+  function dropDeadSession(err) {
+    const msg = String((err && (err.message || err.error_description)) || err);
+    if (!/jwt|token|expired|refresh|401/i.test(msg)) return;
+    console.warn("[backend] dropping a session the server rejected:", msg);
+    try {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith("sb-"))
+        .forEach((k) => localStorage.removeItem(k));
+    } catch (e) {}
+    profile = null;
+    listeners.forEach((fn) => fn(null));
   }
 
   async function fetchProfile(userId) {
@@ -169,13 +194,24 @@ window.Backend = (() => {
   /** Lists created by real users, newest first. */
   async function fetchLists(limit = 60) {
     if (!ready()) return [];
-    const { data, error } = await client
-      .from("lists")
-      .select("id, title, category, items, created_at, profiles(username)")
-      .order("created_at", { ascending: false })
-      .limit(limit);
+    let data, error;
+    /* A token that can no longer be refreshed makes supabase-js reject rather
+       than hand back an error, so this has to catch as well as check. The feed
+       calls it on every load: it returns empty, never throws. */
+    try {
+      ({ data, error } = await client
+        .from("lists")
+        .select("id, title, category, items, created_at, profiles(username)")
+        .order("created_at", { ascending: false })
+        .limit(limit));
+    } catch (err) {
+      console.warn("[backend] list fetch threw:", err);
+      dropDeadSession(err);
+      return [];
+    }
     if (error) {
       console.warn("[backend] list fetch failed:", error.message);
+      dropDeadSession(error);
       return [];
     }
     return data.map((row) => ({

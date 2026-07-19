@@ -1051,13 +1051,23 @@ const Feed = (() => {
     all = await MockAPI.getLists(1);
     corpus = await MockAPI.getAll();
 
-    // Real lists go to the front — they're the newest thing on the site.
-    const mine = await loadUserLists();
-    if (mine.length) {
-      all = mine.concat(all);
-      corpus = mine.concat(corpus);
-    }
+    /* Paint the seeded feed before touching the network. What the server adds
+       is additive, so it must never be able to leave the page empty: a stale
+       session token used to make this call throw, and the throw took render()
+       with it — every poll on the site gone because one fetch failed. */
     render();
+
+    // Real lists go to the front — they're the newest thing on the site.
+    loadUserLists()
+      .then((mine) => {
+        if (!mine.length) return;
+        all = mine.concat(all);
+        corpus = mine.concat(corpus);
+        render();
+      })
+      .catch((err) => {
+        console.warn("[feed] user lists unavailable, showing seeded only:", err);
+      });
 
     const sortFor = { hot: "hot", top: "top", controversial: "controversial", new: "fresh" };
     document.querySelectorAll(".feed-filters .chip").forEach((chip) => {
