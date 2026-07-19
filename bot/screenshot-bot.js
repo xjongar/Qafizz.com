@@ -12,6 +12,7 @@ const { TwitterApi } = require('twitter-api-v2');
 const SITE = process.env.SITE_URL || 'https://qafizz.com';
 const SHOT = path.join(__dirname, 'poll-screenshot.png');
 const DRY_RUN = process.argv.includes('--dry-run');
+const ALLOW_TEXT_ONLY = process.env.ALLOW_TEXT_ONLY === '1';
 
 const SEL = {
   card: '.tier-card-main',      // feed card; click handler opens Detail (app.js:896)
@@ -178,7 +179,31 @@ async function post(caption) {
     throw new Error(`Credential check failed (${e.code || '?'}): ${e.message}`);
   }
 
-  const mediaId = await x.v1.uploadMedia(SHOT);
+  /* v1.1 media upload is gated behind a paid tier (402 on free). The v2 media
+     endpoint is newer and may be gated differently, so try it as a fallback.
+     If both refuse, post text-only rather than posting nothing. */
+  let mediaId = null;
+  try {
+    mediaId = await x.v1.uploadMedia(SHOT);
+  } catch (e1) {
+    console.log(`v1.1 media upload failed (${e1.code || '?'}) — trying v2`);
+    try {
+      mediaId = await x.v2.uploadMedia(SHOT, { media_type: 'image/png' });
+    } catch (e2) {
+      console.log(`v2 media upload also failed (${e2.code || '?'})`);
+    }
+  }
+
+  if (!mediaId) {
+    if (!ALLOW_TEXT_ONLY) {
+      throw new Error('Media upload is not available on this API tier (402). ' +
+        'Set ALLOW_TEXT_ONLY=1 to post without the image.');
+    }
+    console.log('Posting text-only — no image.');
+    const { data } = await x.v2.tweet({ text: caption });
+    return data.id;
+  }
+
   const { data } = await x.v2.tweet({ text: caption, media: { media_ids: [mediaId] } });
   return data.id;
 }
