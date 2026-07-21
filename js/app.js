@@ -895,6 +895,15 @@ const Feed = (() => {
     // Clicking anywhere on the card body opens the detail view (vote rail is separate)
     card.querySelector(".tier-card-main").addEventListener("click", () => Detail.open(list));
 
+    // Share straight from the card — the highest-traffic surface for the loop.
+    const shareBtn = card.querySelector(".tier-card-share");
+    if (shareBtn) {
+      shareBtn.addEventListener("click", (e) => {
+        e.stopPropagation(); // don't also open the detail view
+        if (window.ShareCard) ShareCard.open(list, Detail.entriesFor(list));
+      });
+    }
+
     return card;
   }
 
@@ -1257,9 +1266,23 @@ const Detail = (() => {
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && !overlay.hidden) close();
     });
+    const shareBtn = document.getElementById("detailShare");
+    if (shareBtn) {
+      shareBtn.addEventListener("click", () => {
+        if (currentList && window.ShareCard) {
+          ShareCard.open(currentList, itemShares(currentList.tiers, currentList));
+        }
+      });
+    }
   }
 
-  return { init, open, getCurrentId: () => currentList?.id };
+  /* Shares for any list, computed with the same seed + vote model the detail
+     view uses. Lets the feed cards open the share card without opening detail. */
+  function entriesFor(list) {
+    return itemShares(list.tiers, list);
+  }
+
+  return { init, open, entriesFor, getCurrentId: () => currentList?.id };
 })();
 
 /* ---------- COMMENTS (nested thread) ---------- */

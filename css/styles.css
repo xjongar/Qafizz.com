@@ -412,6 +412,15 @@ input { font: inherit; }
   transition: all .15s ease;
 }
 .tier-card-comments:hover { color: var(--accent); background: var(--accent-soft); }
+/* Author takes the slack so comments + share sit together on the right. */
+.tier-card-author { margin-right: auto; }
+.tier-card-footer { gap: .35rem; }
+.tier-card-share {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-muted); padding: .3rem .45rem; border-radius: 8px;
+  transition: all .15s ease;
+}
+.tier-card-share:hover { color: var(--accent); background: var(--accent-soft); }
 
 /* ---------- 8. SIDEBAR WIDGETS ---------- */
 
@@ -485,6 +494,8 @@ input { font: inherit; }
   padding: 1.5rem 1.75rem 1rem;
   border-bottom: 1px solid var(--border);
 }
+.detail-heading { margin-right: auto; min-width: 0; }
+.detail-share { flex-shrink: 0; white-space: nowrap; align-self: center; }
 .detail-title { font-size: 1.35rem; font-weight: 800; letter-spacing: -.02em; }
 .detail-meta { font-size: .8rem; color: var(--text-muted); margin-top: .25rem; }
 .detail-body { padding: 1.5rem 1.75rem 2rem; }

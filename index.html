@@ -20,7 +20,7 @@
        repeatedly ran the previous build and looked like the fix had failed.
        Changing the URL is the only thing a cache cannot ignore. Bump this on
        every deploy that touches css/ or js/. -->
-  <link rel="stylesheet" href="css/styles.css?v=20260719j" />
+  <link rel="stylesheet" href="css/styles.css?v=20260721a" />
   <!-- AdSense site verification / Auto ads. Static so Google's reviewer sees it
        in the served HTML; slots.js skips its own injection when this is present. -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6047624815480207"
@@ -172,6 +172,10 @@
           <h2 id="detailTitle" class="detail-title"><!-- injected --></h2>
           <p class="detail-meta" id="detailMeta"><!-- injected --></p>
         </div>
+        <button class="btn btn-primary btn-sm detail-share" id="detailShare" aria-label="Share this ranking">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>
+          Share
+        </button>
         <button class="btn btn-ghost detail-close" id="detailClose" aria-label="Close">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
@@ -322,6 +326,9 @@
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2-3a8 8 0 1 1 15-5z"/></svg>
             <span class="comment-num"></span>
           </button>
+          <button class="tier-card-share" aria-label="Share this ranking" title="Share as image">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+          </button>
         </div>
       </div>
     </article>
@@ -351,6 +358,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
   <script src="js/backend.js?v=20260719j"></script>
   <script src="js/auth.js?v=20260719j"></script>
-  <script src="js/app.js?v=20260719j"></script>
+  <!-- share.js before app.js: the detail view and feed cards wire up share buttons -->
+  <script src="js/share.js?v=20260721a"></script>
+  <script src="js/app.js?v=20260721a"></script>
 </body>
 </html>
