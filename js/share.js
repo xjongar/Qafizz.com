@@ -15,7 +15,12 @@
    ========================================================================== */
 
 window.ShareCard = (() => {
-  const SITE_URL = "https://qafizz.com";
+  const SITE_URL = "https://qafizz.com"; // where the app lives (redirect target)
+  /* Where the /r/<id> preview Worker runs. The apex stays DNS-only so GitHub
+     Pages keeps its cert, and Worker routes only fire on PROXIED traffic — so
+     the Worker lives on a proxied subdomain. If you route it on the apex
+     instead, set this back to SITE_URL. See SHARE-CARDS-SETUP.md. */
+  const CARD_HOST = "https://s.qafizz.com";
   const MAX_BARS = 8;
 
   /* Pull a colour from the live theme so the card tracks dark/light. */
@@ -97,37 +102,12 @@ window.ShareCard = (() => {
 
   const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
+  /* 1200x630 landscape — the ratio X/Facebook/Discord show without cropping.
+     Left column: brand, category, title, meta, CTA. Right column: the bars. */
   function draw(list, entries) {
     const p = palette();
-    const W = 1080;
-    const PAD = 72;
-    const inner = W - PAD * 2;
-
-    // A measuring context (title wrapping) before we know the final height.
-    const probe = document.createElement("canvas").getContext("2d");
-    probe.font = `800 74px ${FONT}`;
-    const titleLines = wrapLines(probe, list.title, inner, 3);
-
-    const bars = entries.slice(0, MAX_BARS);
-    const extra = Math.max(0, entries.length - bars.length);
-    const maxShare = bars.reduce((m, e) => Math.max(m, e.share || 0), 0) || 1;
-
-    // Vertical layout — accumulate so the canvas is exactly as tall as it needs.
-    let y = PAD + 12; // room under the accent bar
-    const headerBottom = y + 88;
-    y = headerBottom + 56;
-    const titleTop = y;
-    y += titleLines.length * 86;
-    y += 20;
-    const metaY = y;
-    y += 54;
-    const barsTop = y;
-    const rowH = 104;
-    y = barsTop + bars.length * rowH;
-    if (extra) y += 46;
-    y += 28;
-    const footerTop = y;
-    const H = footerTop + 132 + PAD;
+    const W = 1200;
+    const H = 630;
 
     const canvas = document.createElement("canvas");
     canvas.width = W;
@@ -135,114 +115,112 @@ window.ShareCard = (() => {
     const ctx = canvas.getContext("2d");
     ctx.textBaseline = "alphabetic";
 
+    // Columns
+    const LX = 56;                 // left column start
+    const LW = 470;                // left column width
+    const RX = 576;                // right column start
+    const RW = W - RX - 56;        // right column width
+
     // Background + accent top bar
     ctx.fillStyle = p.bg;
     ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = p.accent;
-    ctx.fillRect(0, 0, W, 12);
+    ctx.fillRect(0, 0, W, 10);
 
-    // Header: logo mark + wordmark, category pill on the right
+    // ---- LEFT COLUMN ----
+    // Brand mark + wordmark
     ctx.fillStyle = p.accent;
-    roundRect(ctx, PAD, PAD + 12, 88, 88, 22);
+    roundRect(ctx, LX, 54, 74, 74, 18);
     ctx.fill();
     ctx.fillStyle = p.onAccent;
-    ctx.font = `800 40px ${FONT}`;
+    ctx.font = `800 32px ${FONT}`;
     ctx.textAlign = "center";
-    ctx.fillText("TM", PAD + 44, PAD + 12 + 58);
-
+    ctx.fillText("TM", LX + 37, 54 + 49);
     ctx.textAlign = "left";
-    const markRight = PAD + 88 + 26;
-    ctx.font = `800 42px ${FONT}`;
+    ctx.font = `800 34px ${FONT}`;
     ctx.fillStyle = p.text;
-    ctx.fillText("Trust Me ", markRight, PAD + 12 + 58);
+    ctx.fillText("Trust Me ", LX + 74 + 20, 54 + 48);
     const tmW = ctx.measureText("Trust Me ").width;
     ctx.fillStyle = p.accent;
-    ctx.fillText("Bro", markRight + tmW, PAD + 12 + 58);
+    ctx.fillText("Bro", LX + 74 + 20 + tmW, 54 + 48);
 
+    // Category (accent, uppercase)
+    let ly = 186;
     if (list.category) {
-      ctx.font = `600 28px ${FONT}`;
-      const label = ellipsize(ctx, list.category, 320);
-      const cw = ctx.measureText(label).width + 44;
-      const cx = W - PAD - cw;
-      ctx.strokeStyle = p.border;
-      ctx.lineWidth = 2;
-      roundRect(ctx, cx, PAD + 20, cw, 52, 26);
-      ctx.stroke();
-      ctx.fillStyle = p.muted;
-      ctx.textAlign = "center";
-      ctx.fillText(label, cx + cw / 2, PAD + 20 + 34);
-      ctx.textAlign = "left";
+      ctx.font = `700 22px ${FONT}`;
+      ctx.fillStyle = p.accent;
+      ctx.fillText(ellipsize(ctx, list.category.toUpperCase(), LW), LX, ly);
+      ly += 20;
     }
 
-    // Title
+    // Title — wrap to the left column, up to 4 lines
+    const titleFont = `800 50px ${FONT}`;
+    ctx.font = titleFont;
+    const titleLines = wrapLines(ctx, list.title, LW, 4);
     ctx.fillStyle = p.text;
-    ctx.font = `800 74px ${FONT}`;
-    titleLines.forEach((ln, i) => ctx.fillText(ln, PAD, titleTop + 62 + i * 86));
+    titleLines.forEach((ln, i) => ctx.fillText(ln, LX, ly + 44 + i * 56));
+    ly = ly + 44 + titleLines.length * 56;
 
     // Meta
+    ctx.font = `500 26px ${FONT}`;
     ctx.fillStyle = p.muted;
-    ctx.font = `500 30px ${FONT}`;
-    const meta = `by @${list.author || "someone"} · ${fmt(list.votes || 0)} votes`;
-    ctx.fillText(meta, PAD, metaY + 30);
+    ctx.fillText(`by @${list.author || "someone"} · ${fmt(list.votes || 0)} votes`, LX, ly + 8);
 
-    // Bars
-    const trackH = 30;
+    // CTA pinned near the bottom of the left column
+    ctx.font = `700 30px ${FONT}`;
+    ctx.fillStyle = p.text;
+    ctx.fillText("Vote on the real ranking →", LX, H - 96);
+    ctx.font = `800 36px ${FONT}`;
+    ctx.fillStyle = p.accent;
+    ctx.fillText("qafizz.com", LX, H - 50);
+
+    // Divider
+    ctx.strokeStyle = p.border;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(RX - 28, 60);
+    ctx.lineTo(RX - 28, H - 48);
+    ctx.stroke();
+
+    // ---- RIGHT COLUMN: bars ----
+    const bars = entries.slice(0, MAX_BARS);
+    const extra = Math.max(0, entries.length - bars.length);
+    const maxShare = bars.reduce((m, e) => Math.max(m, e.share || 0), 0) || 1;
+
+    const rowH = extra ? 62 : 68;
+    const trackH = 22;
+    const top0 = 66;
     bars.forEach((e, i) => {
-      const top = barsTop + i * rowH;
+      const top = top0 + i * rowH;
       const tierColor = p.tier[e.tier] || p.accent;
       const pct = (e.share || 0).toFixed(1) + "%";
 
-      // rank + name (left), percent (right)
-      ctx.font = `700 36px ${FONT}`;
+      ctx.font = `700 28px ${FONT}`;
       ctx.fillStyle = tierColor;
       ctx.textAlign = "right";
       const pctW = ctx.measureText(pct).width;
-      ctx.fillText(pct, W - PAD, top + 34);
+      ctx.fillText(pct, RX + RW, top + 26);
 
       ctx.textAlign = "left";
       ctx.fillStyle = p.text;
-      ctx.font = `600 36px ${FONT}`;
-      const name = ellipsize(ctx, `${i + 1}.  ${e.item}`, inner - pctW - 24);
-      ctx.fillText(name, PAD, top + 34);
+      ctx.font = `600 28px ${FONT}`;
+      ctx.fillText(ellipsize(ctx, `${i + 1}.  ${e.item}`, RW - pctW - 18), RX, top + 26);
 
-      // track + fill
-      const trackY = top + 54;
+      const trackY = top + 38;
       ctx.fillStyle = p.hover;
-      roundRect(ctx, PAD, trackY, inner, trackH, trackH / 2);
+      roundRect(ctx, RX, trackY, RW, trackH, trackH / 2);
       ctx.fill();
-      const w = Math.max(trackH, (e.share / maxShare) * inner);
       ctx.fillStyle = tierColor;
-      roundRect(ctx, PAD, trackY, w, trackH, trackH / 2);
+      roundRect(ctx, RX, trackY, Math.max(trackH, (e.share / maxShare) * RW), trackH, trackH / 2);
       ctx.fill();
     });
 
     if (extra) {
-      ctx.fillStyle = p.faint;
-      ctx.font = `500 28px ${FONT}`;
       ctx.textAlign = "left";
-      ctx.fillText(`+ ${extra} more pick${extra > 1 ? "s" : ""} on the site`, PAD, barsTop + bars.length * rowH + 30);
+      ctx.fillStyle = p.faint;
+      ctx.font = `500 24px ${FONT}`;
+      ctx.fillText(`+ ${extra} more pick${extra > 1 ? "s" : ""}`, RX, top0 + bars.length * rowH + 22);
     }
-
-    // Footer
-    ctx.strokeStyle = p.border;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(PAD, footerTop);
-    ctx.lineTo(W - PAD, footerTop);
-    ctx.stroke();
-
-    ctx.textAlign = "left";
-    ctx.fillStyle = p.text;
-    ctx.font = `700 40px ${FONT}`;
-    ctx.fillText("Vote on the real ranking →", PAD, footerTop + 62);
-    ctx.fillStyle = p.faint;
-    ctx.font = `500 27px ${FONT}`;
-    ctx.fillText("Opinions are ranked. Feelings are not our problem.", PAD, footerTop + 104);
-
-    ctx.textAlign = "right";
-    ctx.fillStyle = p.accent;
-    ctx.font = `800 44px ${FONT}`;
-    ctx.fillText("qafizz.com", W - PAD, footerTop + 74);
 
     return canvas;
   }
@@ -270,11 +248,21 @@ window.ShareCard = (() => {
     return { body, tags };
   }
 
+  /* Per-list link the Cloudflare Worker serves at /r/<id>: it returns HTML with
+     this ranking's own og:image (the uploaded card) so X/Facebook/Discord show
+     the ranking in the preview, then redirects a human visitor to /?list=<id>.
+     Title + category ride along so the Worker can fill og:title without a DB. */
+  function shareUrl(list) {
+    const q = new URLSearchParams({ t: list.title });
+    if (list.category) q.set("c", list.category);
+    return CARD_HOST + "/r/" + encodeURIComponent(list.id) + "?" + q.toString();
+  }
+
   /* Everything rides in the text field so the blank lines survive — the intent's
      separate url/hashtags params would get appended with no spacing at all. */
   function tweetText(list, includeUrl) {
     const { body, tags } = tweetParts(list);
-    return body + (includeUrl ? "\n\n" + SITE_URL : "") + "\n\n" + tags;
+    return body + (includeUrl ? "\n\n" + shareUrl(list) : "") + "\n\n" + tags;
   }
 
   function xIntentUrl(list) {
@@ -287,7 +275,7 @@ window.ShareCard = (() => {
      copy the PNG to the clipboard before opening those. Facebook only reads the
      link's own preview, so text/image there come from the page, not the URL. */
   function shareTargets(list) {
-    const url = encodeURIComponent(SITE_URL);
+    const url = encodeURIComponent(shareUrl(list));
     const redditTitle = encodeURIComponent(list.title + " ranked on Trust Me Bro. vote on the real order");
     const waText = encodeURIComponent(tweetText(list, true));
     const tgText = encodeURIComponent(tweetText(list, false));
@@ -303,6 +291,7 @@ window.ShareCard = (() => {
 
   let els = null;
   let current = { blob: null, url: null, list: null };
+  const uploaded = new Set(); // ranking ids whose card is already in Storage this session
 
   function injectStyles() {
     if (document.getElementById("sc-styles")) return;
@@ -413,7 +402,7 @@ window.ShareCard = (() => {
     els.copyimg.addEventListener("click", () => copyImage().then((ok) =>
       toast(ok ? "Image copied to clipboard" : "Copy failed — try Download instead")));
     els.copylink.addEventListener("click", () => {
-      copyText(SITE_URL);
+      copyText(current.list ? shareUrl(current.list) : SITE_URL);
       toast("Link copied");
     });
   }
@@ -523,6 +512,20 @@ window.ShareCard = (() => {
       if (current.url) URL.revokeObjectURL(current.url);
       current.blob = blob;
       current.url = blob ? URL.createObjectURL(blob) : null;
+      /* Push the card to Supabase Storage as <id>.png so the Worker's /r/<id>
+         page can point og:image at it. Upsert + a per-session guard keep it to
+         one upload per ranking. A failure is non-fatal: the Worker falls back
+         to the generic card, so sharing still works, just without the per-list
+         preview image. */
+      if (blob && window.Backend && Backend.uploadCard && !uploaded.has(String(list.id))) {
+        uploaded.add(String(list.id));
+        Backend.uploadCard(list.id, blob).then((r) => {
+          if (r && r.error) {
+            uploaded.delete(String(list.id));
+            console.warn("[share] card upload failed:", r.error);
+          }
+        });
+      }
     }, "image/png");
 
     // Native file share is the clean path on mobile (attaches to the X app).

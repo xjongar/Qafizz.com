@@ -387,6 +387,23 @@ window.Backend = (() => {
     return data.map((r) => ({ ...r, username: r.profiles ? r.profiles.username : null }));
   }
 
+  /* ---------- SHARE CARDS (Storage) ----------
+     share.js renders a ranking to a PNG and drops it here as <id>.png so the
+     Cloudflare Worker at /r/<id> can serve it as the link-preview image. The
+     `cards` bucket must be public-read with an anon insert/update policy;
+     upsert overwrites so a re-share always reflects the latest tallies. */
+  async function uploadCard(id, blob) {
+    if (!ready()) return { error: "Backend not configured" };
+    const { error } = await client.storage
+      .from("cards")
+      .upload(String(id) + ".png", blob, {
+        upsert: true,
+        contentType: "image/png",
+        cacheControl: "3600",
+      });
+    return { error: error ? error.message : null };
+  }
+
   async function allProfiles(limit = 200) {
     if (!ready()) return [];
     const { data, error } = await client
@@ -426,7 +443,7 @@ window.Backend = (() => {
 
   return {
     init, ready, configured, onAuthChange, usernameTaken,
-    allVotes, allComments, allProfiles,
+    allVotes, allComments, allProfiles, uploadCard,
     signUp, signIn, signOut, currentUser,
     tallies, myVotes, vote,
     fetchLists, createList,

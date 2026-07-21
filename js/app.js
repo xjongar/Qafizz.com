@@ -803,6 +803,7 @@ const Feed = (() => {
   let all = [];      // what the user has paged into the feed so far
   let corpus = [];   // every list that exists — searched/filtered directly
   let nextPage = 2;
+  let pendingDeepLink = null; // a /?list=<id> waiting on user lists to load
   const state = { sort: "hot", category: null, query: "" };
 
   /* In-feed density ramps with scroll depth: lighter up top so the first screen
@@ -1025,6 +1026,29 @@ const Feed = (() => {
     reset();
   }
 
+  /* Ids are numbers on seeded lists and uuids on user ones; compare as strings
+     so a /?list= value from the URL matches either. corpus holds everything
+     (user lists included once they load), so search it first. */
+  function findAny(id) {
+    const s = String(id);
+    return corpus.find((l) => String(l.id) === s) || all.find((l) => String(l.id) === s) || null;
+  }
+
+  function openById(id) {
+    const list = findAny(id);
+    if (list) { Detail.open(list); return true; }
+    return false;
+  }
+
+  /* Deep link from a shared /r/<id> card (Worker redirects to /?list=<id>).
+     A seeded id opens immediately; a user-list id may not be in corpus until
+     loadUserLists resolves, so it's parked in pendingDeepLink and retried. */
+  function openFromUrl() {
+    const wanted = new URLSearchParams(location.search).get("list");
+    if (!wanted) return;
+    if (!openById(wanted)) pendingDeepLink = wanted;
+  }
+
   async function loadMore() {
     const extra = await MockAPI.getLists(nextPage);
     if (!extra.length) return;
@@ -1080,6 +1104,10 @@ const Feed = (() => {
        with it — every poll on the site gone because one fetch failed. */
     render();
 
+    // A shared card may be pointing at a specific list — open it once the feed
+    // exists. Seeded ids resolve now; user-list ids wait for the fetch below.
+    openFromUrl();
+
     // Real lists go to the front — they're the newest thing on the site.
     loadUserLists()
       .then((mine) => {
@@ -1087,6 +1115,7 @@ const Feed = (() => {
         all = mine.concat(all);
         corpus = mine.concat(corpus);
         render();
+        if (pendingDeepLink && openById(pendingDeepLink)) pendingDeepLink = null;
       })
       .catch((err) => {
         console.warn("[feed] user lists unavailable, showing seeded only:", err);
@@ -1103,7 +1132,7 @@ const Feed = (() => {
     loadMoreBtn.addEventListener("click", loadMore);
   }
 
-  return { init, setSort, setCategory, setQuery, reset, addList, matchCount: () => lastCount };
+  return { init, setSort, setCategory, setQuery, reset, addList, openById, matchCount: () => lastCount };
 })();
 
 /* ---------- DETAIL VIEW (full tier list + comments) ---------- */
