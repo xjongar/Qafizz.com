@@ -16,11 +16,11 @@
 
 window.ShareCard = (() => {
   const SITE_URL = "https://qafizz.com"; // where the app lives (redirect target)
-  /* Where the /r/<id> preview Worker runs. The apex stays DNS-only so GitHub
-     Pages keeps its cert, and Worker routes only fire on PROXIED traffic — so
-     the Worker lives on a proxied subdomain. If you route it on the apex
-     instead, set this back to SITE_URL. See SHARE-CARDS-SETUP.md. */
-  const CARD_HOST = "https://s.qafizz.com";
+  /* Where the /r/<id> preview Worker runs. Using the workers.dev URL directly
+     for now — no DNS/route setup needed, works immediately. To move to the
+     pretty subdomain later, add s.qafizz.com as a Custom Domain on the Worker
+     and set this to "https://s.qafizz.com". See SHARE-CARDS-SETUP.md. */
+  const CARD_HOST = "https://qafizz-share.azio-fbb.workers.dev";
   const MAX_BARS = 8;
 
   /* Pull a colour from the live theme so the card tracks dark/light. */
