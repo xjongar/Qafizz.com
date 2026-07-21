@@ -393,23 +393,42 @@ window.Backend = (() => {
      `cards` bucket must be public-read with an anon insert/update policy;
      upsert overwrites so a re-share always reflects the latest tallies. */
   async function uploadCard(id, blob) {
-    if (!ready()) return { error: "Backend not configured" };
-    /* Race the upload against a timeout: supabase-js fetches the auth token
-       (behind a Web Lock) before the storage write, and that lock can wedge —
-       see the Web Lock gotcha. Without this the promise would hang forever and
-       the card would never land AND never retry. */
-    const upload = client.storage
-      .from("cards")
-      .upload(String(id) + ".png", blob, {
-        upsert: true,
-        contentType: "image/png",
-        cacheControl: "3600",
-      })
-      .then((r) => ({ error: r && r.error ? r.error.message : null }))
-      .catch((e) => ({ error: (e && e.message) || String(e) }));
-    const timeout = new Promise((res) =>
-      setTimeout(() => res({ error: "upload timed out (10s)" }), 10000));
-    return Promise.race([upload, timeout]);
+    if (!configured) return { error: "Backend not configured" };
+    /* Upload via the Storage REST endpoint directly instead of client.storage:
+       supabase-js fetches the auth token (behind a Web Lock) before every
+       storage write, and that lock wedges in the browser — see the Web Lock
+       gotcha — hanging the write forever. The `cards` bucket allows anon
+       inserts, so the anon key is all this needs. AbortController caps it so a
+       stall surfaces as an error instead of hanging. */
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 20000);
+    try {
+      const res = await fetch(
+        CONFIG.url + "/storage/v1/object/cards/" + encodeURIComponent(String(id)) + ".png",
+        {
+          method: "POST",
+          headers: {
+            authorization: "Bearer " + CONFIG.anonKey,
+            apikey: CONFIG.anonKey,
+            "content-type": "image/png",
+            "x-upsert": "true",
+            "cache-control": "3600",
+          },
+          body: blob,
+          signal: ctrl.signal,
+        }
+      );
+      if (!res.ok) {
+        let msg = "HTTP " + res.status;
+        try { const j = await res.json(); msg = j.message || j.error || msg; } catch (e) {}
+        return { error: msg };
+      }
+      return { error: null };
+    } catch (e) {
+      return { error: e && e.name === "AbortError" ? "upload timed out (20s)" : ((e && e.message) || String(e)) };
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   async function allProfiles(limit = 200) {
