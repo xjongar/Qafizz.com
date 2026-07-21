@@ -16,11 +16,10 @@
 
 window.ShareCard = (() => {
   const SITE_URL = "https://qafizz.com"; // where the app lives (redirect target)
-  /* Where the /r/<id> preview Worker runs. Using the workers.dev URL directly
-     for now — no DNS/route setup needed, works immediately. To move to the
-     pretty subdomain later, add s.qafizz.com as a Custom Domain on the Worker
-     and set this to "https://s.qafizz.com". See SHARE-CARDS-SETUP.md. */
-  const CARD_HOST = "https://qafizz-share.azio-fbb.workers.dev";
+  /* Where the /r/<id> preview Worker runs — s.qafizz.com is a Custom Domain on
+     the qafizz-share Worker (auto-managed DNS, so no 522). The workers.dev URL
+     https://qafizz-share.azio-fbb.workers.dev also serves it as a fallback. */
+  const CARD_HOST = "https://s.qafizz.com";
   const MAX_BARS = 8;
 
   /* Pull a colour from the live theme so the card tracks dark/light. */
