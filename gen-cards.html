@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Card Generator — Trust Me Bro (admin)</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    body{max-width:900px;margin:0 auto;padding:2rem 1.25rem 4rem;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      background:var(--bg,#0f110f);color:var(--text,#f4f6f4);}
+    h1{font-size:1.4rem;margin:0 0 .25rem;}
+    p.sub{color:var(--text-muted,#9aa39a);margin:0 0 1.5rem;font-size:.95rem;}
+    .controls{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;margin-bottom:1.25rem;}
+    button{font:inherit;font-weight:700;padding:.7rem 1.2rem;border-radius:11px;cursor:pointer;
+      border:1px solid var(--border-strong,#333);background:transparent;color:var(--text,#f4f6f4);}
+    button.go{background:var(--accent,#b6ff2e);color:var(--on-accent,#0c0d0c);border-color:var(--accent,#b6ff2e);}
+    button:disabled{opacity:.45;cursor:not-allowed;}
+    label{display:inline-flex;align-items:center;gap:.4rem;color:var(--text-muted,#9aa39a);font-size:.9rem;}
+    input[type=number]{width:3.5rem;font:inherit;padding:.3rem .4rem;border-radius:7px;
+      border:1px solid var(--border,#242824);background:var(--bg-card,#171917);color:var(--text,#f4f6f4);}
+    .track{height:14px;border-radius:7px;background:var(--bg-hover,#1e211e);overflow:hidden;margin:.5rem 0;}
+    .track>div{height:100%;width:0;background:var(--accent,#b6ff2e);transition:width .2s ease;}
+    #stat{font-weight:700;font-size:.95rem;margin-bottom:1rem;}
+    .row{display:flex;gap:1.25rem;align-items:flex-start;flex-wrap:wrap;}
+    #preview{width:360px;max-width:100%;border-radius:12px;border:1px solid var(--border,#242824);display:block;}
+    #log{flex:1;min-width:260px;height:340px;overflow:auto;white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;
+      font-size:.78rem;line-height:1.5;color:var(--text-muted,#9aa39a);
+      background:var(--bg-card,#171917);border:1px solid var(--border,#242824);border-radius:12px;padding:.75rem 1rem;}
+    code{background:var(--bg-hover,#1e211e);padding:.1rem .35rem;border-radius:5px;}
+  </style>
+</head>
+<body>
+  <h1>Share-card generator</h1>
+  <p class="sub">Renders every ranking's preview card with the live app code and uploads each to
+    the Supabase <code>cards</code> bucket as <code>&lt;id&gt;.png</code>, so sharing is instant and
+    X/Discord always find the image. Safe to re-run — it upserts. Leave this tab focused while it works.</p>
+
+  <div class="controls">
+    <button id="go" class="go">Generate all cards</button>
+    <button id="stop" disabled>Stop</button>
+    <label><input type="checkbox" id="skip" checked> Skip cards that already exist</label>
+    <label>Parallel <input type="number" id="conc" value="4" min="1" max="8"></label>
+  </div>
+
+  <div class="track"><div id="bar"></div></div>
+  <div id="stat">Idle. Click “Generate all cards”.</div>
+
+  <div class="row">
+    <img id="preview" alt="latest card preview">
+    <div id="log"></div>
+  </div>
+
+  <!-- Load the same modules index.html uses so cards are pixel-identical. -->
+  <script src="js/topics.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+  <script src="js/backend.js"></script>
+  <script src="js/share.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+  (() => {
+    const SUPA = "https://penlvacldoriiegbusjz.supabase.co";
+    const goBtn = document.getElementById("go");
+    const stopBtn = document.getElementById("stop");
+    const bar = document.getElementById("bar");
+    const stat = document.getElementById("stat");
+    const logEl = document.getElementById("log");
+    const preview = document.getElementById("preview");
+    let stopping = false;
+
+    function log(msg) { logEl.textContent = msg + "\n" + logEl.textContent; }
+
+    // Best-effort HEAD so a re-run can skip what's already uploaded. A CORS or
+    // network hiccup just means we re-upload (upsert) — never a hard failure.
+    async function exists(id) {
+      try {
+        const r = await fetch(SUPA + "/storage/v1/object/public/cards/" + encodeURIComponent(id) + ".png", { method: "HEAD" });
+        return r.ok;
+      } catch (e) { return false; }
+    }
+
+    function toBlob(canvas) {
+      return new Promise((res) => canvas.toBlob(res, "image/png"));
+    }
+
+    async function genOne(list, skip) {
+      if (skip && await exists(list.id)) return "skip";
+      const entries = Detail.entriesFor(list);
+      const canvas = ShareCard.draw(list, entries);
+      const blob = await toBlob(canvas);
+      if (!blob) throw new Error("canvas produced no blob");
+      const r = await Backend.uploadCard(list.id, blob);
+      if (r && r.error) throw new Error(r.error);
+      preview.src = URL.createObjectURL(blob);
+      return "ok";
+    }
+
+    async function run() {
+      // MockAPI/Detail/ShareCard are top-level `const` in classic scripts, so
+      // they're global lexical bindings (bare names), NOT window properties.
+      if (typeof MockAPI === "undefined" || typeof Detail === "undefined" ||
+          typeof ShareCard === "undefined" || typeof Backend === "undefined") {
+        stat.textContent = "Modules not loaded — check the script tags / console.";
+        return;
+      }
+      if (!Backend.uploadCard) { stat.textContent = "Backend.uploadCard missing."; return; }
+
+      stopping = false;
+      goBtn.disabled = true; stopBtn.disabled = false;
+      const skip = document.getElementById("skip").checked;
+      const conc = Math.max(1, Math.min(8, +document.getElementById("conc").value || 4));
+
+      const lists = await MockAPI.getAll();
+      const total = lists.length;
+      const queue = lists.slice();
+      let done = 0, ok = 0, skipped = 0, failed = 0;
+      log("Starting — " + total + " rankings, " + conc + " in parallel" + (skip ? ", skipping existing" : "") + ".");
+
+      async function worker() {
+        while (queue.length && !stopping) {
+          const list = queue.shift();
+          try {
+            const res = await genOne(list, skip);
+            if (res === "ok") ok++; else skipped++;
+          } catch (e) {
+            failed++;
+            log("FAIL  #" + list.id + "  " + list.title + "  — " + (e && e.message || e));
+          }
+          done++;
+          bar.style.width = (done / total * 100).toFixed(1) + "%";
+          stat.textContent = done + "/" + total + "  ·  " + ok + " uploaded  ·  " + skipped + " skipped  ·  " + failed + " failed";
+        }
+      }
+
+      await Promise.all(Array.from({ length: conc }, worker));
+      log(stopping ? "STOPPED at " + done + "/" + total + "." : "DONE — " + ok + " uploaded, " + skipped + " skipped, " + failed + " failed.");
+      goBtn.disabled = false; stopBtn.disabled = true;
+    }
+
+    goBtn.addEventListener("click", run);
+    stopBtn.addEventListener("click", () => { stopping = true; stopBtn.disabled = true; log("Stopping after in-flight uploads…"); });
+  })();
+  </script>
+</body>
+</html>
