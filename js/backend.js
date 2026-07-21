@@ -394,14 +394,22 @@ window.Backend = (() => {
      upsert overwrites so a re-share always reflects the latest tallies. */
   async function uploadCard(id, blob) {
     if (!ready()) return { error: "Backend not configured" };
-    const { error } = await client.storage
+    /* Race the upload against a timeout: supabase-js fetches the auth token
+       (behind a Web Lock) before the storage write, and that lock can wedge —
+       see the Web Lock gotcha. Without this the promise would hang forever and
+       the card would never land AND never retry. */
+    const upload = client.storage
       .from("cards")
       .upload(String(id) + ".png", blob, {
         upsert: true,
         contentType: "image/png",
         cacheControl: "3600",
-      });
-    return { error: error ? error.message : null };
+      })
+      .then((r) => ({ error: r && r.error ? r.error.message : null }))
+      .catch((e) => ({ error: (e && e.message) || String(e) }));
+    const timeout = new Promise((res) =>
+      setTimeout(() => res({ error: "upload timed out (10s)" }), 10000));
+    return Promise.race([upload, timeout]);
   }
 
   async function allProfiles(limit = 200) {

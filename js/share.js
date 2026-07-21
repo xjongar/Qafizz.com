@@ -288,7 +288,23 @@ window.ShareCard = (() => {
 
   let els = null;
   let current = { blob: null, url: null, list: null };
+  let cardReady = null; // promise: resolves once this ranking's card is in Storage
   const uploaded = new Set(); // ranking ids whose card is already in Storage this session
+
+  /* Open a share/compose window WITHOUT losing the click gesture (popup
+     blockers) while still waiting for the card upload to finish first: reserve
+     a blank tab synchronously, then point it at the target once cardReady
+     settles. Falls back to a direct open if the blank tab was blocked. */
+  async function openWhenReady(url) {
+    const w = window.open("about:blank", "_blank");
+    if (cardReady) { try { await cardReady; } catch (e) {} }
+    if (w && !w.closed) {
+      try { w.opener = null; } catch (e) {}
+      w.location.href = url;
+    } else {
+      window.open(url, "_blank", "noopener");
+    }
+  }
 
   function injectStyles() {
     if (document.getElementById("sc-styles")) return;
@@ -442,7 +458,7 @@ window.ShareCard = (() => {
      paste. The intent opens pre-filled with the tweet text, link and hashtags. */
   async function shareToX() {
     const copied = await copyImage();
-    window.open(xIntentUrl(current.list), "_blank", "noopener");
+    await openWhenReady(xIntentUrl(current.list));
     toast(copied
       ? "Image copied — paste it (Ctrl/⌘V) into your X post"
       : "X opened — download the image and attach it to your post");
@@ -469,7 +485,7 @@ window.ShareCard = (() => {
             ? `Image copied — paste it (Ctrl/⌘V) into your ${t.label} post`
             : `${t.label} opened — attach the downloaded image`);
         }
-        window.open(t.href, "_blank", "noopener");
+        await openWhenReady(t.href);
       });
       els.networks.appendChild(btn);
     });
@@ -505,25 +521,36 @@ window.ShareCard = (() => {
     els.img.src = canvas.toDataURL("image/png");
     renderNetworks(list);
 
-    canvas.toBlob((blob) => {
-      if (current.url) URL.revokeObjectURL(current.url);
-      current.blob = blob;
-      current.url = blob ? URL.createObjectURL(blob) : null;
-      /* Push the card to Supabase Storage as <id>.png so the Worker's /r/<id>
-         page can point og:image at it. Upsert + a per-session guard keep it to
-         one upload per ranking. A failure is non-fatal: the Worker falls back
-         to the generic card, so sharing still works, just without the per-list
-         preview image. */
-      if (blob && window.Backend && Backend.uploadCard && !uploaded.has(String(list.id))) {
-        uploaded.add(String(list.id));
+    /* cardReady resolves once the card is (attempted to be) in Storage. Share
+       actions await it so a /r/<id> link is never scraped by X/Facebook before
+       its card exists. */
+    cardReady = new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        if (current.url) URL.revokeObjectURL(current.url);
+        current.blob = blob;
+        current.url = blob ? URL.createObjectURL(blob) : null;
+        /* Push the card to Supabase Storage as <id>.png so the Worker's /r/<id>
+           page can point og:image at it. Mark done ONLY on success, so a failed
+           or timed-out upload (e.g. the auth Web Lock wedging) retries next open
+           instead of silently sticking. Non-fatal: the Worker falls back to the
+           generic card, so sharing still works, just without the per-list image. */
+        if (!blob || !window.Backend || !Backend.uploadCard || uploaded.has(String(list.id))) {
+          return resolve();
+        }
         Backend.uploadCard(list.id, blob).then((r) => {
           if (r && r.error) {
-            uploaded.delete(String(list.id));
             console.warn("[share] card upload failed:", r.error);
+          } else {
+            uploaded.add(String(list.id));
+            console.info("[share] card uploaded to Storage:", String(list.id));
           }
+          resolve();
+        }).catch((e) => {
+          console.warn("[share] card upload error:", e);
+          resolve();
         });
-      }
-    }, "image/png");
+      }, "image/png");
+    });
 
     // Native file share is the clean path on mobile (attaches to the X app).
     const canFiles = navigator.canShare && (() => {
