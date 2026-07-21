@@ -254,30 +254,31 @@ window.ShareCard = (() => {
     return t ? t.charAt(0).toUpperCase() + t.slice(1) : "";
   }
 
-  function composeTweet(list) {
-    const text =
-      `"${list.title}" — ranked. Trust me bro. 🏆\n` +
-      `You're gonna disagree. Vote on the REAL order 👇`;
-    const hashtags = ["TierList", "TrustMeBro", tagFrom(list.category)].filter(Boolean);
-    return { text, hashtags };
+  /* One post in the Trust Me Bro voice. Category sits on top, then the take,
+     then a full blank line before the link and another before the hashtags —
+     so X and WhatsApp lay it out with real spacing. No quotes, no dashes. */
+  function tweetParts(list) {
+    const category = list.category || "Tier List";
+    const tags = ["TierList", "TrustMeBro", tagFrom(list.category)]
+      .filter(Boolean)
+      .map((h) => "#" + h)
+      .join(" ");
+    const body =
+      category + "\n\n" +
+      list.title + " ranked. trust me bro 🏆\n" +
+      "you're gonna disagree. vote on the real order 👇";
+    return { body, tags };
   }
 
-  function hashString(list) {
-    return composeTweet(list).hashtags.map((h) => "#" + h).join(" ");
-  }
-
-  // Caption for networks that take one free-text field (WhatsApp/Telegram).
-  function captionText(list) {
-    return composeTweet(list).text + "\n" + hashString(list);
+  /* Everything rides in the text field so the blank lines survive — the intent's
+     separate url/hashtags params would get appended with no spacing at all. */
+  function tweetText(list, includeUrl) {
+    const { body, tags } = tweetParts(list);
+    return body + (includeUrl ? "\n\n" + SITE_URL : "") + "\n\n" + tags;
   }
 
   function xIntentUrl(list) {
-    const { text, hashtags } = composeTweet(list);
-    const q = new URLSearchParams({
-      text,
-      url: SITE_URL,
-      hashtags: hashtags.join(","),
-    });
+    const q = new URLSearchParams({ text: tweetText(list, true) });
     return "https://twitter.com/intent/tweet?" + q.toString();
   }
 
@@ -287,13 +288,13 @@ window.ShareCard = (() => {
      link's own preview, so text/image there come from the page, not the URL. */
   function shareTargets(list) {
     const url = encodeURIComponent(SITE_URL);
-    const redditTitle = encodeURIComponent(`${list.title} — tier list. Vote on the real order.`);
-    const caption = encodeURIComponent(captionText(list) + "\n" + SITE_URL);
-    const tgText = encodeURIComponent(captionText(list));
+    const redditTitle = encodeURIComponent(list.title + " ranked on Trust Me Bro. vote on the real order");
+    const waText = encodeURIComponent(tweetText(list, true));
+    const tgText = encodeURIComponent(tweetText(list, false));
     return [
       { key: "reddit",   label: "Reddit",   copyFirst: true,  href: `https://www.reddit.com/submit?url=${url}&title=${redditTitle}` },
       { key: "facebook", label: "Facebook", copyFirst: false, href: `https://www.facebook.com/sharer/sharer.php?u=${url}` },
-      { key: "whatsapp", label: "WhatsApp", copyFirst: false, href: `https://api.whatsapp.com/send?text=${caption}` },
+      { key: "whatsapp", label: "WhatsApp", copyFirst: false, href: `https://api.whatsapp.com/send?text=${waText}` },
       { key: "telegram", label: "Telegram", copyFirst: false, href: `https://t.me/share/url?url=${url}&text=${tgText}` },
     ];
   }
@@ -491,9 +492,9 @@ window.ShareCard = (() => {
   async function nativeShare() {
     if (!current.blob) return;
     const file = new File([current.blob], "qafizz-ranking.png", { type: "image/png" });
-    const { text } = composeTweet(current.list);
+    const text = tweetText(current.list, true);
     try {
-      await navigator.share({ files: [file], text: text + "\n" + SITE_URL, title: current.list.title });
+      await navigator.share({ files: [file], text, title: current.list.title });
     } catch (e) {
       /* user cancelled or share failed — nothing to do */
     }

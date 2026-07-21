@@ -14,6 +14,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Trust Me Bro — Tier Lists That Matter</title>
   <meta name="description" content="Browse thousands of community tier lists. Vote, argue, repeat." />
+
+  <!-- Open Graph + Twitter Card: makes X, Facebook, Discord, iMessage etc. render
+       a large image card when the qafizz.com link is posted — no manual image
+       attach needed. The image is absolute (cards require a full URL) and is a
+       single static site preview; per-ranking previews would need per-list URLs. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Trust Me Bro" />
+  <meta property="og:title" content="Trust Me Bro — Tier Lists That Matter" />
+  <meta property="og:description" content="Vote on thousands of community tier lists. Argue. Repeat." />
+  <meta property="og:url" content="https://qafizz.com/" />
+  <meta property="og:image" content="https://qafizz.com/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Trust Me Bro — Tier Lists That Matter" />
+  <meta name="twitter:description" content="Vote on thousands of community tier lists. Argue. Repeat." />
+  <meta name="twitter:image" content="https://qafizz.com/og-image.png" />
   <!-- ?v= on every asset below. GitHub Pages serves these with
        cache-control: max-age=600, so a deploy could take ten minutes to reach a
        browser that already had the old copy — long enough that testing a fix
@@ -359,7 +376,7 @@
   <script src="js/backend.js?v=20260719j"></script>
   <script src="js/auth.js?v=20260719j"></script>
   <!-- share.js before app.js: the detail view and feed cards wire up share buttons -->
-  <script src="js/share.js?v=20260721a"></script>
+  <script src="js/share.js?v=20260721b"></script>
   <script src="js/app.js?v=20260721a"></script>
 </body>
 </html>
