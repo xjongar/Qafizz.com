@@ -251,11 +251,9 @@ window.ShareCard = (() => {
   /* Per-list link the Cloudflare Worker serves at /r/<id>: it returns HTML with
      this ranking's own og:image (the uploaded card) so X/Facebook/Discord show
      the ranking in the preview, then redirects a human visitor to /?list=<id>.
-     Title + category ride along so the Worker can fill og:title without a DB. */
+     Just the id — the card image already carries the title, so no query string. */
   function shareUrl(list) {
-    const q = new URLSearchParams({ t: list.title });
-    if (list.category) q.set("c", list.category);
-    return CARD_HOST + "/r/" + encodeURIComponent(list.id) + "?" + q.toString();
+    return CARD_HOST + "/r/" + encodeURIComponent(list.id);
   }
 
   /* Everything rides in the text field so the blank lines survive — the intent's

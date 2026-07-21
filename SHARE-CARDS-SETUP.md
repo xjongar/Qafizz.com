@@ -63,8 +63,8 @@ back to the apex app. The apex is left untouched.
    - Save.
 
 Test:
-- Visit `https://s.qafizz.com/r/100?t=Fast+Food+Brands&c=Fast+Food` — you should
-  land on the site with that ranking open.
+- Visit `https://s.qafizz.com/r/100` — you should land on the site with that
+  ranking open.
 - Paste the same URL into the
   [X Card Validator](https://cards-dev.twitter.com/validator) — it should show
   the ranking's card. (X caches hard; the validator forces a refresh.)

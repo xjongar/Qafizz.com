@@ -25,7 +25,8 @@ export default {
     if (!match) return Response.redirect(SITE + "/", 302);
 
     const id = decodeURIComponent(match[1]);
-    const title = (url.searchParams.get("t") || "A tier list").slice(0, 160);
+    // Optional — links are just /r/<id> now; the card image carries the title.
+    const title = (url.searchParams.get("t") || "Tier list on Trust Me Bro").slice(0, 160);
     const category = (url.searchParams.get("c") || "").slice(0, 60);
 
     // Per-ranking card, if share.js has uploaded one; else the site-wide card.
