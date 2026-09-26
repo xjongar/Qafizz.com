@@ -1,0 +1,68 @@
+[
+  {
+    "id": "curl-comb",
+    "name": "Cordless 2-in-1 Straightening Comb and Curling Iron, 4-Speed Temperature, Fast Heating, LED Display, USB-C Charging",
+    "short": "Cordless 2-in-1 Straightening Comb",
+    "price": 39.99,
+    "was": 54.99,
+    "tags": ["bestseller", "lightning"],
+    "details": [
+      "2-in-1: straightening brush and curling iron",
+      "4 heat settings with an LED display",
+      "Cordless, charges with USB-C",
+      "Heats up in about 60 seconds",
+      "Small enough for your bag"
+    ],
+    "images": [],
+    "styles": ["Black", "Beige"],
+    "reviews": []
+  },
+  {
+    "id": "galaxy-projector",
+    "name": "Galaxy Star Projector with Nebula Lights, 8 Colours, Remote Control and Sleep Timer",
+    "short": "Galaxy Star Projector",
+    "price": 44.99,
+    "was": 59.99,
+    "tags": ["lightning"],
+    "details": [
+      "Nebula and star modes with 8 colours",
+      "Remote plus a sleep timer",
+      "USB-C powered, cable included"
+    ],
+    "images": [],
+    "styles": [],
+    "reviews": []
+  },
+  {
+    "id": "portable-blender",
+    "name": "Portable Blender Bottle, 400 ml, 6 Stainless Steel Blades, USB-C Rechargeable",
+    "short": "Portable Blender Bottle",
+    "price": 35.99,
+    "was": 45.99,
+    "tags": ["unbeatable"],
+    "details": [
+      "400 ml bottle with 6 stainless steel blades",
+      "About 15 blends per charge",
+      "Blades lock unless the lid is on"
+    ],
+    "images": [],
+    "styles": ["Pink", "White", "Green"],
+    "reviews": []
+  },
+  {
+    "id": "heavy-tee",
+    "name": "Oversized Heavyweight Cotton Tee, Boxy Fit, Dropped Shoulders",
+    "short": "Oversized Heavyweight Tee",
+    "price": 34.00,
+    "was": null,
+    "tags": ["new", "unbeatable"],
+    "details": [
+      "280 gsm 100% cotton",
+      "Dropped shoulders, boxy cut",
+      "Size down for a regular fit"
+    ],
+    "images": [],
+    "styles": ["S", "M", "L", "XL"],
+    "reviews": []
+  }
+]
