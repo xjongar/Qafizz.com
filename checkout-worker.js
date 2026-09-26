@@ -70,14 +70,22 @@ export default {
       if (!p) continue;
       const styles = p.styles || [];
       const style = styles.indexOf(item.style) !== -1 ? item.style : (styles[0] || "");
-      const qty = Math.max(1, Math.min(99, parseInt(item.qty, 10) || 1));
-      const name = (p.short || p.name) + (style ? " - " + style : "");
+      const qty = Math.max(1, Math.min(20, parseInt(item.qty, 10) || 1));
+      // Same pack maths as js/store.js: price x pack size, minus the pack's % off.
+      const packs = p.packs && p.packs.length ? p.packs : [{ qty: 1 }];
+      const packIndex = Math.max(0, Math.min(packs.length - 1, parseInt(item.pack, 10) || 0));
+      const pack = packs[packIndex];
+      const unit = Math.round(Number(p.price) * pack.qty * (1 - (pack.off || 0) / 100) * 100);
+      const noun = p.packNoun || ["item", "items"];
+      const packText = p.packs && p.packs.length ? pack.qty + " " + (pack.qty === 1 ? noun[0] : noun[1]) : "";
+      const name = p.name + [style, packText].filter(Boolean).map(function (x) { return " - " + x; }).join("");
       form.set("line_items[" + n + "][quantity]", String(qty));
       form.set("line_items[" + n + "][price_data][currency]", "cad");
-      form.set("line_items[" + n + "][price_data][unit_amount]", String(Math.round(Number(p.price) * 100)));
+      form.set("line_items[" + n + "][price_data][unit_amount]", String(unit));
       form.set("line_items[" + n + "][price_data][product_data][name]", name.slice(0, 250));
       form.set("line_items[" + n + "][price_data][product_data][metadata][product_id]", p.id);
       form.set("line_items[" + n + "][price_data][product_data][metadata][style]", style);
+      form.set("line_items[" + n + "][price_data][product_data][metadata][pack]", String(pack.qty));
       if (p.images && p.images[0]) {
         const img = /^https?:\/\//.test(p.images[0]) ? p.images[0] : SITE + "/" + p.images[0].replace(/^\//, "");
         form.set("line_items[" + n + "][price_data][product_data][images][0]", img);

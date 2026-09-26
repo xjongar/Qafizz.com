@@ -1,5 +1,5 @@
 /* ==========================================================================
-   QAFIZZ - store (header, cart, home page, product page)
+   QAFIZZ - store (header, cart drawer, home, shop, product page)
    Products come from /products.json and settings from js/config.js.
    You should not need to edit this file.
    ========================================================================== */
@@ -8,474 +8,401 @@
 
   var CONFIG = window.QAFIZZ_CONFIG || {};
   var EMAIL = CONFIG.supportEmail || "qafizz@qafizz.com";
-  var TINTS = ["#E9E4F5", "#FCE3D6", "#DDF0E4", "#FFF1C7", "#DDE7FA", "#F7DDE6"];
-  var CART_KEY = "qafizz_cart_v1";
+  var CART_KEY = "qafizz_cart_v2";
+  var TINTS = ["#F6E1D3", "#F3E6DA", "#EFDCCB", "#F8E8DE", "#F1DED5"];
   var PRODUCTS = [];
 
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
-
   function esc(s) {
-    return String(s == null ? "" : s)
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
-
-  function money(n) { return "$" + Number(n).toFixed(2); }
-
-  // "$39.99" with small cents, the way deal sites print prices.
-  function bigPrice(n) {
-    var parts = Number(n).toFixed(2).split(".");
-    return '<span class="p-dollar">$</span><span class="p-whole">' + parts[0] + '</span><span class="p-cents">.' + parts[1] + "</span>";
-  }
-
-  function percentOff(p) {
-    if (!p.was || p.was <= p.price) return 0;
-    return Math.round((1 - p.price / p.was) * 100);
-  }
-
-  function tintFor(id) {
-    var h = 0;
-    for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-    return TINTS[h % TINTS.length];
-  }
-
-  function hasTag(p, t) { return (p.tags || []).indexOf(t) !== -1; }
+  function money(n) { return "$" + (Math.round(n * 100) / 100).toFixed(2); }
+  function round2(n) { return Math.round(n * 100) / 100; }
+  function tintFor(id) { var h = 0; for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0; return TINTS[h % TINTS.length]; }
   function productUrl(p) { return "product.html?id=" + encodeURIComponent(p.id); }
   function findProduct(id) { return PRODUCTS.filter(function (p) { return p.id === id; })[0]; }
-  function shortName(p) { return p.short || p.name; }
+  function percentOff(was, now) { return was && was > now ? Math.round((1 - now / was) * 100) : 0; }
+
+  /* ---------------- packs + pricing (the checkout worker uses the same maths) ---------------- */
+  function packsOf(p) { return p.packs && p.packs.length ? p.packs : [{ qty: 1, label: "" }]; }
+  function packPrice(p, i) { var k = packsOf(p)[i] || packsOf(p)[0]; return round2(p.price * k.qty * (1 - (k.off || 0) / 100)); }
+  function packWas(p, i) { var k = packsOf(p)[i] || packsOf(p)[0]; return round2((p.was || p.price) * k.qty); }
+  function nounFor(p, qty) { var n = p.packNoun || ["item", "items"]; return qty + " " + (qty === 1 ? n[0] : n[1]); }
 
   /* ---------------- icons ---------------- */
   var I = {
-    truck: '<svg viewBox="0 0 24 24"><path d="M2 6h11v9H2zM13 9h4l4 4v2h-8z"/><circle cx="6" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>',
-    guarantee: '<svg viewBox="0 0 24 24"><path d="M3 5h18v10H3z"/><path d="m8 10 2.5 2.5L16 7"/><path d="M7 19h10"/></svg>',
-    lock: '<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
-    card: '<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>',
-    box: '<svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>',
-    shield: '<svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>',
-    bell: '<svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
-    thumb: '<svg viewBox="0 0 24 24"><path d="M7 10v10H3V10zM7 10l4-7c1.5 0 2.5 1 2.5 2.5L13 9h6a2 2 0 0 1 2 2.3l-1.2 6.8A2 2 0 0 1 17.8 20H7"/></svg>',
-    star: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="16" rx="3"/><path d="m12 6.5 1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z" class="fill"/></svg>',
-    support: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 13a4 4 0 0 0 8 0M9 9.5h.01M15 9.5h.01"/></svg>',
-    cart: '<svg viewBox="0 0 24 24"><path d="M2 3h3l2.5 12h11L21 7H6.2"/><circle cx="9" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/></svg>',
+    user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c1-4.2 3.8-6.3 7.5-6.3s6.5 2.1 7.5 6.3"/></svg>',
     search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
-    bolt: '<svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z" class="fill"/></svg>',
-    chev: '<svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>',
-    down: '<svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>',
-    share: '<svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5M5 13v7h14v-7"/></svg>',
-    check: '<svg viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></svg>',
+    bag: '<svg viewBox="0 0 24 24"><path d="M5 8h14l-1 13H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
     close: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>',
-    trash: '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>',
-    user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.5 4-6.5 8-6.5s7 2 8 6.5"/></svg>'
+    left: '<svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg>',
+    right: '<svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>',
+    down: '<svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>',
+    lock: '<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+    sparkle: '<svg viewBox="0 0 24 24"><path class="fill" d="M12 2c.6 4.6 2.4 7.4 8 10-5.6 2.6-7.4 5.4-8 10-.6-4.6-2.4-7.4-8-10 5.6-2.6 7.4-5.4 8-10z"/></svg>',
+    menu: '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+    trash: '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>'
   };
-  function icon(name, cls) { return '<span class="ic ' + (cls || "") + '" aria-hidden="true">' + I[name] + "</span>"; }
+  function icon(n, cls) { return '<span class="ic ' + (cls || "") + '" aria-hidden="true">' + I[n] + "</span>"; }
+  var CHECK = '<span class="tick" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><path d="m6 10.5 2.6 2.6L14.5 7"/></svg></span>';
 
-  var FLAG_CA = '<svg class="flag" viewBox="0 0 30 20" aria-label="Canada" role="img"><rect width="30" height="20" fill="#fff"/><rect width="7.5" height="20" fill="#D52B1E"/><rect x="22.5" width="7.5" height="20" fill="#D52B1E"/><path d="M15 4l1.1 2.3 1.6-.6-.5 3.3 1.8-1.4.4 1.2 2-.3-.8 2 .8.4-3.2 2.3.3 1.2-3-.4v2.6h-.9v-2.6l-3 .4.3-1.2-3.2-2.3.8-.4-.8-2 2 .3.4-1.2 1.8 1.4-.5-3.3 1.6.6z" fill="#D52B1E"/></svg>';
-  var FLAG_US = '<svg class="flag" viewBox="0 0 30 20" aria-label="United States" role="img"><rect width="30" height="20" fill="#B22234"/><path d="M0 3h30M0 6h30M0 9h30M0 12h30M0 15h30M0 18h30" stroke="#fff" stroke-width="1.5"/><rect width="13" height="10.5" fill="#3C3B6E"/></svg>';
-
-  /* ---------------- product visuals ---------------- */
+  /* ---------------- visuals ---------------- */
   function placeholder(p, big) {
-    var initials = shortName(p).split(/\s+/).filter(function (w) { return /^[A-Za-z]/.test(w); })
-      .slice(0, 2).map(function (w) { return w[0]; }).join("").toUpperCase();
-    return '<div class="ph' + (big ? " ph-big" : "") + '" style="--tint:' + tintFor(p.id) + '" role="img" aria-label="' + esc(shortName(p)) + ', photo coming soon">' +
-      '<svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="44" cy="74" r="30"/><circle cx="84" cy="36" r="17"/><circle cx="90" cy="84" r="9"/></svg>' +
-      "<span>" + esc(initials) + "</span></div>";
+    return '<div class="ph' + (big ? " ph-big" : "") + '" style="--tint:' + tintFor(p.id) + '" role="img" aria-label="' + esc(p.name) + ', photo coming soon">' +
+      '<span class="ph-name">' + esc(p.name) + "</span><span class=\"ph-note\">Photo coming soon</span></div>";
   }
-  function mainImage(p, big) {
-    if (p.images && p.images.length) return '<img src="' + esc(p.images[0]) + '" alt="' + esc(shortName(p)) + '" loading="lazy" />';
-    return placeholder(p, big);
+  function img(p, i, big) {
+    var src = (p.images || [])[i || 0];
+    return src ? '<img src="' + esc(src) + '" alt="' + esc(p.name) + '" loading="lazy" />' : placeholder(p, big);
   }
-
   function reviewStats(p) {
     var r = p.reviews || [];
     if (!r.length) return null;
-    var sum = r.reduce(function (a, x) { return a + Number(x.stars || 0); }, 0);
-    return { count: r.length, avg: sum / r.length };
+    return { count: r.length, avg: r.reduce(function (a, x) { return a + Number(x.stars || 0); }, 0) / r.length };
   }
-  function starsHtml(value, cls) {
-    var out = "";
-    for (var i = 1; i <= 5; i++) {
-      var fill = Math.max(0, Math.min(1, value - (i - 1)));
-      out += '<span class="star" style="--fill:' + Math.round(fill * 100) + '%"></span>';
-    }
-    return '<span class="stars ' + (cls || "") + '" role="img" aria-label="' + value.toFixed(1) + ' out of 5 stars">' + out + "</span>";
+  function stars(n) {
+    var s = "";
+    for (var i = 1; i <= 5; i++) s += i <= Math.round(n) ? "★" : "☆";
+    return '<span class="stars" role="img" aria-label="' + Number(n).toFixed(1) + ' out of 5 stars">' + s + "</span>";
   }
+  function stamp() {
+    return '<svg class="stamp" viewBox="0 0 120 120" aria-hidden="true"><defs><path id="stampCircle" d="M60 60m-42 0a42 42 0 1 1 84 0a42 42 0 1 1-84 0"/></defs>' +
+      '<circle cx="60" cy="60" r="56" class="stamp-ring"/><circle cx="60" cy="60" r="52" class="stamp-ring thin"/>' +
+      '<text><textPath href="#stampCircle" startOffset="0">QAFIZZ PICK · FREE SHIPPING · QAFIZZ PICK ·</textPath></text>' +
+      '<path class="stamp-star" d="M60 40c1.2 9 4.8 14.6 16 20-11.2 5.4-14.8 11-16 20-1.2-9-4.8-14.6-16-20 11.2-5.4 14.8-11 16-20z"/></svg>';
+  }
+  function wave(cls) {
+    return '<svg class="wave ' + cls + '" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 C 120 0 240 0 360 30 S 600 60 720 30 S 960 0 1080 30 S 1320 60 1440 30 V 60 H 0 Z"/></svg>';
+  }
+
+  /* ---------------- dates ---------------- */
+  function addBusinessDays(d, n) {
+    var x = new Date(d);
+    while (n > 0) { x.setDate(x.getDate() + 1); if (x.getDay() !== 0 && x.getDay() !== 6) n--; }
+    return x;
+  }
+  function longDate(d) { return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }); }
 
   /* ---------------- toast ---------------- */
   var toastTimer;
   function toast(msg) {
     var t = $("#toast");
     if (!t) return;
-    t.textContent = msg;
-    t.hidden = false;
+    t.textContent = msg; t.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { t.hidden = true; }, 2600);
   }
 
   /* ---------------- cart ---------------- */
-  function readCart() {
-    try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { return []; }
-  }
-  var cart = readCart();
+  var cart = (function () { try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { return []; } })();
   function saveCart() {
-    try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) { /* private mode: cart lives for this page only */ }
+    try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) { /* private mode */ }
     renderCart();
   }
-  function cartLines() {
-    return cart.map(function (line) {
-      var p = findProduct(line.id);
-      return p ? { line: line, p: p } : null;
-    }).filter(Boolean);
+  function lines() {
+    return cart.map(function (l, i) { var p = findProduct(l.id); return p ? { l: l, p: p, i: i } : null; }).filter(Boolean);
   }
-  function cartCount() { return cartLines().reduce(function (a, x) { return a + x.line.qty; }, 0); }
-  function cartTotal() { return cartLines().reduce(function (a, x) { return a + x.line.qty * x.p.price; }, 0); }
-
-  function addToCart(id, style, qty) {
-    var existing = cart.filter(function (l) { return l.id === id && l.style === style; })[0];
-    if (existing) existing.qty = Math.min(99, existing.qty + qty);
-    else cart.unshift({ id: id, style: style, qty: qty });
+  function lineTotal(x) { return packPrice(x.p, x.l.pack) * x.l.qty; }
+  function addToCart(id, style, pack, qty) {
+    var hit = cart.filter(function (l) { return l.id === id && l.style === style && l.pack === pack; })[0];
+    if (hit) hit.qty = Math.min(20, hit.qty + qty); else cart.unshift({ id: id, style: style, pack: pack, qty: qty });
     saveCart();
   }
 
-  function qtySelect(value, attrs) {
-    var opts = "";
-    for (var i = 1; i <= 10; i++) opts += '<option value="' + i + '"' + (i === value ? " selected" : "") + ">" + i + "</option>";
-    if (value > 10) opts += '<option value="' + value + '" selected>' + value + "</option>";
-    return '<select ' + attrs + ">" + opts + "</select>";
-  }
-
   function renderCart() {
-    var panel = $("#cartPanel");
-    if (!panel) return;
-    var lines = cartLines();
-    var count = cartCount();
-    $all(".cart-count").forEach(function (el) { el.textContent = count; el.hidden = count === 0; });
-    document.body.classList.toggle("has-cart", lines.length > 0);
-
-    var items = lines.map(function (x, i) {
-      return '<div class="cart-item">' +
-        '<a class="cart-thumb" href="' + productUrl(x.p) + '">' + mainImage(x.p, false) + "</a>" +
-        '<div class="cart-item-info">' +
-          '<a class="cart-name" href="' + productUrl(x.p) + '">' + esc(shortName(x.p)) + "</a>" +
-          (x.line.style ? '<span class="cart-style">' + esc(x.line.style) + "</span>" : "") +
-          '<span class="cart-price">' + money(x.p.price) + "</span>" +
-          '<div class="cart-row">' + qtySelect(x.line.qty, 'class="qty-select" data-line="' + i + '" aria-label="Quantity"') +
-          '<button type="button" class="cart-remove" data-line="' + i + '" aria-label="Remove">' + icon("trash") + "</button></div>" +
-        "</div></div>";
-    }).join("");
-
-    panel.innerHTML =
-      '<div class="cart-head"><span class="cart-sub">' + icon("cart") + " Subtotal</span>" +
-        '<button type="button" class="cart-close" id="cartClose" aria-label="Close cart">' + icon("close") + "</button></div>" +
-      '<div class="cart-total">' + money(cartTotal()) + "</div>" +
-      '<div class="cart-free">' + icon("check") + " Free shipping</div>" +
-      '<button type="button" class="btn-orange cart-checkout" id="checkoutBtn"' + (lines.length ? "" : " disabled") + ">Checkout</button>" +
-      '<p class="cart-msg" id="cartMsg" hidden></p>' +
-      (lines.length ? '<div class="cart-items">' + items + "</div>" : '<p class="cart-empty">Your cart is empty.</p>');
+    var d = $("#cartDrawer");
+    if (!d) return;
+    var ls = lines();
+    var count = ls.reduce(function (a, x) { return a + x.l.qty; }, 0);
+    $all(".bag-count").forEach(function (el) { el.textContent = count; });
+    var total = ls.reduce(function (a, x) { return a + lineTotal(x); }, 0);
+    d.innerHTML =
+      '<div class="drawer-head"><h2>Your cart</h2><button type="button" class="icon-btn" id="cartClose" aria-label="Close cart">' + icon("close") + "</button></div>" +
+      '<p class="drawer-free">' + CHECK + " Free shipping on every order</p>" +
+      (ls.length ? '<div class="drawer-items">' + ls.map(function (x) {
+        var k = packsOf(x.p)[x.l.pack] || packsOf(x.p)[0];
+        var meta = [x.l.style, x.p.packs && x.p.packs.length ? nounFor(x.p, k.qty) : ""].filter(Boolean).join(" · ");
+        return '<div class="ditem"><a class="ditem-img" href="' + productUrl(x.p) + '">' + img(x.p, 0) + "</a>" +
+          '<div class="ditem-info"><a class="ditem-name" href="' + productUrl(x.p) + '">' + esc(x.p.name) + "</a>" +
+          (meta ? '<span class="ditem-meta">' + esc(meta) + "</span>" : "") +
+          '<div class="ditem-row"><div class="stepper small" data-line="' + x.i + '"><button type="button" data-step="-1" aria-label="Less">&minus;</button><span>' + x.l.qty + '</span><button type="button" data-step="1" aria-label="More">+</button></div>' +
+          '<span class="ditem-price">' + money(lineTotal(x)) + "</span></div>" +
+          '<button type="button" class="ditem-remove" data-remove="' + x.i + '">Remove</button></div></div>';
+      }).join("") + "</div>" : '<p class="drawer-empty">Your cart is empty.</p><a class="pill-link" href="shop.html">Shop all finds &rarr;</a>') +
+      (ls.length ? '<div class="drawer-foot"><div class="drawer-total"><span>Subtotal</span><strong>' + money(total) + "</strong></div>" +
+        '<p class="drawer-note">Taxes, if any, are calculated at checkout.</p>' +
+        '<button type="button" class="btn-main" id="checkoutBtn">Checkout</button><p class="drawer-msg" id="cartMsg" hidden></p></div>' : "");
   }
-
   function openCart() { document.body.classList.add("cart-open"); }
   function closeCart() { document.body.classList.remove("cart-open"); }
 
   function checkout() {
-    var msg = $("#cartMsg");
-    var btn = $("#checkoutBtn");
-    var lines = cartLines();
-    if (!lines.length) return;
+    var msg = $("#cartMsg"), btn = $("#checkoutBtn"), ls = lines();
+    if (!ls.length) return;
     if (!CONFIG.checkoutUrl) {
       msg.hidden = false;
       msg.innerHTML = "Online checkout opens very soon. To order now, email <strong>" + esc(EMAIL) + "</strong>.";
       return;
     }
-    btn.disabled = true;
-    btn.textContent = "Opening checkout...";
+    btn.disabled = true; btn.textContent = "Opening checkout...";
     fetch(CONFIG.checkoutUrl.replace(/\/$/, "") + "/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items: lines.map(function (x) { return { id: x.line.id, style: x.line.style, qty: x.line.qty }; }) })
+      body: JSON.stringify({ items: ls.map(function (x) { return { id: x.l.id, style: x.l.style, pack: x.l.pack, qty: x.l.qty }; }) })
     }).then(function (r) { return r.json(); }).then(function (data) {
       if (data && data.url) { location.href = data.url; return; }
-      throw new Error(data && data.error || "Checkout failed");
+      throw new Error("no url");
     }).catch(function () {
-      btn.disabled = false;
-      btn.textContent = "Checkout";
-      msg.hidden = false;
-      msg.textContent = "Checkout didn't open. Check your connection and try again.";
+      btn.disabled = false; btn.textContent = "Checkout";
+      msg.hidden = false; msg.textContent = "Checkout didn't open. Check your connection and try again.";
     });
   }
 
   /* ---------------- site chrome ---------------- */
-  function renderChrome(isHome) {
+  function renderChrome() {
     var top = $("#siteTop");
     if (top) {
-      var q = new URLSearchParams(location.search).get("q") || "";
       top.outerHTML =
-        '<div class="topbar"><div class="shell topbar-inner">' +
-          '<a class="tb-item" href="policies.html#shipping">' + icon("truck", "tb-ic tb-green") + '<span><strong>Free shipping</strong><small>On every order</small></span>' + icon("chev", "tb-chev") + "</a>" +
-          '<span class="tb-sep" aria-hidden="true"></span>' +
-          '<a class="tb-item" href="policies.html#returns">' + icon("guarantee", "tb-ic tb-yellow") + '<span><strong>Delivery guarantee</strong><small>Refund for any issues</small></span></a>' +
-          '<span class="tb-sep" aria-hidden="true"></span>' +
-          '<a class="tb-item" href="policies.html#privacy">' + icon("lock", "tb-ic tb-yellow") + '<span><strong>Secure checkout</strong><small>Card, Apple Pay, Google Pay</small></span></a>' +
-          '<div class="tb-promo"><span>Shipping to<br />Canada &amp; the US</span><span class="tb-flags">' + FLAG_CA + FLAG_US + "</span></div>" +
-        "</div></div>" +
-        '<header class="header' + (isHome ? " header-home" : "") + '"><div class="shell header-inner">' +
-          '<a class="logo" href="./" aria-label="Qafizz home"><span class="logo-bubbles"><i></i><i></i><i></i></span><span class="logo-word">qafizz</span></a>' +
-          '<nav class="hnav" aria-label="Shop">' +
-            '<a href="./?f=bestseller#explore">' + icon("thumb") + "Best-Selling Items</a>" +
-            '<a href="./?f=fivestar#explore">' + icon("star") + "5-Star Rated</a>" +
-            '<a href="./?f=new#explore">New In</a>' +
-          "</nav>" +
-          '<form class="hsearch" action="./" role="search"><label class="sr-only" for="q">Search</label>' +
-            '<input id="q" name="q" type="search" placeholder="cordless hair straightener brush" value="' + esc(q) + '" autocomplete="off" />' +
-            '<button type="submit" aria-label="Search">' + icon("search") + "</button></form>" +
-          '<div class="hright">' +
-            '<a class="hlink" href="policies.html#contact">' + icon("support") + "<span>Support</span></a>" +
-            '<span class="hlink hlang">' + FLAG_CA + "<span>English</span></span>" +
-            '<button type="button" class="hcart" id="cartOpen" aria-label="Cart">' + icon("cart") + '<span class="cart-count" hidden>0</span></button>' +
+        '<div class="announce" id="announce">Fall Sale: Up to 27% Off &amp; Free Shipping on Every Order</div>' +
+        '<header class="header" id="header"><div class="wrap header-inner">' +
+          '<button type="button" class="icon-btn menu-btn" id="menuBtn" aria-label="Menu">' + icon("menu") + "</button>" +
+          '<nav class="nav" id="nav" aria-label="Main"><a href="./">Home</a><a href="shop.html">Shop</a><a href="./#story">Our Story</a><a href="policies.html#contact">Contact</a></nav>' +
+          '<a class="logo" href="./">QAFIZZ</a>' +
+          '<div class="header-icons">' +
+            '<a class="icon-btn" href="policies.html#contact" aria-label="Contact">' + icon("user") + "</a>" +
+            '<button type="button" class="icon-btn" id="searchBtn" aria-label="Search">' + icon("search") + "</button>" +
+            '<button type="button" class="icon-btn bag" id="cartOpen" aria-label="Cart">' + icon("bag") + '<span class="bag-count">0</span></button>' +
           "</div>" +
-        "</div></header>";
+        "</div>" +
+        '<form class="searchbar" id="searchbar" action="shop.html" role="search" hidden><div class="wrap"><label class="sr-only" for="q">Search</label>' +
+          '<input id="q" name="q" type="search" placeholder="Search for a product" autocomplete="off" /><button type="submit" class="icon-btn" aria-label="Search">' + icon("search") + "</button></div></form>" +
+        "</header>";
     }
-
     var bottom = $("#siteBottom");
     if (bottom) {
       bottom.outerHTML =
-        '<footer class="footer"><div class="shell">' +
-          '<div class="footer-cols">' +
-            '<div><h3>Company info</h3><a href="policies.html#contact">About Qafizz</a><a href="policies.html#contact">Contact us</a></div>' +
-            '<div><h3>Customer service</h3><a href="policies.html#shipping">Shipping info</a><a href="policies.html#returns">Return and refund policy</a><a href="policies.html#returns">Report a problem</a></div>' +
-            '<div><h3>Help</h3><a href="policies.html#privacy">Privacy policy</a><a href="policies.html#terms">Terms of use</a><a href="./#explore">Shop all</a></div>' +
-            '<div><h3>Questions?</h3><p>Email us any time</p><p class="footer-mail">' + esc(EMAIL) + "</p><p>We reply within 1 to 2 business days.</p></div>" +
+        '<footer class="footer">' + wave("wave-footer") +
+          '<div class="footer-body"><div class="wrap footer-grid">' +
+            '<div class="footer-brand"><a class="logo logo-footer" href="./">QAFIZZ</a><p>The finds you keep seeing on TikTok, picked because they work. Shipped free across Canada and the US.</p></div>' +
+            '<div><h3>Shop</h3><a href="shop.html">All products</a><a href="./#featured">Bestseller</a></div>' +
+            '<div><h3>Help</h3><a href="policies.html#shipping">Shipping</a><a href="policies.html#returns">Returns &amp; refunds</a><a href="policies.html#contact">Contact</a></div>' +
+            '<div><h3>Legal</h3><a href="policies.html#privacy">Privacy</a><a href="policies.html#terms">Terms</a></div>' +
           "</div>" +
-          '<div class="footer-pay"><span>We accept</span><span class="pay">VISA</span><span class="pay">Mastercard</span><span class="pay">AMEX</span><span class="pay">Apple Pay</span><span class="pay">Google Pay</span><span class="footer-secure">' + icon("lock") + " Payments secured by Stripe</span></div>" +
-          '<p class="footer-copy">&copy; ' + new Date().getFullYear() + " Qafizz. All rights reserved.</p>" +
-        "</div></footer>" +
-        '<aside class="cart-panel" id="cartPanel" aria-label="Shopping cart"></aside>' +
-        '<div class="cart-scrim" id="cartScrim"></div>' +
+          '<div class="wrap footer-base"><span>&copy; ' + new Date().getFullYear() + " Qafizz &middot; " + esc(EMAIL) + "</span>" + payBadges() + "</div></div>" +
+        "</footer>" +
+        '<div class="scrim" id="scrim"></div><aside class="drawer" id="cartDrawer" aria-label="Cart"></aside>' +
         '<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>';
     }
   }
 
-  /* ---------------- product card ---------------- */
-  function card(p, opts) {
-    opts = opts || {};
-    var stats = reviewStats(p);
-    var off = percentOff(p);
-    return '<a class="pcard" href="' + productUrl(p) + '">' +
-      '<div class="pcard-img">' + mainImage(p, false) +
-        (off ? '<span class="pcard-off">-' + off + "%</span>" : "") +
-      "</div>" +
-      (opts.noName ? "" : '<div class="pcard-name">' + esc(p.name) + "</div>") +
-      '<div class="pcard-price"><span class="price-orange">' + bigPrice(p.price) + "</span>" +
-        (p.was ? ' <s class="pcard-was">' + money(p.was) + "</s>" : "") + "</div>" +
-      (stats ? '<div class="pcard-stars">' + starsHtml(stats.avg) + '<span class="pcard-count">' + stats.count + "</span></div>" : "") +
-      "</a>";
+  function payBadges() {
+    return '<div class="pay-badges" aria-label="Payment methods">' +
+      '<span class="pb pb-amex">AMEX</span><span class="pb pb-apple"> Pay</span><span class="pb pb-gpay"><b>G</b> Pay</span>' +
+      '<span class="pb pb-mc"><i></i><i></i></span><span class="pb pb-visa">VISA</span></div>';
   }
 
-  /* ---------------- home page ---------------- */
-  var FILTERS = [
-    { key: "all", label: "Recommended", test: function () { return true; } },
-    { key: "bestseller", label: "Best-Selling Items", test: function (p) { return hasTag(p, "bestseller"); } },
-    { key: "fivestar", label: "5-Star Rated", test: function (p) { var s = reviewStats(p); return s && s.avg >= 4.5; } },
-    { key: "new", label: "New In", test: function (p) { return hasTag(p, "new"); } },
-    { key: "deals", label: "On Sale", test: function (p) { return percentOff(p) > 0; } },
-    { key: "under30", label: "Under $30", test: function (p) { return p.price < 30; } },
-    { key: "under50", label: "Under $50", test: function (p) { return p.price < 50; } }
-  ];
-
-  function renderHome() {
-    var page = $("#homePage");
-    if (!page) return;
-    var params = new URLSearchParams(location.search);
-    var q = (params.get("q") || "").trim().toLowerCase();
-    var current = params.get("f") || "all";
-
-    function dealRow(tag, fallback) {
-      var list = PRODUCTS.filter(function (p) { return hasTag(p, tag); });
-      if (!list.length) list = PRODUCTS.filter(fallback);
-      return list.slice(0, 3).map(function (p) { return card(p, { noName: true }); }).join("");
-    }
-
-    page.innerHTML =
-      '<div class="shell">' +
-        '<section class="why">' +
-          '<div class="why-top"><span class="why-title">' + icon("shield") + " Why choose Qafizz?</span>" +
-            '<span class="why-items"><a href="policies.html#privacy">' + icon("lock") + ' Secure privacy</a><i></i><a href="policies.html#privacy">' + icon("card") + ' Safe payments</a><i></i><a href="policies.html#returns">' + icon("box") + " Delivery guarantee " + icon("chev") + "</a></span></div>" +
-          '<div class="why-bottom">' + icon("bell") + " Security reminder: Qafizz will never ask you for extra fees by text message or email.</div>" +
-        "</section>" +
-        '<div class="deals">' +
-          '<section class="deal-col"><h2 class="deal-h orange"><a href="./?f=deals#explore">Lightning deals ' + icon("chev") + "</a></h2>" +
-            '<div class="deal-row">' + dealRow("lightning", function (p) { return percentOff(p) > 0; }) + "</div></section>" +
-          '<section class="deal-col"><h2 class="deal-h red"><a href="./?f=all#explore">Unbeatable deals ' + icon("chev") + "</a></h2>" +
-            '<div class="deal-row">' + dealRow("unbeatable", function () { return true; }) + "</div></section>" +
-        "</div>" +
-        '<div class="paybanner"><em>Shop now, pay your way with</em><span class="pay">VISA</span><span class="pay">Mastercard</span><span class="pay pay-dark">Apple Pay</span><span class="pay pay-blue">Google Pay</span></div>' +
-        '<section class="explore" id="explore">' +
-          '<p class="explore-kicker">' + (q ? "Search results" : "Qafizz deals") + "</p>" +
-          '<h2 class="explore-h">' + (q ? "Results for &ldquo;" + esc(q) + "&rdquo;" : "Explore your interests") + "</h2>" +
-          '<div class="chips" id="chips">' + FILTERS.map(function (f) {
-            return '<button type="button" class="chip' + (f.key === current ? " is-on" : "") + '" data-f="' + f.key + '">' + f.label + "</button>";
-          }).join("") + "</div>" +
-          '<div class="pgrid" id="pgrid"></div>' +
-          '<p class="pgrid-empty" id="pgridEmpty" hidden></p>' +
-        "</section>" +
-      "</div>";
-
-    function draw(key) {
-      var f = FILTERS.filter(function (x) { return x.key === key; })[0] || FILTERS[0];
-      var list = PRODUCTS.filter(f.test).filter(function (p) {
-        return !q || (p.name + " " + (p.details || []).join(" ")).toLowerCase().indexOf(q) !== -1;
-      });
-      $("#pgrid").innerHTML = list.map(function (p) { return card(p); }).join("");
-      var empty = $("#pgridEmpty");
-      empty.hidden = list.length > 0;
-      empty.textContent = key === "fivestar" && !q ? "No 5-star rated items yet. Ratings show up here as customers review their orders." : "Nothing here yet. Try another search or pick Recommended.";
-      $all(".chip", page).forEach(function (c) { c.classList.toggle("is-on", c.dataset.f === f.key); });
-    }
-
-    $("#chips").addEventListener("click", function (e) {
-      var c = e.target.closest(".chip");
-      if (!c) return;
-      draw(c.dataset.f);
-      var url = new URL(location.href);
-      if (c.dataset.f === "all") url.searchParams.delete("f"); else url.searchParams.set("f", c.dataset.f);
-      history.replaceState(null, "", url.pathname + url.search + "#explore");
-    });
-    draw(current);
-    if (q || params.get("f")) { var ex = $("#explore"); if (ex) ex.scrollIntoView(); }
-  }
-
-  /* ---------------- product page ---------------- */
-  var RATING_WORD = { 5: "Excellent", 4: "Good", 3: "Okay", 2: "Poor", 1: "Bad" };
-
-  function renderReviews(p) {
-    var stats = reviewStats(p);
-    var head = '<div class="rv-head"><h2>' + (stats ? stats.count + " review" + (stats.count === 1 ? "" : "s") : "0 reviews") + "</h2>" +
-      (stats ? '<span class="rv-sep"></span><span class="rv-avg">' + stats.avg.toFixed(1) + starsHtml(stats.avg, "stars-lg") + "</span>" : "") +
-      '<span class="rv-badge">' + icon("shield") + " Reviews from real Qafizz customers</span></div>";
-    if (!stats) {
-      return '<section class="reviews" id="reviews">' + head +
-        '<p class="rv-empty">No reviews yet. Bought this item? Email your review and a photo to <strong>' + esc(EMAIL) + "</strong> and we will add it here.</p></section>";
-    }
-    var list = p.reviews.map(function (r) {
-      var n = Math.round(Number(r.stars || 0));
-      var date = r.date ? new Date(r.date + "T12:00:00").toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "";
-      var flag = r.country === "US" ? FLAG_US : r.country === "CA" ? FLAG_CA : "";
-      return '<article class="rv">' +
-        '<div class="rv-who"><span class="rv-avatar" style="--tint:' + tintFor(r.name || "x") + '">' + esc((r.name || "?").trim().charAt(0).toUpperCase()) + "</span>" +
-          "<span><strong>" + esc(r.name) + "</strong>" + (flag ? " in " + flag : "") + (date ? " on " + esc(date) : "") + "</span></div>" +
-        '<div class="rv-stars">' + starsHtml(n, "stars-lg") + ' <span class="rv-word">' + (RATING_WORD[n] || "") + "</span></div>" +
-        '<p class="rv-text">' + esc(r.text) + "</p></article>";
-    }).join("");
-    return '<section class="reviews" id="reviews">' + head + '<div class="rv-list">' + list + "</div></section>";
-  }
-
-  function renderProduct() {
-    var page = $("#productPage");
-    if (!page) return;
-    var id = new URLSearchParams(location.search).get("id");
-    var p = findProduct(id);
-    if (!p) {
-      page.innerHTML = '<div class="shell notfound"><h1>We couldn\'t find that item</h1><p>It may have sold out, or the link has a typo.</p><a class="btn-orange" href="./">Shop all deals</a></div>';
-      return;
-    }
-    document.title = shortName(p) + " | Qafizz";
-
-    var images = (p.images || []).slice();
+  /* ---------------- product module (home featured + product page) ---------------- */
+  function productModule(p, headingTag) {
+    var images = p.images || [];
+    var packs = packsOf(p);
+    var hasPacks = p.packs && p.packs.length > 1;
     var styles = p.styles || [];
     var stats = reviewStats(p);
-    var off = percentOff(p);
+    var eta = longDate(addBusinessDays(new Date(), 18));
 
     var thumbs = images.length > 1 ? '<div class="thumbs">' + images.map(function (src, i) {
       return '<button type="button" class="thumb' + (i === 0 ? " is-on" : "") + '" data-i="' + i + '" aria-label="Photo ' + (i + 1) + '"><img src="' + esc(src) + '" alt="" /></button>';
     }).join("") + "</div>" : "";
 
-    page.innerHTML =
-      '<div class="shell">' +
-        '<nav class="crumbs" aria-label="Breadcrumb"><a href="./">Home</a>' + icon("chev") + '<a href="./#explore">Shop</a>' + icon("chev") + "<span>" + esc(shortName(p)) + "</span></nav>" +
-        '<div class="pdp">' +
-          '<div class="pdp-left">' +
-            '<div class="gallery' + (thumbs ? " has-thumbs" : "") + '">' + thumbs +
-              '<div class="stage">' + (images.length ? '<img id="stageImg" src="' + esc(images[0]) + '" alt="' + esc(shortName(p)) + '" />' : placeholder(p, true)) + "</div>" +
-            "</div>" +
-            renderReviews(p) +
-          "</div>" +
-          '<div class="pdp-right">' +
-            '<div class="dealbar"><span class="dealbar-tag">Qafizz<br />Deal</span>' +
-              '<span class="dealbar-items">' + icon("check") + " Free shipping <i></i> " + icon("check") + ' Refund if damaged <span class="dealbar-chev">' + icon("chev") + "</span></span></div>" +
-            '<div class="ptitle"><h1><span class="fast">' + icon("bolt") + " Ships in 1 to 3 business days</span> " + esc(p.name) + "</h1>" +
-              '<button type="button" class="pshare" id="share" aria-label="Copy link to this item">' + icon("share") + "</button></div>" +
-            '<a class="storebar" href="policies.html#contact">' + icon("shield") + " Qafizz Official Store &middot; Canadian-owned shop " + icon("chev", "storebar-chev") + "</a>" +
-            '<div class="pmeta">' +
-              (hasTag(p, "bestseller") ? '<span class="best">' + icon("thumb") + " BEST-SELLING ITEM <b>in our shop</b></span>" : '<span class="soldby">Sold and shipped by Qafizz</span>') +
-              (stats ? '<a class="pmeta-rating" href="#reviews">' + stats.avg.toFixed(1) + " " + starsHtml(stats.avg, "stars-md") + "</a>" : "") +
-            "</div>" +
-            '<div class="pprice"><span class="price-orange price-xl">' + bigPrice(p.price) + "</span>" +
-              (p.was ? ' <span class="pwas">Was: <s>' + money(p.was) + "</s></span>" : "") +
-              (off ? ' <span class="poff">' + off + "% OFF</span>" : "") +
-              ' <span class="pcad">CAD</span></div>' +
-            '<div class="superdeal"><div class="superdeal-h"><em>SUPER DEAL</em>' + icon("chev") + "</div>" +
-              '<div class="superdeal-body">' +
-                (styles.length ? '<fieldset class="styles"><legend>Style</legend><div class="style-row">' + styles.map(function (s, i) {
-                  return '<label class="style-opt"><input type="radio" name="style" value="' + esc(s) + '"' + (i === 0 ? " checked" : "") + " /><span>" + esc(s) + "</span></label>";
-                }).join("") + "</div></fieldset>" : "") +
-                '<label class="qty"><span>Qty</span>' + qtySelect(1, 'id="qty"') + "</label>" +
-              "</div></div>" +
-            '<button type="button" class="btn-orange btn-add" id="addBtn">' + (off ? "-" + off + "% now! " : "") + "Add to cart!<small>Ships in 1 to 3 business days</small></button>" +
-            '<div class="perks">' +
-              '<div class="perk"><div class="perk-h"><span class="tag-green">' + icon("truck") + ' Free shipping</span> for this item <a href="policies.html#shipping">' + icon("chev") + "</a></div>" +
-                '<p>Delivery in 7 to 15 business days. Ships <b class="green">within 1 to 3 business days</b> with tracking.</p></div>' +
-              '<div class="perk"><div class="perk-h">' + icon("shield", "ic-green") + ' Safe payments &middot; Secure privacy <a href="policies.html#privacy">' + icon("chev") + "</a></div></div>" +
-              '<div class="perk"><div class="perk-h">' + icon("guarantee", "ic-green") + ' Order guarantee <a href="policies.html#returns">' + icon("chev") + "</a></div>" +
-                '<div class="gchips"><span>Free shipping</span><span>Refund if item damaged</span><span>Refund if package lost</span><span>30-day returns</span><span>Tracking on every order</span></div></div>' +
-            "</div>" +
-            '<div class="about"><h2>About this item</h2><ul>' + (p.details || []).map(function (d) { return "<li>" + esc(d) + "</li>"; }).join("") + "</ul></div>" +
-          "</div>" +
-        "</div>" +
-      "</div>";
+    var packHtml = hasPacks ? '<div class="packs-h">' + icon("sparkle", "spark") + " Choose your pack</div>" +
+      '<div class="packs" role="radiogroup" aria-label="Pack size">' + packs.map(function (k, i) {
+        var off = percentOff(packWas(p, i), packPrice(p, i));
+        var flag = k.label ? '<span class="pack-flag">' + esc(k.label) + (off ? " " + off + "%" : "") + "</span>" : (off ? '<span class="pack-flag plain">-' + off + "%</span>" : "");
+        var pics = images.length ? Array.apply(null, Array(Math.min(k.qty, 4))).map(function () { return '<img src="' + esc(images[0]) + '" alt="" />'; }).join("") : '<span class="pack-count">' + k.qty + "&times;</span>";
+        return '<label class="pack"><input type="radio" name="pack" value="' + i + '"' + (i === 0 ? " checked" : "") + " />" +
+          '<span class="pack-card">' + flag + '<span class="pack-pics n' + Math.min(k.qty, 4) + '">' + pics + "</span>" +
+          '<span class="pack-name">' + esc(nounFor(p, k.qty)) + "</span>" +
+          '<span class="pack-price">' + (packWas(p, i) > packPrice(p, i) ? "<s>" + money(packWas(p, i)) + "</s> " : "") + "<b>" + money(packPrice(p, i)) + "</b></span></span></label>";
+      }).join("") + "</div>" : "";
 
-    page.addEventListener("click", function (e) {
+    var styleHtml = styles.length ? '<div class="opt-h">Style: <span id="styleLabel">' + esc(styles[0]) + "</span></div>" +
+      '<div class="style-row" role="radiogroup" aria-label="Style">' + styles.map(function (s, i) {
+        return '<label class="style-opt"><input type="radio" name="style" value="' + esc(s) + '"' + (i === 0 ? " checked" : "") + " /><span>" + esc(s) + "</span></label>";
+      }).join("") + "</div>" : "";
+
+    var reviewSlider = stats ? '<div class="rslider" id="rslider"><button type="button" class="round-btn" data-r="-1" aria-label="Previous review">' + icon("left") + '</button><div class="rslide" id="rslide"></div><button type="button" class="round-btn" data-r="1" aria-label="Next review">' + icon("right") + "</button></div>" : "";
+
+    return '<div class="pm" data-id="' + esc(p.id) + '">' +
+      '<div class="pm-media">' + stamp() +
+        '<div class="stage">' + (images.length ? '<img id="stageImg" src="' + esc(images[0]) + '" alt="' + esc(p.name) + '" />' : placeholder(p, true)) +
+          (headingTag === "h3" ? '<a class="stage-link" href="' + productUrl(p) + '">See full details &rarr;</a>' : "") + "</div>" +
+        thumbs +
+      "</div>" +
+      '<div class="pm-info">' +
+        (headingTag === "h1" ? "<h1 class=\"pm-title\">" + esc(p.name) + "</h1>" + (p.tagline ? '<p class="pm-tag">' + esc(p.tagline) + "</p>" : "") : "") +
+        (stats ? '<a class="pm-rating" href="#reviews">' + stars(stats.avg) + " " + stats.avg.toFixed(1) + " &middot; " + stats.count + " review" + (stats.count === 1 ? "" : "s") + "</a>" : "") +
+        '<ul class="bullets">' + (p.bullets || []).map(function (b) { return "<li>" + CHECK + esc(b) + "</li>"; }).join("") + "</ul>" +
+        '<div class="pm-price" id="pmPrice"></div>' +
+        styleHtml + packHtml +
+        '<div class="buy-row"><div class="stepper" id="qtyStepper"><button type="button" data-step="-1" aria-label="Less">&minus;</button><span id="qtyVal">1</span><button type="button" data-step="1" aria-label="More">+</button></div>' +
+          '<button type="button" class="btn-main btn-add" id="addBtn"></button></div>' +
+        '<div class="stock-row">' + (p.stock != null && p.stock > 0 && p.stock <= 20 ? '<span class="low"><i></i>Only ' + Number(p.stock) + " left in stock</span>" : '<span class="instock"><i></i>In stock, ships in 1 to 3 business days</span>') +
+          '<span class="eta">Estimated delivery by <strong>' + esc(eta) + "</strong></span></div>" +
+        '<p class="secure">' + icon("lock") + " Secure checkout &middot; <a href=\"policies.html#returns\">30-day returns</a></p>" +
+        payBadges() +
+        reviewSlider +
+        '<div class="accordion">' +
+          (p.specs ? "<details><summary>Details and specifications" + icon("down") + "</summary><p>" + esc(p.specs) + "</p></details>" : "") +
+          (p.howToUse ? "<details><summary>How and who can use it?" + icon("down") + "</summary><p>" + esc(p.howToUse) + "</p></details>" : "") +
+          "<details><summary>Shipping and returns" + icon("down") + "</summary><p>Free shipping to Canada and the US. Orders ship in 1 to 3 business days and arrive in about 7 to 15. Damaged or wrong item? Email us within 30 days for a replacement or refund. <a href=\"policies.html#returns\">Full policy</a></p></details>" +
+        "</div>" +
+      "</div></div>";
+  }
+
+  function wireModule(root, p) {
+    var images = p.images || [];
+    var qty = 1, rIndex = 0;
+    function current() {
+      var pk = $('input[name="pack"]:checked', root);
+      var st = $('input[name="style"]:checked', root);
+      return { pack: pk ? Number(pk.value) : 0, style: st ? st.value : "" };
+    }
+    function draw() {
+      var c = current();
+      var now = packPrice(p, c.pack), was = packWas(p, c.pack);
+      $("#pmPrice", root).innerHTML = (was > now ? "<s>" + money(was) + "</s> " : "") + "<strong>" + money(now) + "</strong>" + (p.badge ? ' <span class="sale-pill">' + esc(p.badge) + "</span>" : "");
+      $("#addBtn", root).innerHTML = "Add to cart <i></i> " + money(now * qty) + (was > now ? " <s>" + money(was * qty) + "</s>" : "");
+      $("#qtyVal", root).textContent = qty;
+      var sl = $("#styleLabel", root); if (sl) sl.textContent = c.style;
+    }
+    function drawReview() {
+      var box = $("#rslide", root);
+      if (!box) return;
+      var r = p.reviews[rIndex];
+      box.innerHTML = '<span class="rs-avatar" style="--tint:' + tintFor(r.name || "x") + '">' + (r.photo ? '<img src="' + esc(r.photo) + '" alt="" />' : esc((r.name || "?").charAt(0))) + "</span>" +
+        '<span class="rs-body"><strong>' + esc(r.name) + "</strong> " + stars(r.stars || 5) + '<span class="rs-text">&ldquo;' + esc(r.text) + "&rdquo;</span></span>";
+    }
+    root.addEventListener("change", draw);
+    root.addEventListener("click", function (e) {
       var t = e.target.closest(".thumb");
-      if (t) {
-        $("#stageImg").src = images[Number(t.dataset.i)];
-        $all(".thumb", page).forEach(function (b) { b.classList.toggle("is-on", b === t); });
-      }
-      if (e.target.closest("#share")) {
-        var url = location.origin + location.pathname + "?id=" + encodeURIComponent(p.id);
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(url).then(function () { toast("Link copied"); }, function () { toast(url); });
-        } else toast(url);
-      }
+      if (t) { $("#stageImg", root).src = images[Number(t.dataset.i)]; $all(".thumb", root).forEach(function (b) { b.classList.toggle("is-on", b === t); }); }
+      var s = e.target.closest("#qtyStepper [data-step]");
+      if (s) { qty = Math.max(1, Math.min(20, qty + Number(s.dataset.step))); draw(); }
+      var r = e.target.closest("[data-r]");
+      if (r) { rIndex = (rIndex + Number(r.dataset.r) + p.reviews.length) % p.reviews.length; drawReview(); }
       if (e.target.closest("#addBtn")) {
-        var st = $('input[name="style"]:checked', page);
-        addToCart(p.id, st ? st.value : "", Number($("#qty").value) || 1);
-        toast("Added to cart");
-        if (window.innerWidth < 1200) openCart();
+        var c = current();
+        addToCart(p.id, c.style, c.pack, qty);
+        openCart();
       }
     });
+    draw();
+    if (p.reviews && p.reviews.length) drawReview();
+  }
+
+  /* ---------------- shared sections ---------------- */
+  function clipsSection(p) {
+    var clips = p.clips || [];
+    if (!clips.length) return "";
+    return '<section class="section clips"><div class="wrap"><h2 class="display">Seen on your For You page</h2><p class="sub">Drag to explore. Every clip is the same ' + esc(p.name.toLowerCase()) + ".</p></div>" +
+      '<div class="clip-row wrap">' + clips.map(function (c) {
+        var isVid = /\.(mp4|webm|mov)(\?|$)/i.test(c.src || "");
+        return '<figure class="clip">' + (isVid ? '<video src="' + esc(c.src) + '" muted loop playsinline preload="metadata"></video>' : '<img src="' + esc(c.src) + '" alt="" loading="lazy" />') +
+          (c.caption ? "<figcaption>" + esc(c.caption) + "</figcaption>" : "") + "</figure>";
+      }).join("") + "</div></section>";
+  }
+
+  function reviewsSection(list) {
+    if (!list.length) return "";
+    return '<section class="section reviews-band" id="reviews">' + wave("wave-top") + '<div class="band-body"><div class="wrap"><h2 class="display">Don&rsquo;t just listen to us</h2></div>' +
+      '<div class="rcards wrap">' + list.map(function (r) {
+        return '<article class="rcard">' + (r.photo ? '<img class="rcard-img" src="' + esc(r.photo) + '" alt="Photo from ' + esc(r.name) + '" loading="lazy" />' : "") +
+          stars(r.stars || 5) + '<p class="rcard-text">&ldquo;' + esc(r.text) + '&rdquo;</p><p class="rcard-name">' + esc(r.name) + "</p>" +
+          (r.product ? '<a class="rcard-link" href="product.html?id=' + encodeURIComponent(r.product.id) + '">' + esc(r.product.name) + "</a>" : "") + "</article>";
+      }).join("") + "</div></div>" + wave("wave-bottom") + "</section>";
+  }
+
+  function allReviews() {
+    var out = [];
+    PRODUCTS.forEach(function (p) { (p.reviews || []).forEach(function (r) { out.push(Object.assign({ product: p }, r)); }); });
+    return out.sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); });
+  }
+
+  function card(p) {
+    var off = percentOff(p.was, p.price);
+    return '<a class="card" href="' + productUrl(p) + '"><div class="card-img">' + img(p, 0) + (p.badge ? '<span class="card-pill">' + esc(p.badge) + "</span>" : "") + "</div>" +
+      '<h3 class="card-name">' + esc(p.name) + "</h3>" +
+      '<p class="card-price">' + (off ? "<s>" + money(p.was) + "</s> " : "") + "<strong>" + money(p.price) + "</strong></p></a>";
+  }
+
+  /* ---------------- pages ---------------- */
+  function renderHome() {
+    var page = $("#homePage");
+    if (!page) return;
+    var feat = PRODUCTS.filter(function (p) { return p.featured; })[0] || PRODUCTS[0];
+    var others = PRODUCTS.filter(function (p) { return p !== feat; });
+    page.innerHTML =
+      '<section class="hero"><div class="wrap hero-inner">' +
+        '<h1 class="display hero-h">Viral finds, actually worth it</h1>' +
+        '<p class="hero-p">The things you keep seeing on TikTok, picked because they work, priced fairly and shipped free across Canada and the US.</p>' +
+        '<a class="btn-cream" href="#featured">Shop the bestseller</a>' +
+      "</div>" + wave("wave-hero") + "</section>" +
+      (feat ? '<section class="section featured" id="featured"><div class="wrap"><h2 class="display">The one you came for</h2><p class="sub">' + esc(feat.tagline || "") + "</p>" + productModule(feat, "h3") + "</div></section>" + clipsSection(feat) : "") +
+      reviewsSection(allReviews()) +
+      (others.length ? '<section class="section more"><div class="wrap"><h2 class="display">More finds you&rsquo;ll love</h2><p class="sub">Free shipping on every one.</p><div class="grid">' + others.map(card).join("") + '</div><div class="center"><a class="btn-outline" href="shop.html">Shop all</a></div></div></section>' : "") +
+      '<section class="section story" id="story"><div class="wrap story-inner"><h2 class="display">Our story</h2>' +
+        "<p>Qafizz started in Canada with a simple frustration: the products going viral on TikTok were hard to get here, or came with surprise fees and weeks of silence. So we pick a small number of finds, check that they actually do what the videos say, and ship them free to Canada and the US with tracking on every order.</p>" +
+        '<p>Got a question before you buy? Email <strong>' + esc(EMAIL) + "</strong> and a real person answers within 1 to 2 business days.</p></div></section>";
+    if (feat) wireModule($(".pm", page), feat);
+  }
+
+  function renderShop() {
+    var page = $("#shopPage");
+    if (!page) return;
+    var q = (new URLSearchParams(location.search).get("q") || "").trim().toLowerCase();
+    var list = PRODUCTS.filter(function (p) { return !q || (p.name + " " + (p.tagline || "") + " " + (p.bullets || []).join(" ")).toLowerCase().indexOf(q) !== -1; });
+    page.innerHTML = '<section class="section shop-page"><div class="wrap"><h1 class="display">' + (q ? "Results for &ldquo;" + esc(q) + "&rdquo;" : "Shop all") + '</h1><p class="sub">' + list.length + " product" + (list.length === 1 ? "" : "s") + " &middot; free shipping on every order</p>" +
+      (list.length ? '<div class="grid">' + list.map(card).join("") + "</div>" : '<p class="center muted">Nothing matches that search yet. <a href="shop.html">See everything</a></p>') + "</div></section>";
+  }
+
+  function renderProduct() {
+    var page = $("#productPage");
+    if (!page) return;
+    var p = findProduct(new URLSearchParams(location.search).get("id"));
+    if (!p) {
+      page.innerHTML = '<section class="section"><div class="wrap center"><h1 class="display">We couldn&rsquo;t find that product</h1><p class="sub">It may have sold out, or the link has a typo.</p><a class="btn-main inline" href="shop.html">Shop all</a></div></section>';
+      return;
+    }
+    document.title = p.name + " | Qafizz";
+    var revs = (p.reviews || []).map(function (r) { return Object.assign({}, r); });
+    page.innerHTML = '<section class="section product-top"><div class="wrap"><nav class="crumbs" aria-label="Breadcrumb"><a href="./">Home</a> / <a href="shop.html">Shop</a> / <span>' + esc(p.name) + "</span></nav>" + productModule(p, "h1") + "</div></section>" +
+      clipsSection(p) + reviewsSection(revs) +
+      (revs.length ? "" : '<section class="section"><div class="wrap center"><h2 class="display small">No reviews yet</h2><p class="sub">Bought this? Email your review and a photo to <strong>' + esc(EMAIL) + "</strong> and we will share it here.</p></div></section>");
+    wireModule($(".pm", page), p);
   }
 
   /* ---------------- boot ---------------- */
-  function wireCart() {
-    document.addEventListener("click", function (e) {
-      if (e.target.closest("#cartOpen")) { if (document.body.classList.contains("cart-open")) closeCart(); else openCart(); }
-      if (e.target.closest("#cartClose") || e.target.closest("#cartScrim")) closeCart();
-      if (e.target.closest("#checkoutBtn")) checkout();
-      var rm = e.target.closest(".cart-remove");
-      if (rm) { cart.splice(Number(rm.dataset.line), 1); saveCart(); }
-    });
-    document.addEventListener("change", function (e) {
-      if (e.target.classList.contains("qty-select") && e.target.dataset.line != null) {
-        var line = cart[Number(e.target.dataset.line)];
-        if (line) { line.qty = Number(e.target.value); saveCart(); }
-      }
-    });
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeCart(); });
-  }
+  renderChrome();
 
-  renderChrome(!!$("#homePage"));
-  wireCart();
+  document.addEventListener("click", function (e) {
+    if (e.target.closest("#cartOpen")) openCart();
+    if (e.target.closest("#cartClose") || e.target.closest("#scrim")) closeCart();
+    if (e.target.closest("#checkoutBtn")) checkout();
+    if (e.target.closest("#menuBtn")) document.body.classList.toggle("nav-open");
+    if (e.target.closest("#searchBtn")) { var sb = $("#searchbar"); sb.hidden = !sb.hidden; if (!sb.hidden) $("#q").focus(); }
+    var st = e.target.closest(".stepper.small [data-step]");
+    if (st) {
+      var line = cart[Number(st.parentNode.dataset.line)];
+      if (line) { line.qty += Number(st.dataset.step); if (line.qty < 1) cart.splice(Number(st.parentNode.dataset.line), 1); saveCart(); }
+    }
+    var rm = e.target.closest("[data-remove]");
+    if (rm) { cart.splice(Number(rm.dataset.remove), 1); saveCart(); }
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { closeCart(); document.body.classList.remove("nav-open"); } });
+  window.addEventListener("scroll", function () { var h = $("#header"); if (h) h.classList.toggle("is-scrolled", window.scrollY > 40); }, { passive: true });
 
-  if ($("#thanksPage")) { cart = []; saveCart(); }
+  if ($("#thanksPage")) { cart = []; try { localStorage.removeItem(CART_KEY); } catch (e) { /* ignore */ } }
 
   fetch("products.json?v=" + Math.floor(Date.now() / 300000))
     .then(function (r) { return r.json(); })
@@ -483,8 +410,11 @@
     .catch(function () { PRODUCTS = []; })
     .then(function () {
       cart = cart.filter(function (l) { return findProduct(l.id); });
-      renderCart();
-      renderHome();
-      renderProduct();
+      renderCart(); renderHome(); renderShop(); renderProduct();
+      // Clip videos play while on screen.
+      if ("IntersectionObserver" in window) {
+        var io = new IntersectionObserver(function (es) { es.forEach(function (x) { if (x.isIntersecting) x.target.play().catch(function () {}); else x.target.pause(); }); });
+        $all(".clip video").forEach(function (v) { io.observe(v); });
+      }
     });
 })();

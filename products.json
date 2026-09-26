@@ -1,68 +1,101 @@
 [
   {
     "id": "curl-comb",
-    "name": "Cordless 2-in-1 Straightening Comb and Curling Iron, 4-Speed Temperature, Fast Heating, LED Display, USB-C Charging",
-    "short": "Cordless 2-in-1 Straightening Comb",
+    "name": "Cordless 2-in-1 Straightening Comb",
+    "tagline": "Straighten or curl anywhere. No cord, heats up in about a minute.",
     "price": 39.99,
     "was": 54.99,
-    "tags": ["bestseller", "lightning"],
-    "details": [
-      "2-in-1: straightening brush and curling iron",
+    "badge": "Fall Sale",
+    "featured": true,
+    "bullets": [
+      "Straightens and curls in one tool",
       "4 heat settings with an LED display",
       "Cordless, charges with USB-C",
-      "Heats up in about 60 seconds",
       "Small enough for your bag"
     ],
     "images": [],
     "styles": ["Black", "Beige"],
+    "packs": [
+      { "qty": 1, "label": "" },
+      { "qty": 2, "off": 10, "label": "Most popular" },
+      { "qty": 3, "off": 20, "label": "Best value" }
+    ],
+    "packNoun": ["comb", "combs"],
+    "stock": null,
+    "specs": "Heat settings: 4 (about 140 to 200 °C). Battery: rechargeable, USB-C cable included. Heat-up time: about 60 seconds. In the box: comb, USB-C cable, instructions.",
+    "howToUse": "Charge fully before first use. Brush through dry, detangled hair in small sections, starting on the lowest heat. To curl, twist the comb as you pull it down. Works on most hair types. Keep away from water and let it cool before packing it away.",
+    "clips": [],
     "reviews": []
   },
   {
     "id": "galaxy-projector",
-    "name": "Galaxy Star Projector with Nebula Lights, 8 Colours, Remote Control and Sleep Timer",
-    "short": "Galaxy Star Projector",
+    "name": "Galaxy Star Projector",
+    "tagline": "Turns your ceiling into a nebula.",
     "price": 44.99,
     "was": 59.99,
-    "tags": ["lightning"],
-    "details": [
+    "badge": "Fall Sale",
+    "bullets": [
       "Nebula and star modes with 8 colours",
       "Remote plus a sleep timer",
       "USB-C powered, cable included"
     ],
     "images": [],
     "styles": [],
+    "packs": [
+      { "qty": 1, "label": "" },
+      { "qty": 2, "off": 10, "label": "Gift one" }
+    ],
+    "packNoun": ["projector", "projectors"],
+    "stock": null,
+    "specs": "Power: USB-C, 5 V. Modes: nebula, stars, both. Timer: 1 or 2 hours. In the box: projector, remote, USB-C cable.",
+    "howToUse": "Plug in, point at the ceiling and pick a mode with the remote. Best in a dark room, 1 to 3 metres from the wall.",
+    "clips": [],
     "reviews": []
   },
   {
     "id": "portable-blender",
-    "name": "Portable Blender Bottle, 400 ml, 6 Stainless Steel Blades, USB-C Rechargeable",
-    "short": "Portable Blender Bottle",
+    "name": "Portable Blender Bottle",
+    "tagline": "Smoothies anywhere. Charges with USB-C.",
     "price": 35.99,
     "was": 45.99,
-    "tags": ["unbeatable"],
-    "details": [
+    "badge": "",
+    "bullets": [
       "400 ml bottle with 6 stainless steel blades",
       "About 15 blends per charge",
       "Blades lock unless the lid is on"
     ],
     "images": [],
     "styles": ["Pink", "White", "Green"],
+    "packs": [],
+    "stock": null,
+    "specs": "Capacity: 400 ml. Blades: 6, stainless steel. Charging: USB-C, about 3 hours for a full charge.",
+    "howToUse": "Add liquid first, then fruit or ice in small pieces. Close the lid, press the button twice and blend for 30 to 40 seconds. Rinse with warm water and a drop of soap.",
+    "clips": [],
     "reviews": []
   },
   {
     "id": "heavy-tee",
-    "name": "Oversized Heavyweight Cotton Tee, Boxy Fit, Dropped Shoulders",
-    "short": "Oversized Heavyweight Tee",
+    "name": "Oversized Heavyweight Tee",
+    "tagline": "Boxy fit, thick cotton, never see-through.",
     "price": 34.00,
     "was": null,
-    "tags": ["new", "unbeatable"],
-    "details": [
+    "badge": "New",
+    "bullets": [
       "280 gsm 100% cotton",
       "Dropped shoulders, boxy cut",
       "Size down for a regular fit"
     ],
     "images": [],
     "styles": ["S", "M", "L", "XL"],
+    "packs": [
+      { "qty": 1, "label": "" },
+      { "qty": 2, "off": 15, "label": "Most popular" }
+    ],
+    "packNoun": ["tee", "tees"],
+    "stock": null,
+    "specs": "Fabric: 280 gsm 100% cotton jersey. Fit: oversized and boxy. Chest width S 56 cm, M 58 cm, L 61 cm, XL 64 cm.",
+    "howToUse": "Machine wash cold, inside out. Tumble dry low or hang dry to keep the shape.",
+    "clips": [],
     "reviews": []
   }
 ]
